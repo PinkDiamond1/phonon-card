@@ -1,0 +1,10 @@
+/select A000000820000301
+#create 1 Phonons
+/send 0030000000
+
+#set Descriptor
+/send 8031000010500E410200018102000183043DCCCCCD
+
+# Get List
+/send 80320000
+

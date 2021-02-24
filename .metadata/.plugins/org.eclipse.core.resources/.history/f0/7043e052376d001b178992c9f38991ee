@@ -1,0 +1,614 @@
+/**
+ * 
+ */
+package im.status.phonon;
+
+import javacard.framework.*;
+import javacard.security.*;
+import javacardx.crypto.Cipher;
+
+
+/**
+ * @author MikeZercher
+ *
+ */
+public class PhononApplet extends Applet {
+	public static void install(byte[] bArray, short bOffset, byte bLength) {
+		// GP-compliant JavaCard applet registration
+		new PhononApplet(bArray, bOffset, bLength);
+	}
+	  static final short APPLICATION_VERSION = (short) 0x0001;
+	  static final byte CAPABILITY_SECURE_CHANNEL = (byte) 0x01;
+	  static final byte CAPABILITY_KEY_MANAGEMENT = (byte) 0x02;
+	  static final byte CAPABILITY_CREDENTIALS_MANAGEMENT = (byte) 0x04;
+	  static final byte CAPABILITY_NDEF = (byte) 0x08;
+
+//	  static final byte APPLICATION_CAPABILITIES = (byte)(CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT | CAPABILITY_CREDENTIALS_MANAGEMENT | CAPABILITY_NDEF);
+	  static final byte APPLICATION_CAPABILITIES = (byte)(CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT | CAPABILITY_CREDENTIALS_MANAGEMENT );
+
+	 static final byte INS_INIT 					= (byte) 0xFE;
+	 static final byte INS_CREATE_PHONON 			= (byte)0x30;
+	 static final byte INS_SET_PHONON_DESCRIPTOR	= (byte) 0x31;
+	 	
+	  static final byte PUK_LENGTH = 12;
+	  static final byte PUK_MAX_RETRIES = 5;
+	  static final byte PIN_LENGTH = 6;
+	  static final byte PIN_MAX_RETRIES = 3;
+	  static final byte KEY_PATH_MAX_DEPTH = 10;
+	  static final byte PAIRING_MAX_CLIENT_COUNT = 1;
+	  static final byte UID_LENGTH = 16;
+	  // Maximum payload size of an encrypted APDU: https://status.im/keycard_api/apdu/opensecurechannel.html
+	  static final short SAVED_DATA_SIZE = 223;
+
+	  static final short CHAIN_CODE_SIZE = 32;
+	  static final short KEY_UID_LENGTH = 32;
+	  static final short BIP39_SEED_SIZE = CHAIN_CODE_SIZE * 2;
+	  static final byte MASTERSEED_EMPTY = (byte) 0x00;
+	  static final byte MASTERSEED_NOT_EXPORTABLE = (byte) 0x01;
+	  static final byte MASTERSEED_EXPORTABLE = (byte) 0x02;
+
+	  static final byte TLV_SIGNATURE_TEMPLATE = (byte) 0xA0;
+
+	  static final byte TLV_KEY_TEMPLATE = (byte) 0xA1;
+	  static final byte TLV_PUB_KEY = (byte) 0x80;
+	  static final byte TLV_PRIV_KEY = (byte) 0x81;
+	  static final byte TLV_CHAIN_CODE = (byte) 0x82;
+	  static final byte TLV_SEED = (byte) 0x83;
+	  static final byte TLV_SEED_STATUS = (byte) 0x84;
+	  static final byte TLV_DATA = (byte) 0x85;
+	  static final byte TLV_PHONON = (byte) 0x40;
+	  static final byte TLV_PHONON_INDEX = (byte) 0x41;
+
+	  static final byte TLV_APPLICATION_STATUS_TEMPLATE = (byte) 0xA3;
+	  static final byte TLV_PAIRING_SLOT = (byte)0x03;
+	  static final byte TLV_INT = (byte) 0x02;
+	  static final byte TLV_BOOL = (byte) 0x01;
+
+	  static final byte TLV_APPLICATION_INFO_TEMPLATE = (byte) 0xA4;
+	  static final byte TLV_UID = (byte) 0x8F;
+	  static final byte TLV_KEY_UID = (byte) 0x8E;
+	  static final byte TLV_CAPABILITIES = (byte) 0x8D;
+
+	  static final byte INS_VERIFY_PIN = (byte) 0x20;
+	  static final byte INS_CHANGE_PIN = (byte) 0x21;
+
+	  static final byte CHANGE_PIN_P1_USER_PIN = 0x00;
+//	  static final byte CHANGE_PIN_P1_PUK = 0x01;
+	  static final byte CHANGE_PIN_P1_PAIRING_SECRET = 0x02;
+
+	  private Crypto crypto;
+	  private SECP256k1 secp256k1;
+	  private SecureChannel secureChannel;
+	  private byte[] uid;
+	  private byte[] savedData;
+	  private byte masterSeedStatus; // Invalid / valid, but non-exportable / valid and exportable
+
+	  private ECPublicKey masterPublic;
+	  private ECPrivateKey masterPrivate;
+	  private byte[] masterChainCode;
+	  private boolean isExtended;
+
+	  private ECPublicKey parentPublicKey;
+	  private ECPrivateKey parentPrivateKey;
+	  private byte[] parentChainCode;
+
+	  private ECPublicKey publicKey;
+	  private ECPrivateKey privateKey;
+	  private byte[] chainCode;
+
+	  private ECPublicKey pinlessPublicKey;
+	  private ECPrivateKey pinlessPrivateKey;
+
+	  private byte[] keyPath;
+	  private short keyPathLen;
+
+	  private byte[] pinlessPath;
+	  private short pinlessPathLen;
+
+	  private Signature signature;
+
+	  private byte[] keyUID;
+
+	  private byte[] masterSeed;
+	  private byte[] duplicationEncKey;
+	  private short expectedEntropy;
+
+	  private byte[] derivationOutput;
+	  private OwnerPIN pin;
+
+	  public static final short PHONON_KEY_LENGTH = 256;
+	  
+	  static final byte TLV_SET_PHONON_DESCRIPTOR	= (byte)0x50;
+	  static final byte	TLV_SET_PHONON_KEY_INDEX 	= (byte)0x41;
+	  static final byte TLV_SET_PHONON_CURRENCY		= (byte)0x81;
+	  static final byte TLV_SET_PHONON_VALUE		= (byte)0x83;
+	  
+	  private KeyPair[] phononKeyPair;
+	  private ECPublicKey phononPublicKey;
+	  private ECPrivateKey phononPrivateKey;
+	  private byte phononKeyIndex = 0;
+
+	  private Phonon[]	PhononArray;
+	  
+	  public PhononApplet(byte[] bArray, short bOffset, byte bLength) 
+	  {
+		    crypto = new Crypto();
+		    secp256k1 = new SECP256k1(crypto);
+		    secureChannel = new SecureChannel(PAIRING_MAX_CLIENT_COUNT, crypto, secp256k1);
+
+		    uid = new byte[UID_LENGTH];
+		    crypto.random.generateData(uid, (short) 0, UID_LENGTH);
+		    
+		    savedData = new byte[SAVED_DATA_SIZE];
+
+		    masterSeed = new byte[BIP39_SEED_SIZE];
+		    masterSeedStatus = MASTERSEED_EMPTY;
+		    phononKeyPair = new KeyPair[512];
+		    PhononArray = new Phonon[ 512 ];
+
+		    masterPublic = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
+		    masterPrivate = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
+
+		    parentPublicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
+		    parentPrivateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
+
+		    publicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
+		    privateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
+
+		    pinlessPublicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
+		    pinlessPrivateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
+
+		    masterChainCode = new byte[CHAIN_CODE_SIZE];
+		    parentChainCode = new byte[CHAIN_CODE_SIZE];
+		    chainCode = new byte[CHAIN_CODE_SIZE];
+		    keyPath = new byte[KEY_PATH_MAX_DEPTH * 4];
+		    pinlessPath = new byte[KEY_PATH_MAX_DEPTH * 4];
+
+		    keyUID = new byte[KEY_UID_LENGTH];
+
+		    resetCurveParameters();
+
+		    signature = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
+
+		    duplicationEncKey = new byte[(short)(KeyBuilder.LENGTH_AES_256/8)];
+		    expectedEntropy = -1;
+
+		    derivationOutput = JCSystem.makeTransientByteArray((short) (Crypto.KEY_SECRET_SIZE + CHAIN_CODE_SIZE), JCSystem.CLEAR_ON_RESET);
+
+		    register(bArray, (short) (bOffset + 1), bArray[bOffset]);
+		  }
+	
+	public void process(APDU apdu) throws ISOException
+	{
+		// Good practice: Return 9000 on SELECT
+		byte[] buf = apdu.getBuffer();
+		if((buf[ISO7816.OFFSET_INS] != INS_CREATE_PHONON  )
+			&& 	(buf[ISO7816.OFFSET_INS] != INS_SET_PHONON_DESCRIPTOR)	)
+		{
+		    if( buf[ISO7816.OFFSET_INS] != SecureChannel.INS_IDENTIFY_CARD &&
+		    		buf[ISO7816.OFFSET_INS] != SecureChannel.INS_LOAD_CERT ) 
+		    {
+			      if (pin == null) 
+			      {
+			          processInit(apdu);
+			          return;
+			      }
+	    	
+		    }
+			if (selectingApplet())
+			{
+			      selectApplet(apdu);
+			      return;
+			}
+		}
+		try
+		{
+			switch (buf[ISO7816.OFFSET_INS]) 
+			{
+		        case SecureChannel.INS_IDENTIFY_CARD:
+		        {
+		            secureChannel.identifyCard(apdu);
+		            break;
+		        }
+		        case SecureChannel.INS_LOAD_CERT:
+		        {
+		            secureChannel.loadCert(apdu);
+		            break;
+		        }
+		        case SecureChannel.INS_OPEN_SECURE_CHANNEL:
+		        {
+		            secureChannel.openSecureChannel(apdu);
+		            break;
+		        }
+		        case SecureChannel.INS_MUTUALLY_AUTHENTICATE:
+		        {
+		            secureChannel.mutuallyAuthenticate(apdu);
+		            break;
+		        }
+		        case SecureChannel.INS_PAIR:
+		        {
+		            secureChannel.pair(apdu);
+		            break;
+		        }
+		        case SecureChannel.INS_UNPAIR:
+		        {
+		            unpair(apdu);
+		            break;
+		        }
+		        case INS_VERIFY_PIN:
+		        {
+		            verifyPIN(apdu);
+		            break;
+		        }
+		        case INS_CHANGE_PIN:
+		        {
+		            changePIN(apdu);
+		            break;
+		        }
+		        case INS_CREATE_PHONON:
+		        {
+		        	createPhonon( apdu );
+		        	break;
+		        }
+		        case INS_SET_PHONON_DESCRIPTOR:
+		        {
+		        	SetPhononDescriptor( apdu);
+		        	break;
+		        }
+		        
+		        default:
+				// good practice: If you don't know the INStruction, say so:
+				ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+			}
+		}catch(ISOException sw) 
+		{
+		      handleException(apdu, sw.getReason());
+	    }catch(CryptoException ce)
+	    {
+	      handleException(apdu, (short)(ISO7816.SW_UNKNOWN | ce.getReason()));
+	    }catch (Exception e)
+	    {
+	      handleException(apdu, ISO7816.SW_UNKNOWN);
+	    }
+
+	    if (shouldRespond(apdu)) {
+	      secureChannel.respond(apdu, (short) 0, ISO7816.SW_NO_ERROR);
+	    }
+	}
+
+	private void handleException(APDU apdu, short sw)
+	  {
+		if (shouldRespond(apdu) && (sw != ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED))
+		{
+		    secureChannel.respond(apdu, (short) 0, sw);
+		} 
+		else
+		{
+		    ISOException.throwIt(sw);
+		}
+	}
+	  
+	private boolean shouldRespond(APDU apdu)
+	{
+		return secureChannel.isOpen() && (apdu.getCurrentState() != APDU.STATE_FULL_OUTGOING);
+	}
+
+	private void createPhonon( APDU apdu)
+	{
+		if(phononKeyIndex > 255)
+		{
+			ISOException.throwIt(ISO7816.SW_FILE_FULL);
+			return;
+		}
+/*	   PhononArray[phononKeyIndex].PhononKey = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
+	   secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPrivate());
+	   secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPublic());
+	   PhononArray[phononKeyIndex].PhononKey.genKeyPair();
+*/
+	   phononKeyPair[phononKeyIndex] = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
+	   secp256k1.setCurveParameters((ECKey) phononKeyPair[phononKeyIndex].getPrivate());
+	   secp256k1.setCurveParameters((ECKey) phononKeyPair[phononKeyIndex].getPublic());
+	   phononKeyPair[phononKeyIndex].genKeyPair();
+
+		
+	    byte[] apduBuffer = apdu.getBuffer();
+
+	    short off = 0;
+
+	    apduBuffer[off++] = TLV_PHONON;
+	    
+	    off++;
+	    apduBuffer[off++] = TLV_PHONON_INDEX;
+	    apduBuffer[off++] = 0x02;
+	    Util.setShort(apduBuffer, off, (short)(phononKeyIndex + 1));
+	    off += 2;
+//	    apduBuffer[off++] = (short)(phononKeyIndex + 1);
+	    
+	    apduBuffer[off++] = TLV_PUB_KEY;
+	    short lenoff = off++;
+	    ECPublicKey pk = (ECPublicKey)phononKeyPair[phononKeyIndex].getPublic();
+//	    ECPublicKey pk = (ECPublicKey)PhononArray[phononKeyIndex].PhononKey.getPublic();
+	    
+	    short keyLength = pk.getW(apduBuffer, off);
+	    apduBuffer[lenoff] = (byte) keyLength;
+	    off += keyLength;
+	    apduBuffer[ 1 ] = (byte)(off - 1);
+	    apdu.setOutgoingAndSend((short) 0, off);
+	    phononKeyIndex++;
+	}
+
+	private void SetPhononDescriptor( APDU apdu )
+	{
+	    byte[] apduBuffer = apdu.getBuffer();
+        byte bLC = apduBuffer[ISO7816.OFFSET_LC];
+        if( bLC > 16 )
+        {
+            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+	        return;
+        }
+/*        if( apduBuffer[ ISO7816.OFFSET_CDATA] != TLV_SET_PHONON_DESCRIPTOR)
+        {
+        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+        }
+        if( apduBuffer[ ISO7816.OFFSET_CDATA + 2] != TLV_SET_PHONON_KEY_INDEX)
+        {
+        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+        }
+*/        Bertlv Phonon = new Bertlv();
+        byte [] IncomingPhonon = new byte[apdu.getIncomingLength()];
+        Util.arrayCopyNonAtomic(apduBuffer, apdu.getOffsetCdata(), IncomingPhonon, (short)0,apdu.getIncomingLength());
+        Phonon.LoadTag(IncomingPhonon);
+        if( Phonon.GetTag() != TLV_SET_PHONON_DESCRIPTOR )
+        {
+        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+        }
+        byte[] ptrIndex = Phonon.GetNextData((short)0);
+        Bertlv berPhononIndex = new Bertlv();
+        berPhononIndex.LoadTag(ptrIndex);
+        if( berPhononIndex.GetTag() != TLV_SET_PHONON_KEY_INDEX)
+        {
+           	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+        }
+         short PhononIndex = Util.getShort( berPhononIndex.GetData(), (short)0);
+        
+         if ( PhononIndex == 0)
+         {
+          	ISOException.throwIt(ISO7816.SW_FILE_INVALID);
+          	    	 
+          }
+         PhononIndex--;
+        if( PhononIndex >= phononKeyIndex)
+         {
+         	ISOException.throwIt(ISO7816.SW_FILE_INVALID);
+         	    	 
+         }
+         Bertlv berPhononCurrency = new Bertlv();
+         ptrIndex = berPhononIndex.GetNextData((short)0 );
+         berPhononCurrency.LoadTag( ptrIndex );
+         if(berPhononCurrency.GetTag() != TLV_SET_PHONON_CURRENCY)
+         {
+          	ISOException.throwIt(ISO7816.SW_FILE_INVALID);     	    	 
+         }
+        
+         PhononArray[PhononIndex].CurrencyType =  Util.getShort( berPhononCurrency.GetData(), (short)0);
+         
+         Bertlv berPhononValue = new Bertlv();
+         ptrIndex = berPhononCurrency.GetNextData((short)0 );
+         berPhononValue.LoadTag( ptrIndex );
+         if(berPhononValue.GetTag() != TLV_SET_PHONON_VALUE)
+         {
+          	ISOException.throwIt(ISO7816.SW_FILE_INVALID);     	    	 
+         }
+        
+         PhononArray[PhononIndex].Value = new byte [berPhononCurrency.GetLength()];
+         Util.arrayCopyNonAtomic(berPhononCurrency.GetData(), (short)0, PhononArray[PhononIndex].Value, (short)0, berPhononCurrency.GetLength());
+         return;
+ 	}
+	
+	private void selectApplet(APDU apdu) {
+	    pin.reset();
+	    secureChannel.reset();
+	    secureChannel.updateSecureChannelCounter();
+
+	    byte[] apduBuffer = apdu.getBuffer();
+
+	    short off = 0;
+
+	    apduBuffer[off++] = TLV_APPLICATION_INFO_TEMPLATE;
+
+	    if (privateKey.isInitialized()) {
+	      apduBuffer[off++] = (byte) 0x81;
+	    }
+
+	    short lenoff = off++;
+
+	    apduBuffer[off++] = TLV_UID;
+	    apduBuffer[off++] = UID_LENGTH;
+	    Util.arrayCopyNonAtomic(uid, (short) 0, apduBuffer, off, UID_LENGTH);
+	    off += UID_LENGTH;
+
+	    apduBuffer[off++] = TLV_PUB_KEY;
+	    short keyLength = secureChannel.copyPublicKey(apduBuffer, (short) (off + 1));
+	    apduBuffer[off++] = (byte) keyLength;
+	    off += keyLength;
+
+	    apduBuffer[off++] = TLV_INT;
+	    apduBuffer[off++] = 2;
+	    Util.setShort(apduBuffer, off, APPLICATION_VERSION);
+	    off += 2;
+
+	    apduBuffer[off++] = TLV_PAIRING_SLOT;
+	    apduBuffer[off++] = 1;
+	    apduBuffer[off++] = secureChannel.getRemainingPairingSlots();
+
+	    apduBuffer[off++] = TLV_CAPABILITIES;
+	    apduBuffer[off++] = 1;
+	    apduBuffer[off++] = APPLICATION_CAPABILITIES;
+
+	    apduBuffer[lenoff] = (byte)(off - lenoff - 1);
+	    apdu.setOutgoingAndSend((short) 0, off);
+	  }
+
+	 private void resetCurveParameters()
+	 {
+		    secp256k1.setCurveParameters(masterPublic);
+		    secp256k1.setCurveParameters(masterPrivate);
+
+		    secp256k1.setCurveParameters(parentPublicKey);
+		    secp256k1.setCurveParameters(parentPrivateKey);
+
+		    secp256k1.setCurveParameters(publicKey);
+		    secp256k1.setCurveParameters(privateKey);
+
+		    secp256k1.setCurveParameters(pinlessPublicKey);
+		    secp256k1.setCurveParameters(pinlessPrivateKey);
+	}
+	 
+	private void processInit(APDU apdu)
+	{
+		    byte[] apduBuffer = apdu.getBuffer();
+		    apdu.setIncomingAndReceive();
+
+		    if (selectingApplet()) {
+		      apduBuffer[0] = TLV_PUB_KEY;
+		      apduBuffer[1] = (byte) secureChannel.copyPublicKey(apduBuffer, (short) 2);
+		      apdu.setOutgoingAndSend((short) 0, (short)(apduBuffer[1] + 2));
+		    } 
+		    else 
+		    if (apduBuffer[ISO7816.OFFSET_INS] == INS_INIT) 
+		    {
+		      secureChannel.oneShotDecrypt(apduBuffer);
+		      
+		      byte bLC = apduBuffer[ISO7816.OFFSET_LC];
+
+//		      if ((apduBuffer[ISO7816.OFFSET_LC] != (byte)(PIN_LENGTH + PUK_LENGTH + SecureChannel.SC_SECRET_LENGTH)) || !allDigits(apduBuffer, ISO7816.OFFSET_CDATA, (short)(PIN_LENGTH + PUK_LENGTH))) 
+		      if ((apduBuffer[ISO7816.OFFSET_LC] != (byte)(PIN_LENGTH  + SecureChannel.SC_SECRET_LENGTH)) || !allDigits(apduBuffer, ISO7816.OFFSET_CDATA, (short)(PIN_LENGTH ))) 
+		      {
+		        ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		      }
+
+		      JCSystem.beginTransaction();
+		      secureChannel.initSecureChannel(apduBuffer, (short)(ISO7816.OFFSET_CDATA + PIN_LENGTH ));
+
+		      pin = new OwnerPIN(PIN_MAX_RETRIES, PIN_LENGTH);
+		      pin.update(apduBuffer, ISO7816.OFFSET_CDATA, PIN_LENGTH);
+
+//		      puk = new OwnerPIN(PUK_MAX_RETRIES, PUK_LENGTH);
+//		      puk.update(apduBuffer, (short)(ISO7816.OFFSET_CDATA + PIN_LENGTH), PUK_LENGTH);
+
+		      JCSystem.commitTransaction();
+		    } 
+		    else
+		    {
+		      ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+		    }
+	  }
+	
+	  /**
+	   * Utility method to verify if all the bytes in the buffer between off (included) and off + len (excluded) are digits.
+	   *
+	   * @param buffer the buffer
+	   * @param off the offset to begin checking
+	   * @param len the length of the data
+	   * @return whether all checked bytes are digits or not
+	   */
+
+	  private boolean allDigits(byte[] buffer, short off, short len)
+	  {
+		    while(len > 0) {
+		      len--;
+
+		      byte c = buffer[(short)(off+len)];
+
+		      if (c < 0x30 || c > 0x39) {
+		        return false;
+		      }
+		    }
+
+		    return true;
+	  }
+	  private void unpair(APDU apdu)
+	  {
+		    byte[] apduBuffer = apdu.getBuffer();
+		    secureChannel.preprocessAPDU(apduBuffer);
+
+		    if (pin.isValidated()) {
+		      secureChannel.unpair(apduBuffer);
+		    } else {
+		      ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+		    }
+	  }
+	  /**
+	   * Processes the VERIFY PIN command. Requires a secure channel to be already open. If a PIN longer or shorter than 6
+	   * digits is provided, the method will still proceed with its verification and will decrease the remaining tries
+	   * counter.
+	   *
+	   * @param apdu the JCRE-owned APDU object.
+	   */
+	  private void verifyPIN(APDU apdu) 
+	  {
+	    byte[] apduBuffer = apdu.getBuffer();
+	    byte len = (byte) secureChannel.preprocessAPDU(apduBuffer);
+
+	    if (!pin.check(apduBuffer, ISO7816.OFFSET_CDATA, len))
+	    {
+	      ISOException.throwIt((short)((short) 0x63c0 | (short) pin.getTriesRemaining()));
+	    }
+	  }
+
+	  /**
+	   * Processes the CHANGE PIN command. Requires a secure channel to be already open and the user PIN to be verified. All
+	   * PINs have a fixed format which is verified by this method.
+	   *
+	   * @param apdu the JCRE-owned APDU object.
+	   */
+	  private void changePIN(APDU apdu) 
+	  {
+	    byte[] apduBuffer = apdu.getBuffer();
+	    byte len = (byte) secureChannel.preprocessAPDU(apduBuffer);
+
+	    if (!pin.isValidated()) {
+	      ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+	    }
+
+	    switch(apduBuffer[ISO7816.OFFSET_P1]) {
+	      case CHANGE_PIN_P1_USER_PIN:
+	        changeUserPIN(apduBuffer, len);
+	        break;
+	      case CHANGE_PIN_P1_PAIRING_SECRET:
+	        changePairingSecret(apduBuffer, len);
+	        break;
+	      default:
+	        ISOException.throwIt(ISO7816.SW_INCORRECT_P1P2);
+	        break;
+	    }
+	  }
+	  /**
+	   * Changes the user PIN. Called internally by CHANGE PIN
+	   * @param apduBuffer the APDU buffer
+	   * @param len the data length
+	   */
+	  private void changeUserPIN(byte[] apduBuffer, byte len)
+	  {
+	    if (!(len == PIN_LENGTH && allDigits(apduBuffer, ISO7816.OFFSET_CDATA, len))) {
+	      ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+	    }
+
+	    pin.update(apduBuffer, ISO7816.OFFSET_CDATA, len);
+	    pin.check(apduBuffer, ISO7816.OFFSET_CDATA, len);
+	  }
+
+	  /**
+	   * Changes the pairing secret. Called internally by CHANGE PIN
+	   * @param apduBuffer the APDU buffer
+	   * @param len the data length
+	   */
+	  private void changePairingSecret(byte[] apduBuffer, byte len) {
+	    if (len != SecureChannel.SC_SECRET_LENGTH) {
+	      ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+	    }
+
+	    secureChannel.updatePairingSecret(apduBuffer, ISO7816.OFFSET_CDATA);
+	  }
+
+}
