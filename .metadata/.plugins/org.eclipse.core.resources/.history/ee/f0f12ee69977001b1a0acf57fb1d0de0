@@ -27,8 +27,10 @@ public class PhononApplet extends Applet {
 	  static final byte APPLICATION_CAPABILITIES = (byte)(CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT | CAPABILITY_CREDENTIALS_MANAGEMENT );
 
 	 static final byte INS_INIT 					= (byte) 0xFE;
-	 static final byte INS_CREATE_PHONON 			= (byte)0x30;
+	 static final byte INS_CREATE_PHONON 			= (byte) 0x30;
 	 static final byte INS_SET_PHONON_DESCRIPTOR	= (byte) 0x31;
+	 static final byte INS_LIST_PHONONS				= (byte) 0x32;
+	 static final byte INS_GET_PHONON_PUB_KEY		= (byte) 0x33;
 	 	
 	  static final byte PUK_LENGTH = 12;
 	  static final byte PUK_MAX_RETRIES = 5;
@@ -56,7 +58,7 @@ public class PhononApplet extends Applet {
 	  static final byte TLV_SEED = (byte) 0x83;
 	  static final byte TLV_SEED_STATUS = (byte) 0x84;
 	  static final byte TLV_DATA = (byte) 0x85;
-	  static final byte TLV_PHONON = (byte) 0x40;
+	  static final byte TLV_PHONON_KEY = (byte) 0x40;
 	  static final byte TLV_PHONON_INDEX = (byte) 0x41;
 
 	  static final byte TLV_APPLICATION_STATUS_TEMPLATE = (byte) 0xA3;
@@ -117,20 +119,41 @@ public class PhononApplet extends Applet {
 	  private OwnerPIN pin;
 
 	  public static final short PHONON_KEY_LENGTH = 256;
+	  public static final short MAX_NUMBER_PHONONS = 512;
 	  
 	  static final byte TLV_SET_PHONON_DESCRIPTOR	= (byte)0x50;
+	  static final byte TLV_PHONON_COLLECTION		= (byte)0x52;
+	  static final byte TLV_PHONON					= (byte)0x51;
+	  static final byte TLV_PHONON_COLLECTION_COUNT = (byte)0x53;
+	  
+	  static final byte TLV_PHONON_FILTER			= (byte)0x60;
 	  static final byte	TLV_SET_PHONON_KEY_INDEX 	= (byte)0x41;
 	  static final byte TLV_SET_PHONON_CURRENCY		= (byte)0x81;
 	  static final byte TLV_SET_PHONON_VALUE		= (byte)0x83;
+	  static final byte TLV_PHONON_LESS_THAN		= (byte)0x84;
+	  static final byte TLV_PHONON_GREATER_THAN		= (byte)0x85;
 	  
-	  private KeyPair[] phononKeyPair;
+	  static final byte LIST_FILTER_ALL				= (byte) 0x00;
+	  static final byte LIST_FILTER_LESS_THAN		= (byte) 0x01;
+	  static final byte LIST_FILTER_GREATER_THAN	= (byte) 0x02;
+	  static final byte LIST_FILTER_GT_AND_LT		= (byte) 0x03;
+	  static final byte LIST_FILTER_LAST			= (byte) 0x03;
+	  
+	  static final short TLV_NOT_FOUND				= (short)0xffff;
+	  
+//	  private KeyPair[] phononKeyPair;
 	  private ECPublicKey phononPublicKey;
 	  private ECPrivateKey phononPrivateKey;
 	  private byte phononKeyIndex = 0;
 
 	  private Phonon[]	PhononArray;
-	  private byte[]	PhononValueArray;
-	  private short[]	PhononCurrencyTypeArray;
+	  private short[]	PhononList;
+	  
+	  private short		PhononListCount;
+	  private short		PhononListLastSent;
+	  
+//	  private byte[]	PhononValueArray;
+//	  private short[]	PhononCurrencyTypeArray;
 	  
 	  public PhononApplet(byte[] bArray, short bOffset, byte bLength) 
 	  {
@@ -145,10 +168,14 @@ public class PhononApplet extends Applet {
 
 		    masterSeed = new byte[BIP39_SEED_SIZE];
 		    masterSeedStatus = MASTERSEED_EMPTY;
-		    phononKeyPair = new KeyPair[512];
-		    PhononArray = new Phonon[ 512 ];
-		    PhononValueArray = new byte[512*4];
-		    PhononCurrencyTypeArray = new short[512];
+//		    phononKeyPair = new KeyPair[512];
+		    PhononArray = new Phonon[ MAX_NUMBER_PHONONS ];
+		    PhononList = new short[ MAX_NUMBER_PHONONS ];
+		    PhononListCount = 0;
+		    PhononListLastSent = 0;
+		    
+//		    PhononValueArray = new byte[512*4];
+//		    PhononCurrencyTypeArray = new short[512];
 
 
 		    masterPublic = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
@@ -188,6 +215,8 @@ public class PhononApplet extends Applet {
 		// Good practice: Return 9000 on SELECT
 		byte[] buf = apdu.getBuffer();
 		if((buf[ISO7816.OFFSET_INS] != INS_CREATE_PHONON  )
+				&& (buf[ISO7816.OFFSET_INS] != INS_LIST_PHONONS )
+				&& (buf[ISO7816.OFFSET_INS] != INS_GET_PHONON_PUB_KEY )
 			&& 	(buf[ISO7816.OFFSET_INS] != INS_SET_PHONON_DESCRIPTOR)	)
 		{
 		    if( buf[ISO7816.OFFSET_INS] != SecureChannel.INS_IDENTIFY_CARD &&
@@ -260,6 +289,17 @@ public class PhononApplet extends Applet {
 		        	SetPhononDescriptor( apdu);
 		        	break;
 		        }
+		        case INS_LIST_PHONONS:
+		        {
+		        	ListPhonons( apdu);
+		        	break;
+		        }
+		        
+		        case INS_GET_PHONON_PUB_KEY:
+		        {
+		        	GetPhononPublicKey( apdu);
+		        	break;
+		        }
 		        
 		        default:
 				// good practice: If you don't know the INStruction, say so:
@@ -300,7 +340,7 @@ public class PhononApplet extends Applet {
 
 	private void createPhonon( APDU apdu)
 	{
-		if(phononKeyIndex > 255)
+		if(phononKeyIndex > MAX_NUMBER_PHONONS)
 		{
 			ISOException.throwIt(ISO7816.SW_FILE_FULL);
 			return;
@@ -311,29 +351,21 @@ public class PhononApplet extends Applet {
 	   secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPublic());
 	   PhononArray[phononKeyIndex].PhononKey.genKeyPair();
 
-/*	   phononKeyPair[phononKeyIndex] = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
-	   secp256k1.setCurveParameters((ECKey) phononKeyPair[phononKeyIndex].getPrivate());
-	   secp256k1.setCurveParameters((ECKey) phononKeyPair[phononKeyIndex].getPublic());
-	   phononKeyPair[phononKeyIndex].genKeyPair();
-*/
-		
 	    byte[] apduBuffer = apdu.getBuffer();
 
 	    short off = 0;
 
-	    apduBuffer[off++] = TLV_PHONON;
+	    apduBuffer[off++] = TLV_PHONON_KEY;
 	    
 	    off++;
 	    apduBuffer[off++] = TLV_PHONON_INDEX;
 	    apduBuffer[off++] = 0x02;
 	    Util.setShort(apduBuffer, off, (short)(phononKeyIndex + 1));
 	    off += 2;
-//	    apduBuffer[off++] = (short)(phononKeyIndex + 1);
 	    
 	    apduBuffer[off++] = TLV_PUB_KEY;
 	    short lenoff = off++;
-	    ECPublicKey pk = (ECPublicKey)phononKeyPair[phononKeyIndex].getPublic();
-//	    ECPublicKey pk = (ECPublicKey)PhononArray[phononKeyIndex].PhononKey.getPublic();
+	    ECPublicKey pk = (ECPublicKey)PhononArray[phononKeyIndex].PhononKey.getPublic();
 	    
 	    short keyLength = pk.getW(apduBuffer, off);
 	    apduBuffer[lenoff] = (byte) keyLength;
@@ -361,7 +393,6 @@ public class PhononApplet extends Applet {
         {
         	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
         }
-//        byte[] ptrIndex = Phonon.GetNextData((short)0);
         byte [] ptrIndex = Phonon.GetData();
         Bertlv berPhononIndex = new Bertlv();
         berPhononIndex.LoadTag(ptrIndex);
@@ -383,9 +414,9 @@ public class PhononApplet extends Applet {
          	ISOException.throwIt(ISO7816.SW_FILE_INVALID);
          	    	 
          }
-        if( PhononCurrencyTypeArray[PhononIndex]== 0x00)
+        if( PhononArray[PhononIndex].CurrencyType != 0x00)
         {
-        	ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+        	ISOException.throwIt( ISO7816.SW_FUNC_NOT_SUPPORTED);
         }
         
          Bertlv berPhononCurrency = new Bertlv();
@@ -400,7 +431,12 @@ public class PhononApplet extends Applet {
          }
         
          byte [] ptrTemp = berPhononCurrency.GetData();
-         PhononCurrencyTypeArray[PhononIndex] = Util.getShort( ptrTemp, (short)0);
+         short CurrencyType = Util.getShort( ptrTemp, (short)0);
+         if( CurrencyType == 0x00)
+         {
+         	ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+         }
+         PhononArray[PhononIndex].CurrencyType = CurrencyType;
          
          Bertlv berPhononValue = new Bertlv();
          ptrIndex = Phonon.GetNextData(PhononOffset );
@@ -411,12 +447,243 @@ public class PhononApplet extends Applet {
           	ISOException.throwIt(ISO7816.SW_FILE_INVALID);     	    	 
          }
          short vLen = berPhononValue.GetLength();
-//         PhononArray[PhononIndex].Value = new byte[vLen];
-//         Util.arrayCopyNonAtomic(berPhononValue.GetData(), (short)0, PhononArray[PhononIndex].Value, (short)0, berPhononCurrency.GetLength());
-         Util.arrayCopyNonAtomic(berPhononValue.GetData(), (short)0, PhononValueArray, (short)(4*PhononIndex), berPhononCurrency.GetLength());
+         PhononArray[PhononIndex].Value = new byte[vLen];
+         Util.arrayCopyNonAtomic(berPhononValue.GetData(), (short)0, PhononArray[PhononIndex].Value, (short)0, vLen);
          return;
  	}
 	
+	private void GetPhononPublicKey( APDU apdu )
+	{
+	    byte[] apduBuffer = apdu.getBuffer();
+        byte bLC = apduBuffer[ISO7816.OFFSET_LC];
+        if( bLC > 4 )
+        {
+            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+	        return;
+        }
+        
+        Bertlv berPhononIndex = new Bertlv();
+        byte [] IncomingPhononIndex = new byte[apdu.getIncomingLength()];
+        Util.arrayCopyNonAtomic(apduBuffer, apdu.getOffsetCdata(), IncomingPhononIndex, (short)0,apdu.getIncomingLength());
+        berPhononIndex.LoadTag(IncomingPhononIndex);
+        if( berPhononIndex.GetTag() != TLV_PHONON_INDEX )
+        {
+        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+        }
+        short PhononIndex = Util.getShort(berPhononIndex.GetData(), (short)0);
+        if ( PhononIndex == 0)
+        {
+         	ISOException.throwIt(ISO7816.SW_FILE_INVALID);
+         	    	 
+         }
+        PhononIndex--;
+        if( PhononIndex >= phononKeyIndex)
+        {
+        	ISOException.throwIt(ISO7816.SW_FILE_INVALID);
+        	    	 
+        }
+        if( PhononArray[PhononIndex].CurrencyType == (short)0)
+        {
+          	ISOException.throwIt(ISO7816.SW_FILE_INVALID);     	    	 
+   	
+        }
+        Bertlv berPhononKey = new Bertlv();
+	    ECPublicKey pk = (ECPublicKey)PhononArray[PhononIndex].PhononKey.getPublic();
+	    
+	    byte[] tempbuffer = new byte[255];
+	    
+	    short keyLength = pk.getW(tempbuffer, (short)0);
+       
+        berPhononKey.BuildTLVStructure(TLV_PUB_KEY, keyLength, tempbuffer, apduBuffer);
+	    apdu.setOutgoingAndSend((short) 0, (short)berPhononKey.BuildLength);
+        return;
+ 	}
+
+	private void ListPhonons( APDU apdu )
+	{
+	    byte[] apduBuffer = apdu.getBuffer();
+	    byte PhononListContinue = apduBuffer[ ISO7816.OFFSET_P1];
+	    if( PhononListContinue > 1 )
+	    {
+	    	ISOException.throwIt( ISO7816.SW_INCORRECT_P1P2);
+	    }
+
+	    if( PhononListContinue == 0x00)
+	    {
+		    byte PhononFilter = apduBuffer[ ISO7816.OFFSET_P2];
+		    if( PhononFilter > LIST_FILTER_LAST)
+		    {
+		    	ISOException.throwIt( ISO7816.SW_INCORRECT_P1P2);
+		    }
+		    
+	        Bertlv PhononFilterTLV = new Bertlv();
+	        byte [] IncomingPhonon = new byte[apdu.getIncomingLength()];
+	        Util.arrayCopyNonAtomic(apduBuffer, apdu.getOffsetCdata(), IncomingPhonon, (short)0,apdu.getIncomingLength());
+	        PhononFilterTLV.LoadTag(IncomingPhonon);
+	        if( PhononFilterTLV.GetTag() != TLV_PHONON_FILTER )
+	        {
+	        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+	        }
+		    short Offset = PhononFilterTLV.FindTag(TLV_SET_PHONON_CURRENCY);
+		    if( Offset == TLV_NOT_FOUND )
+		    {
+		    	// No Coin Type Specified
+	        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);  	
+		    }
+		    Bertlv PhononCoinTypeTLV = new Bertlv();
+		    PhononCoinTypeTLV.LoadTagBase( PhononFilterTLV.bertag.data, Offset);
+		    short PhononCoinType = Util.getShort(PhononCoinTypeTLV.bertag.data, (short)0);
+		    
+		    byte [] PhononLessThanValue = new byte[4];
+		    
+		    Util.arrayFillNonAtomic(PhononLessThanValue, (short)0, (short)4, (byte)0);
+		    if( PhononFilter == LIST_FILTER_LESS_THAN || PhononFilter == LIST_FILTER_GT_AND_LT)
+		    {
+			    Offset = PhononFilterTLV.FindTag(TLV_PHONON_LESS_THAN);
+			    if( Offset == TLV_NOT_FOUND )
+			    {
+			    	// No Coin Type Specified
+		        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);  	
+			    }
+			    Bertlv PhononLessThanTLV = new Bertlv();
+			    PhononLessThanTLV.LoadTagBase( PhononFilterTLV.bertag.data, Offset);
+			    Util.arrayCopyNonAtomic(PhononLessThanTLV.bertag.data, (short)0, PhononLessThanValue, (short)0, (short)4);
+		    }
+		    byte [] PhononGreaterThanValue = new byte[4];
+		    
+		    Util.arrayFillNonAtomic(PhononGreaterThanValue, (short)0, (short)4, (byte)0);
+		    if( PhononFilter == LIST_FILTER_GREATER_THAN || PhononFilter == LIST_FILTER_GT_AND_LT)
+		    {
+			    Offset = PhononFilterTLV.FindTag(TLV_PHONON_GREATER_THAN);
+			    if( Offset == TLV_NOT_FOUND )
+			    {
+			    	// No Coin Type Specified
+		        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);  	
+			    }
+			    Bertlv PhononGreaterThanTLV = new Bertlv();
+			    PhononGreaterThanTLV.LoadTagBase( PhononFilterTLV.bertag.data, Offset);
+			    Util.arrayCopyNonAtomic(PhononGreaterThanTLV.bertag.data, (short)0, PhononGreaterThanValue, (short)0, (short)4);
+		    }
+		    
+		    PhononListCount = 0;
+		    PhononListLastSent = 0;
+		    switch( PhononFilter)
+		    {
+		    	case LIST_FILTER_ALL:
+		    	{
+		    		for( short i= 0; i< phononKeyIndex; i++)
+		    		{
+		    			if( PhononCoinType == 0 || PhononCoinType == PhononArray[i].CurrencyType )
+		    			{
+		    				PhononList[ PhononListCount] = i;
+		    				PhononListCount++;
+		    			}
+		    		}
+		    		break;
+		    	}
+		    	case LIST_FILTER_LESS_THAN:
+		    	{
+		    		for( short i= 0; i< phononKeyIndex; i++)
+		    		{
+		    			if( PhononCoinType == 0 || PhononCoinType == PhononArray[i].CurrencyType )
+		    			{
+		    				if(Util.arrayCompare(PhononArray[i].Value, (short)0, PhononLessThanValue, (short)0, (short)4) != 1 )
+		    				{
+		    					PhononList[ PhononListCount] = i;
+		    					PhononListCount++;
+		    				}
+		    			}
+		    		}
+		    		break;
+		    	}
+		    	case LIST_FILTER_GREATER_THAN:
+		    	{
+		    		for( short i= 0; i< phononKeyIndex; i++)
+		    		{
+		    			if( PhononCoinType == 0 || PhononCoinType == PhononArray[i].CurrencyType )
+		    			{
+		    				if(Util.arrayCompare(PhononArray[i].Value, (short)0, PhononGreaterThanValue, (short)0, (short)4) != -1 )
+		    				{
+		    					PhononList[ PhononListCount] = i;
+		    					PhononListCount++;
+		    				}
+		    			}
+		    		}
+		    		break;
+		    	}
+		    	case LIST_FILTER_GT_AND_LT:
+		    	{
+		    		for( short i= 0; i< phononKeyIndex; i++)
+		    		{
+		    			if( PhononCoinType == 0 || PhononCoinType == PhononArray[i].CurrencyType )
+		    			{
+		    				if(Util.arrayCompare(PhononArray[i].Value, (short)0, PhononLessThanValue, (short)0, (short)4) != 1 )
+		    				{
+			    				if(Util.arrayCompare(PhononArray[i].Value, (short)0, PhononGreaterThanValue, (short)0, (short)4) != -1 )
+			    				{
+			    					PhononList[ PhononListCount] = i;
+			    					PhononListCount++;
+			    				}
+		    					
+		    				}
+		    			}
+		    		}
+		    		break;
+		    	}
+		    }
+	    }
+	    
+	    SendSelectPhononList( apdu,TLV_PHONON_COLLECTION);
+	    return;
+	}
+	
+	private void SendSelectPhononList( APDU apdu, byte tlvTag )
+	{
+	    byte[] apduBuffer = apdu.getBuffer();
+
+	    byte [] PhononCollection = new byte[ 250];
+	    short PhononCollectionOffset = 0;
+	    short i,j;
+		for( j = PhononListLastSent; j< PhononListCount; j++)
+		{
+			i = PhononList[ j ];
+			byte [] PhononTLVData = new byte[24];
+			short Offset = 0;
+			
+ 			Bertlv berPhononValue = new Bertlv();
+			byte [] tlvtemp = berPhononValue.BuildTLVStructure(TLV_SET_PHONON_VALUE, (short)4, PhononArray[i].Value);
+			Util.arrayCopyNonAtomic(tlvtemp, (short)0, PhononTLVData, Offset, berPhononValue.BuildLength);
+			Offset += berPhononValue.BuildLength;
+			
+			Bertlv berPhononType = new Bertlv();
+			tlvtemp = berPhononType.BuildTLVStructure( TLV_SET_PHONON_CURRENCY, (short)2, PhononArray[i].CurrencyType );
+			Util.arrayCopyNonAtomic(tlvtemp, (short)0, PhononTLVData, Offset, berPhononType.BuildLength);
+			Offset += berPhononType.BuildLength;
+			
+			Bertlv berPhononIndex = new Bertlv();
+			tlvtemp = berPhononIndex.BuildTLVStructure( TLV_SET_PHONON_KEY_INDEX, (short)2, (short)(i+1) );
+			Util.arrayCopyNonAtomic(tlvtemp, (short)0, PhononTLVData, Offset, berPhononIndex.BuildLength);
+			Offset += berPhononIndex.BuildLength;
+			
+			Bertlv berPhonon = new Bertlv();
+			tlvtemp = berPhonon.BuildTLVStructure(TLV_PHONON, Offset, PhononTLVData );
+			Util.arrayCopyNonAtomic(tlvtemp, (short) 0, PhononCollection, PhononCollectionOffset, berPhonon.BuildLength);
+			PhononCollectionOffset += berPhonon.BuildLength;
+			if( (short)(PhononCollectionOffset + berPhonon.BuildLength) > (short)(250))
+				break;
+		}
+		Bertlv berPhononCollection = new Bertlv();
+		berPhononCollection.BuildTLVStructure(TLV_PHONON_COLLECTION, PhononCollectionOffset, PhononCollection, apduBuffer);
+	    apdu.setOutgoingAndSend((short) 0, (short)(PhononCollectionOffset + 2));
+	    if( j < PhononListCount )
+	    {
+	    	PhononListLastSent = (short)(j + 1);
+	    	short remaining = (short)((short)(PhononListCount - PhononListLastSent )+ (short)(ISO7816.SW_NO_ERROR));
+	    	ISOException.throwIt( remaining );
+	    }
+		return;
+	
+	}
 	private void selectApplet(APDU apdu) {
 	    pin.reset();
 	    secureChannel.reset();

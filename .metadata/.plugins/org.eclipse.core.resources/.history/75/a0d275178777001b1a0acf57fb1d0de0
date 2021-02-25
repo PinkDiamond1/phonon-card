@@ -466,35 +466,17 @@ public class PhononApplet extends Applet {
         byte [] IncomingPhononIndex = new byte[apdu.getIncomingLength()];
         Util.arrayCopyNonAtomic(apduBuffer, apdu.getOffsetCdata(), IncomingPhononIndex, (short)0,apdu.getIncomingLength());
         berPhononIndex.LoadTag(IncomingPhononIndex);
-        if( berPhononIndex.GetTag() != TLV_PHONON_INDEX )
+        if( berPhononIndex.GetTag() != INS_GET_PHONON_PUB_KEY )
         {
         	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
         }
-        short PhononIndex = Util.getShort(berPhononIndex.GetData(), (short)0);
-        if ( PhononIndex == 0)
-        {
-         	ISOException.throwIt(ISO7816.SW_FILE_INVALID);
-         	    	 
-         }
-        PhononIndex--;
-        if( PhononIndex >= phononKeyIndex)
-        {
-        	ISOException.throwIt(ISO7816.SW_FILE_INVALID);
-        	    	 
-        }
-        if( PhononArray[PhononIndex].CurrencyType == (short)0)
-        {
-          	ISOException.throwIt(ISO7816.SW_FILE_INVALID);     	    	 
-   	
-        }
+
         Bertlv berPhononKey = new Bertlv();
-	    ECPublicKey pk = (ECPublicKey)PhononArray[PhononIndex].PhononKey.getPublic();
+	    ECPublicKey pk = (ECPublicKey)PhononArray[phononKeyIndex].PhononKey.getPublic();
 	    
-	    byte[] tempbuffer = new byte[255];
-	    
-	    short keyLength = pk.getW(tempbuffer, (short)0);
+	    short keyLength = pk.getW(apduBuffer, (short)0);
        
-        berPhononKey.BuildTLVStructure(TLV_PUB_KEY, keyLength, tempbuffer, apduBuffer);
+        berPhononKey.BuildTLVStructure(TLV_PUB_KEY, keyLength, apduBuffer);
 	    apdu.setOutgoingAndSend((short) 0, (short)berPhononKey.BuildLength);
         return;
  	}
