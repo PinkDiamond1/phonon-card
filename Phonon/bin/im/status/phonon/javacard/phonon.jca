@@ -1,5 +1,5 @@
 // converted by version  [v3.0.4]
-// on Thu Feb 25 13:47:31 EST 2021
+// on Tue Mar 02 14:58:37 EST 2021
 
 .package im/status/phonon {
 	.aid 0xA0:0x0:0x0:0x8:0x20:0x0:0x3;
@@ -282,216 +282,222 @@
 			.descriptor	Ljavacard/framework/APDU;	1.10;
 
 		// 114
-		virtualMethodRef 1.7.1()S;		// getReason()S
+		staticMethodRef PhononApplet/DestroyPhonon(Ljavacard/framework/APDU;)V;
+			.descriptor	Ljavacard/framework/APDU;	1.10;
+
 		// 115
+		virtualMethodRef 1.7.1()S;		// getReason()S
+		// 116
 		staticMethodRef PhononApplet/handleException(Ljavacard/framework/APDU;S)V;
 			.descriptor	Ljavacard/framework/APDU;	1.10;
 
-		// 116
-		virtualMethodRef 2.12.1()S;		// getReason()S
 		// 117
+		virtualMethodRef 2.12.1()S;		// getReason()S
+		// 118
 		staticMethodRef PhononApplet/shouldRespond(Ljavacard/framework/APDU;)Z;
 			.descriptor	Ljavacard/framework/APDU;	1.10;
 
-		// 118
+		// 119
 		virtualMethodRef SecureChannel/respond(Ljavacard/framework/APDU;SS)V;
 			.descriptor	Ljavacard/framework/APDU;	1.10;
 
-		// 119
-		virtualMethodRef SecureChannel/isOpen()Z;
 		// 120
-		virtualMethodRef 1.10.11()B;		// getCurrentState()B
+		virtualMethodRef SecureChannel/isOpen()Z;
 		// 121
-		staticMethodRef Phonon/<init>()V;
+		virtualMethodRef 1.10.11()B;		// getCurrentState()B
 		// 122
-		.classRef 2.16;		// javacard/security/KeyPair
+		staticMethodRef Phonon/<init>()V;
 		// 123
-		staticMethodRef 2.16.0(BS)V;		// javacard/security/KeyPair.<init>(BS)V
+		.classRef 2.16;		// javacard/security/KeyPair
 		// 124
-		staticMethodRef 1.16.3([BSSB)S;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
+		staticMethodRef 2.16.0(BS)V;		// javacard/security/KeyPair.<init>(BS)V
 		// 125
+		staticMethodRef 1.16.3([BSSB)S;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
+		// 126
 		virtualMethodRef 2.16.2()Ljavacard/security/PrivateKey;;		// getPrivate()Ljavacard/security/PrivateKey;
 			.descriptor	Ljavacard/security/PrivateKey;	2.2;
 
-		// 126
-		.classRef 2.17;		// javacard/security/ECKey
 		// 127
+		.classRef 2.17;		// javacard/security/ECKey
+		// 128
 		virtualMethodRef SECP256k1/setCurveParameters(Ljavacard/security/ECKey;)V;
 			.descriptor	Ljavacard/security/ECKey;	2.17;
 
-		// 128
+		// 129
 		virtualMethodRef 2.16.3()Ljavacard/security/PublicKey;;		// getPublic()Ljavacard/security/PublicKey;
 			.descriptor	Ljavacard/security/PublicKey;	2.3;
 
-		// 129
-		virtualMethodRef 2.16.1()V;		// genKeyPair()V
 		// 130
-		virtualMethodRef 1.10.8(SS)V;		// setOutgoingAndSend(SS)V
+		virtualMethodRef 2.16.1()V;		// genKeyPair()V
 		// 131
-		.classRef Bertlv;
+		virtualMethodRef 1.10.8(SS)V;		// setOutgoingAndSend(SS)V
 		// 132
-		staticMethodRef Bertlv/<init>()V;
+		.classRef Bertlv;
 		// 133
-		virtualMethodRef 1.10.15()S;		// getIncomingLength()S
+		staticMethodRef Bertlv/<init>()V;
 		// 134
-		virtualMethodRef 1.10.16()S;		// getOffsetCdata()S
+		virtualMethodRef 1.10.15()S;		// getIncomingLength()S
 		// 135
-		virtualMethodRef Bertlv/LoadTag([B)S;
+		virtualMethodRef 1.10.16()S;		// getOffsetCdata()S
 		// 136
-		virtualMethodRef Bertlv/GetTag()B;
+		virtualMethodRef Bertlv/LoadTag([B)S;
 		// 137
-		virtualMethodRef Bertlv/GetData()[B;
+		virtualMethodRef Bertlv/GetTag()B;
 		// 138
-		staticMethodRef 1.16.4([BS)S;		// javacard/framework/Util.getShort([BS)S
+		virtualMethodRef Bertlv/GetData()[B;
 		// 139
-		virtualMethodRef 2.11.5([BSS)V;		// update([BSS)V
+		staticMethodRef 1.16.4([BS)S;		// javacard/framework/Util.getShort([BS)S
 		// 140
-		virtualMethodRef Bertlv/GetNextData(S)[B;
-		// 141
-		virtualMethodRef Bertlv/GetLength()S;
-		// 142
-		virtualMethodRef 2.11.1([BSS[BS)S;		// doFinal([BSS[BS)S
-		// 143
 		virtualMethodRef Bertlv/BuildTLVStructure(BS[B[B)[B;
+		// 141
+		staticMethodRef 1.8.18()V;		// javacard/framework/JCSystem.requestObjectDeletion()V
+		// 142
+		virtualMethodRef 2.11.5([BSS)V;		// update([BSS)V
+		// 143
+		virtualMethodRef Bertlv/GetNextData(S)[B;
 		// 144
-		virtualMethodRef Bertlv/FindTag(B)S;
+		virtualMethodRef Bertlv/GetLength()S;
 		// 145
+		virtualMethodRef 2.11.1([BSS[BS)S;		// doFinal([BSS[BS)S
+		// 146
+		virtualMethodRef Bertlv/FindTag(B)S;
+		// 147
 		staticMethodRef PhononApplet/SendSelectPhononList(Ljavacard/framework/APDU;B)V;
 			.descriptor	Ljavacard/framework/APDU;	1.10;
 
-		// 146
-		staticMethodRef 1.16.0([BS[BSS)B;		// javacard/framework/Util.arrayCompare([BS[BSS)B
-		// 147
-		virtualMethodRef Bertlv/BuildTLVStructure(BS[B)[B;
 		// 148
-		virtualMethodRef Bertlv/BuildTLVStructure(BSS)[B;
+		staticMethodRef 1.16.0([BS[BSS)B;		// javacard/framework/Util.arrayCompare([BS[BSS)B
 		// 149
-		virtualMethodRef 1.9.5()V;		// reset()V
+		virtualMethodRef Bertlv/BuildTLVStructure(BS[B)[B;
 		// 150
-		virtualMethodRef SecureChannel/reset()V;
+		virtualMethodRef Bertlv/BuildTLVStructure(BSS)[B;
 		// 151
-		virtualMethodRef SecureChannel/updateSecureChannelCounter()V;
+		virtualMethodRef 1.9.5()V;		// reset()V
 		// 152
-		virtualMethodRef SecureChannel/copyPublicKey([BS)S;
+		virtualMethodRef SecureChannel/reset()V;
 		// 153
-		virtualMethodRef SecureChannel/getRemainingPairingSlots()B;
+		virtualMethodRef SecureChannel/updateSecureChannelCounter()V;
 		// 154
-		virtualMethodRef 1.10.6()S;		// setIncomingAndReceive()S
+		virtualMethodRef SecureChannel/copyPublicKey([BS)S;
 		// 155
-		virtualMethodRef SecureChannel/oneShotDecrypt([B)V;
+		virtualMethodRef SecureChannel/getRemainingPairingSlots()B;
 		// 156
-		staticMethodRef PhononApplet/allDigits([BSS)Z;
+		virtualMethodRef 1.10.6()S;		// setIncomingAndReceive()S
 		// 157
-		staticMethodRef 1.8.1()V;		// javacard/framework/JCSystem.beginTransaction()V
+		virtualMethodRef SecureChannel/oneShotDecrypt([B)V;
 		// 158
-		virtualMethodRef SecureChannel/initSecureChannel([BS)V;
+		staticMethodRef PhononApplet/allDigits([BSS)Z;
 		// 159
-		.classRef 1.9;		// javacard/framework/OwnerPIN
+		staticMethodRef 1.8.1()V;		// javacard/framework/JCSystem.beginTransaction()V
 		// 160
-		staticMethodRef 1.9.0(BB)V;		// javacard/framework/OwnerPIN.<init>(BB)V
+		virtualMethodRef SecureChannel/initSecureChannel([BS)V;
 		// 161
-		virtualMethodRef 1.9.8([BSB)V;		// update([BSB)V
+		.classRef 1.9;		// javacard/framework/OwnerPIN
 		// 162
-		staticMethodRef 1.8.2()V;		// javacard/framework/JCSystem.commitTransaction()V
+		staticMethodRef 1.9.0(BB)V;		// javacard/framework/OwnerPIN.<init>(BB)V
 		// 163
-		virtualMethodRef SecureChannel/preprocessAPDU([B)S;
+		virtualMethodRef 1.9.8([BSB)V;		// update([BSB)V
 		// 164
-		virtualMethodRef 1.9.4()Z;		// isValidated()Z
+		staticMethodRef 1.8.2()V;		// javacard/framework/JCSystem.commitTransaction()V
 		// 165
-		virtualMethodRef SecureChannel/unpair([B)V;
+		virtualMethodRef SecureChannel/preprocessAPDU([B)S;
 		// 166
-		virtualMethodRef 1.9.1([BSB)Z;		// check([BSB)Z
+		virtualMethodRef 1.9.4()Z;		// isValidated()Z
 		// 167
-		virtualMethodRef 1.9.2()B;		// getTriesRemaining()B
+		virtualMethodRef SecureChannel/unpair([B)V;
 		// 168
-		staticMethodRef PhononApplet/changeUserPIN([BB)V;
+		virtualMethodRef 1.9.1([BSB)Z;		// check([BSB)Z
 		// 169
-		staticMethodRef PhononApplet/changePairingSecret([BB)V;
+		virtualMethodRef 1.9.2()B;		// getTriesRemaining()B
 		// 170
-		virtualMethodRef SecureChannel/updatePairingSecret([BB)V;
+		staticMethodRef PhononApplet/changeUserPIN([BB)V;
 		// 171
-		staticMethodRef Crypto/add256([BS[BS[BS)S;
+		staticMethodRef PhononApplet/changePairingSecret([BB)V;
 		// 172
-		.classRef PhononApplet;
+		virtualMethodRef SecureChannel/updatePairingSecret([BB)V;
 		// 173
-		staticMethodRef PhononApplet/<init>([BSB)V;
+		staticMethodRef Crypto/add256([BS[BS[BS)S;
 		// 174
-		staticFieldRef byte[] SECP256k1/SECP256K1_A;
+		.classRef PhononApplet;
 		// 175
-		staticFieldRef byte[] SECP256k1/SECP256K1_B;
+		staticMethodRef PhononApplet/<init>([BSB)V;
 		// 176
-		staticFieldRef byte[] SECP256k1/SECP256K1_FP;
+		staticFieldRef byte[] SECP256k1/SECP256K1_A;
 		// 177
-		staticFieldRef byte[] SECP256k1/SECP256K1_G;
+		staticFieldRef byte[] SECP256k1/SECP256K1_B;
 		// 178
+		staticFieldRef byte[] SECP256k1/SECP256K1_FP;
+		// 179
+		staticFieldRef byte[] SECP256k1/SECP256K1_G;
+		// 180
 		virtualMethodRef SECP256k1/multiplyPoint(Ljavacard/security/ECPrivateKey;[BSS[BS)S;
 			.descriptor	Ljavacard/security/ECPrivateKey;	2.18;
 
-		// 179
+		// 181
 		virtualMethodRef SECP256k1/derivePublicKey(Ljavacard/security/ECPrivateKey;[BS)S;
 			.descriptor	Ljavacard/security/ECPrivateKey;	2.18;
 
-		// 180
+		// 182
 		virtualMethodRef 2.22.1(Ljavacard/security/PrivateKey;)V;		// init(Ljavacard/security/PrivateKey;)V
 			.descriptor	Ljavacard/security/PrivateKey;	2.2;
 
-		// 181
-		virtualMethodRef 2.22.3([BSS[BS)S;		// generateSecret([BSS[BS)S
-		// 182
-		staticMethodRef 1.3.0()V;		// javacard/framework/Applet.<init>()V
 		// 183
+		virtualMethodRef 2.22.3([BSS[BS)S;		// generateSecret([BSS[BS)S
+		// 184
+		staticMethodRef 1.3.0()V;		// javacard/framework/Applet.<init>()V
+		// 185
 		staticMethodRef 2.14.0(B)Ljavacard/security/RandomData;;		// javacard/security/RandomData.getInstance(B)Ljavacard/security/RandomData;
 			.descriptor	Ljavacard/security/RandomData;	2.14;
 
-		// 184
-		.classRef Crypto;
-		// 185
-		staticMethodRef Crypto/<init>()V;
 		// 186
-		staticMethodRef 0.0.0()V;		// java/lang/Object.<init>()V
+		.classRef Crypto;
 		// 187
-		.classRef SECP256k1;
+		staticMethodRef Crypto/<init>()V;
 		// 188
-		staticMethodRef SECP256k1/<init>(Lim/status/phonon/Crypto;)V;
+		staticMethodRef 0.0.0()V;		// java/lang/Object.<init>()V
 		// 189
+		.classRef SECP256k1;
+		// 190
+		staticMethodRef SECP256k1/<init>(Lim/status/phonon/Crypto;)V;
+		// 191
 		staticMethodRef 2.11.0(BZ)Ljavacard/security/MessageDigest;;		// javacard/security/MessageDigest.getInstance(BZ)Ljavacard/security/MessageDigest;
 			.descriptor	Ljavacard/security/MessageDigest;	2.11;
 
-		// 190
-		.classRef SecureChannel;
-		// 191
-		staticMethodRef SecureChannel/<init>(BLim/status/phonon/Crypto;Lim/status/phonon/SECP256k1;)V;
 		// 192
-		.classRef BerTag;
+		.classRef SecureChannel;
 		// 193
+		staticMethodRef SecureChannel/<init>(BLim/status/phonon/Crypto;Lim/status/phonon/SECP256k1;)V;
+		// 194
+		.classRef BerTag;
+		// 195
 		staticMethodRef 2.22.0(BZ)Ljavacard/security/KeyAgreement;;		// javacard/security/KeyAgreement.getInstance(BZ)Ljavacard/security/KeyAgreement;
 			.descriptor	Ljavacard/security/KeyAgreement;	2.22;
 
-		// 194
-		virtualMethodRef 2.14.1([BSS)V;		// generateData([BSS)V
-		// 195
-		virtualMethodRef Bertlv/LoadTagBase([BS)S;
 		// 196
-		staticMethodRef 1.7.1(S)V;		// javacard/framework/ISOException.throwIt(S)V
+		virtualMethodRef 2.14.1([BSS)V;		// generateData([BSS)V
 		// 197
-		staticMethodRef 1.16.1([BS[BSS)S;		// javacard/framework/Util.arrayCopy([BS[BSS)S
+		virtualMethodRef Bertlv/LoadTagBase([BS)S;
 		// 198
-		staticMethodRef SecureChannel/checkPairingIndexAndGetOffset(B)S;
+		staticMethodRef 1.7.1(S)V;		// javacard/framework/ISOException.throwIt(S)V
 		// 199
-		virtualMethodRef 2.15.9([BSS[BS)S;		// signPreComputedHash([BSS[BS)S
+		staticMethodRef 1.16.1([BS[BSS)S;		// javacard/framework/Util.arrayCopy([BS[BSS)S
 		// 200
-		staticMethodRef SecureChannel/pairStep1([B)S;
+		staticMethodRef SecureChannel/checkPairingIndexAndGetOffset(B)S;
 		// 201
-		staticMethodRef SecureChannel/pairStep2([B)S;
+		virtualMethodRef 2.15.9([BSS[BS)S;		// signPreComputedHash([BSS[BS)S
 		// 202
-		staticMethodRef SecureChannel/verifyAESMAC([BS)Z;
+		staticMethodRef SecureChannel/pairStep1([B)S;
 		// 203
-		virtualMethodRef 2.15.6([BSS)V;		// update([BSS)V
+		staticMethodRef SecureChannel/pairStep2([B)S;
 		// 204
-		virtualMethodRef 2.15.7([BSS[BSS)Z;		// verify([BSS[BSS)Z
+		staticMethodRef SecureChannel/verifyAESMAC([BS)Z;
 		// 205
-		staticMethodRef SecureChannel/computeAESMAC(S[B)V;
+		virtualMethodRef 2.15.6([BSS)V;		// update([BSS)V
 		// 206
+		virtualMethodRef 2.15.7([BSS[BSS)Z;		// verify([BSS[BSS)Z
+		// 207
+		staticMethodRef SecureChannel/computeAESMAC(S[B)V;
+		// 208
 		staticMethodRef 3.1.0(BZ)Ljavacardx/crypto/Cipher;;		// javacardx/crypto/Cipher.getInstance(BZ)Ljavacardx/crypto/Cipher;
 			.descriptor	Ljavacardx/crypto/Cipher;	3.1;
 
@@ -518,7 +524,7 @@
 			.locals 0;
 
 				L0:	aload_0;
-					invokespecial 186;		// java/lang/Object.<init>()V
+					invokespecial 188;		// java/lang/Object.<init>()V
 					return;
 		}
 
@@ -559,9 +565,9 @@
 			.locals 0;
 
 				L0:	aload_0;
-					invokespecial 186;		// java/lang/Object.<init>()V
+					invokespecial 188;		// java/lang/Object.<init>()V
 					aload_0;
-					new 192;		// im/status/phonon/BerTag
+					new 194;		// im/status/phonon/BerTag
 					dup;
 					invokespecial 69;		// im/status/phonon/BerTag.<init>()V
 					putfield_a 0;		// reference im/status/phonon/Bertlv.bertag
@@ -587,7 +593,7 @@
 					getfield_a 4;		// reference im/status/phonon/BerTag.data
 					getfield_a_this 0;		// reference im/status/phonon/Bertlv.bertag
 					getfield_s 3;		// short im/status/phonon/BerTag.nextData
-					invokevirtual 195;		// LoadTagBase([BS)S
+					invokevirtual 197;		// LoadTagBase([BS)S
 					pop;
 					getfield_a_this 0;		// reference im/status/phonon/Bertlv.bertag
 					dup;
@@ -610,7 +616,7 @@
 				L1:	aload_0;
 					aload_1;
 					sload_2;
-					invokevirtual 195;		// LoadTagBase([BS)S
+					invokevirtual 197;		// LoadTagBase([BS)S
 					sreturn;
 		}
 
@@ -678,7 +684,7 @@
 					bspush 127;
 					if_scmple L13;
 				L12:	sspush 27012;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					sconst_0;
 					sreturn;
 				L13:	sload 4;
@@ -755,7 +761,7 @@
 					bspush 127;
 					if_scmple L7;
 				L6:	sspush 27012;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					sconst_0;
 					sreturn;
 				L7:	getfield_a_this 0;		// reference im/status/phonon/Bertlv.bertag
@@ -1303,30 +1309,30 @@
 			.locals 1;
 
 				L0:	aload_0;
-					invokespecial 186;		// java/lang/Object.<init>()V
+					invokespecial 188;		// java/lang/Object.<init>()V
 					aload_0;
 					sconst_2;
-					invokestatic 183;		// javacard/security/RandomData.getInstance(B)Ljavacard/security/RandomData;
+					invokestatic 185;		// javacard/security/RandomData.getInstance(B)Ljavacard/security/RandomData;
 					putfield_a 6;		// reference im/status/phonon/Crypto.random
 					aload_0;
 					sconst_4;
 					sconst_0;
-					invokestatic 189;		// javacard/security/MessageDigest.getInstance(BZ)Ljavacard/security/MessageDigest;
+					invokestatic 191;		// javacard/security/MessageDigest.getInstance(BZ)Ljavacard/security/MessageDigest;
 					putfield_a 7;		// reference im/status/phonon/Crypto.sha256
 					aload_0;
 					sconst_3;
 					sconst_0;
-					invokestatic 193;		// javacard/security/KeyAgreement.getInstance(BZ)Ljavacard/security/KeyAgreement;
+					invokestatic 195;		// javacard/security/KeyAgreement.getInstance(BZ)Ljavacard/security/KeyAgreement;
 					putfield_a 8;		// reference im/status/phonon/Crypto.ecdh
 					aload_0;
 					bspush 6;
 					sconst_0;
-					invokestatic 189;		// javacard/security/MessageDigest.getInstance(BZ)Ljavacard/security/MessageDigest;
+					invokestatic 191;		// javacard/security/MessageDigest.getInstance(BZ)Ljavacard/security/MessageDigest;
 					putfield_a 9;		// reference im/status/phonon/Crypto.sha512
 					aload_0;
 					bspush 23;
 					sconst_0;
-					invokestatic 206;		// javacardx/crypto/Cipher.getInstance(BZ)Ljavacardx/crypto/Cipher;
+					invokestatic 208;		// javacardx/crypto/Cipher.getInstance(BZ)Ljavacardx/crypto/Cipher;
 					putfield_a 10;		// reference im/status/phonon/Crypto.aesCbcIso9797m2
 					aload_0;
 					bspush 14;
@@ -1648,7 +1654,7 @@
 				L5:	bspush 54;
 					goto L7;
 				L6:	bspush 92;
-				L7:	invokestatic 124;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
+				L7:	invokestatic 125;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
 					pop;
 					sconst_0;
 					sstore 10;
@@ -1672,7 +1678,7 @@
 					getfield_a_this 14;		// reference im/status/phonon/Crypto.hmacBlock
 					sconst_0;
 					sspush 128;
-					invokevirtual 139;		// update([BSS)V
+					invokevirtual 142;		// update([BSS)V
 					sload 9;
 					ifne L13;
 				L12:	getfield_a_this 9;		// reference im/status/phonon/Crypto.sha512
@@ -1681,7 +1687,7 @@
 					sload 6;
 					aload 7;
 					sload 8;
-					invokevirtual 142;		// doFinal([BSS[BS)S
+					invokevirtual 145;		// doFinal([BSS[BS)S
 					pop;
 					goto L14;
 				L13:	getfield_a_this 9;		// reference im/status/phonon/Crypto.sha512
@@ -1690,7 +1696,7 @@
 					bspush 64;
 					aload 7;
 					sload 8;
-					invokevirtual 142;		// doFinal([BSS[BS)S
+					invokevirtual 145;		// doFinal([BSS[BS)S
 					pop;
 				L14:	sload 9;
 					sconst_1;
@@ -1714,7 +1720,7 @@
 					sload 4;
 					aload 7;
 					sload 8;
-					invokespecial 171;		// im/status/phonon/Crypto.add256([BS[BS[BS)S
+					invokespecial 173;		// im/status/phonon/Crypto.add256([BS[BS[BS)S
 					ifne L2;
 				L1:	aload_0;
 					aload 7;
@@ -1915,7 +1921,7 @@
 			.locals 0;
 
 				L0:	aload_0;
-					invokespecial 186;		// java/lang/Object.<init>()V
+					invokespecial 188;		// java/lang/Object.<init>()V
 					return;
 		}
 
@@ -1973,6 +1979,7 @@
 			static final byte INS_SET_PHONON_DESCRIPTOR = 49;		// B
 			static final byte INS_LIST_PHONONS = 50;		// B
 			static final byte INS_GET_PHONON_PUB_KEY = 51;		// B
+			static final byte INS_DESTROY_PHONON = 52;		// B
 			static final byte PUK_LENGTH = 12;		// B
 			static final byte PUK_MAX_RETRIES = 5;		// B
 			static final byte PIN_LENGTH = 6;		// B
@@ -2045,11 +2052,11 @@
 			.stack 4;
 			.locals 0;
 
-				L0:	new 172;		// im/status/phonon/PhononApplet
+				L0:	new 174;		// im/status/phonon/PhononApplet
 					aload_0;
 					sload_1;
 					sload_2;
-					invokespecial 173;		// im/status/phonon/PhononApplet.<init>([BSB)V
+					invokespecial 175;		// im/status/phonon/PhononApplet.<init>([BSB)V
 					return;
 		}
 
@@ -2058,28 +2065,28 @@
 			.locals 0;
 
 				L0:	aload_0;
-					invokespecial 182;		// javacard/framework/Applet.<init>()V
+					invokespecial 184;		// javacard/framework/Applet.<init>()V
 					aload_0;
 					sconst_0;
 					putfield_b 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
 					aload_0;
-					new 184;		// im/status/phonon/Crypto
+					new 186;		// im/status/phonon/Crypto
 					dup;
-					invokespecial 185;		// im/status/phonon/Crypto.<init>()V
+					invokespecial 187;		// im/status/phonon/Crypto.<init>()V
 					putfield_a 16;		// reference im/status/phonon/PhononApplet.crypto
 					aload_0;
-					new 187;		// im/status/phonon/SECP256k1
+					new 189;		// im/status/phonon/SECP256k1
 					dup;
 					getfield_a_this 16;		// reference im/status/phonon/PhononApplet.crypto
-					invokespecial 188;		// im/status/phonon/SECP256k1.<init>(Lim/status/phonon/Crypto;)V
+					invokespecial 190;		// im/status/phonon/SECP256k1.<init>(Lim/status/phonon/Crypto;)V
 					putfield_a 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					aload_0;
-					new 190;		// im/status/phonon/SecureChannel
+					new 192;		// im/status/phonon/SecureChannel
 					dup;
 					sconst_1;
 					getfield_a_this 16;		// reference im/status/phonon/PhononApplet.crypto
 					getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
-					invokespecial 191;		// im/status/phonon/SecureChannel.<init>(BLim/status/phonon/Crypto;Lim/status/phonon/SECP256k1;)V
+					invokespecial 193;		// im/status/phonon/SecureChannel.<init>(BLim/status/phonon/Crypto;Lim/status/phonon/SECP256k1;)V
 					putfield_a 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_0;
 					bspush 16;
@@ -2090,7 +2097,7 @@
 					getfield_a_this 19;		// reference im/status/phonon/PhononApplet.uid
 					sconst_0;
 					bspush 16;
-					invokevirtual 194;		// generateData([BSS)V
+					invokevirtual 196;		// generateData([BSS)V
 					aload_0;
 					sspush 223;
 					newarray 11;
@@ -2240,136 +2247,145 @@
 					sconst_1;
 					baload;
 					bspush 48;
-					if_scmpeq L11;
+					if_scmpeq L12;
 				L2:	aload_2;
 					sconst_1;
 					baload;
 					bspush 50;
-					if_scmpeq L11;
+					if_scmpeq L12;
 				L3:	aload_2;
 					sconst_1;
 					baload;
-					bspush 51;
-					if_scmpeq L11;
+					bspush 52;
+					if_scmpeq L12;
 				L4:	aload_2;
 					sconst_1;
 					baload;
-					bspush 49;
-					if_scmpeq L11;
+					bspush 51;
+					if_scmpeq L12;
 				L5:	aload_2;
 					sconst_1;
 					baload;
-					bspush 20;
-					if_scmpeq L9;
+					bspush 49;
+					if_scmpeq L12;
 				L6:	aload_2;
 					sconst_1;
 					baload;
+					bspush 20;
+					if_scmpeq L10;
+				L7:	aload_2;
+					sconst_1;
+					baload;
 					bspush 21;
-					if_scmpeq L9;
-				L7:	getfield_a_this 45;		// reference im/status/phonon/PhononApplet.pin
-					ifnonnull L9;
-				L8:	aload_0;
+					if_scmpeq L10;
+				L8:	getfield_a_this 45;		// reference im/status/phonon/PhononApplet.pin
+					ifnonnull L10;
+				L9:	aload_0;
 					aload_1;
 					invokespecial 99;		// im/status/phonon/PhononApplet.processInit(Ljavacard/framework/APDU;)V
 					return;
-				L9:	aload_0;
-					invokevirtual 100;		// selectingApplet()Z
-					ifeq L11;
 				L10:	aload_0;
+					invokevirtual 100;		// selectingApplet()Z
+					ifeq L12;
+				L11:	aload_0;
 					aload_1;
 					invokespecial 101;		// im/status/phonon/PhononApplet.selectApplet(Ljavacard/framework/APDU;)V
 					return;
-				L11:	aload_2;
+				L12:	aload_2;
 					sconst_1;
 					baload;
-					slookupswitch L24 12 16 L14 17 L15 18 L16 19 L17 20 L12 21 L13 32 L18 33 L19 48 L20 49 L21 50 L22 51 L23;
-				L12:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
-					aload_1;
-					invokevirtual 102;		// identifyCard(Ljavacard/framework/APDU;)V
-					goto_w L34;
+					slookupswitch L26 13 16 L15 17 L16 18 L17 19 L18 20 L13 21 L14 32 L19 33 L20 48 L21 49 L22 50 L23 51 L24 52 L25;
 				L13:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_1;
-					invokevirtual 103;		// loadCert(Ljavacard/framework/APDU;)V
-					goto L34;
+					invokevirtual 102;		// identifyCard(Ljavacard/framework/APDU;)V
+					goto_w L36;
 				L14:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_1;
-					invokevirtual 104;		// openSecureChannel(Ljavacard/framework/APDU;)V
-					goto L34;
+					invokevirtual 103;		// loadCert(Ljavacard/framework/APDU;)V
+					goto_w L36;
 				L15:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_1;
-					invokevirtual 105;		// mutuallyAuthenticate(Ljavacard/framework/APDU;)V
-					goto L34;
+					invokevirtual 104;		// openSecureChannel(Ljavacard/framework/APDU;)V
+					goto L36;
 				L16:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_1;
-					invokevirtual 106;		// pair(Ljavacard/framework/APDU;)V
-					goto L34;
-				L17:	aload_0;
+					invokevirtual 105;		// mutuallyAuthenticate(Ljavacard/framework/APDU;)V
+					goto L36;
+				L17:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_1;
-					invokespecial 107;		// im/status/phonon/PhononApplet.unpair(Ljavacard/framework/APDU;)V
-					goto L34;
+					invokevirtual 106;		// pair(Ljavacard/framework/APDU;)V
+					goto L36;
 				L18:	aload_0;
 					aload_1;
-					invokespecial 108;		// im/status/phonon/PhononApplet.verifyPIN(Ljavacard/framework/APDU;)V
-					goto L34;
+					invokespecial 107;		// im/status/phonon/PhononApplet.unpair(Ljavacard/framework/APDU;)V
+					goto L36;
 				L19:	aload_0;
 					aload_1;
-					invokespecial 109;		// im/status/phonon/PhononApplet.changePIN(Ljavacard/framework/APDU;)V
-					goto L34;
+					invokespecial 108;		// im/status/phonon/PhononApplet.verifyPIN(Ljavacard/framework/APDU;)V
+					goto L36;
 				L20:	aload_0;
 					aload_1;
-					invokespecial 110;		// im/status/phonon/PhononApplet.createPhonon(Ljavacard/framework/APDU;)V
-					goto L34;
+					invokespecial 109;		// im/status/phonon/PhononApplet.changePIN(Ljavacard/framework/APDU;)V
+					goto L36;
 				L21:	aload_0;
 					aload_1;
-					invokespecial 111;		// im/status/phonon/PhononApplet.SetPhononDescriptor(Ljavacard/framework/APDU;)V
-					goto L34;
+					invokespecial 110;		// im/status/phonon/PhononApplet.createPhonon(Ljavacard/framework/APDU;)V
+					goto L36;
 				L22:	aload_0;
 					aload_1;
-					invokespecial 112;		// im/status/phonon/PhononApplet.ListPhonons(Ljavacard/framework/APDU;)V
-					goto L34;
+					invokespecial 111;		// im/status/phonon/PhononApplet.SetPhononDescriptor(Ljavacard/framework/APDU;)V
+					goto L36;
 				L23:	aload_0;
 					aload_1;
+					invokespecial 112;		// im/status/phonon/PhononApplet.ListPhonons(Ljavacard/framework/APDU;)V
+					goto L36;
+				L24:	aload_0;
+					aload_1;
 					invokespecial 113;		// im/status/phonon/PhononApplet.GetPhononPublicKey(Ljavacard/framework/APDU;)V
-					goto L34;
-				L24:	sspush 27904;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L25:	goto L34;
-				L26:	astore_3;
-				L27:	aload_0;
+					goto L36;
+				L25:	aload_0;
+					aload_1;
+					invokespecial 114;		// im/status/phonon/PhononApplet.DestroyPhonon(Ljavacard/framework/APDU;)V
+					goto L36;
+				L26:	sspush 27904;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L27:	goto L36;
+				L28:	astore_3;
+				L29:	aload_0;
 					aload_1;
 					aload_3;
-					invokevirtual 114;		// getReason()S
-					invokespecial 115;		// im/status/phonon/PhononApplet.handleException(Ljavacard/framework/APDU;S)V
-				L28:	goto L34;
-				L29:	astore_3;
-				L30:	aload_0;
+					invokevirtual 115;		// getReason()S
+					invokespecial 116;		// im/status/phonon/PhononApplet.handleException(Ljavacard/framework/APDU;S)V
+				L30:	goto L36;
+				L31:	astore_3;
+				L32:	aload_0;
 					aload_1;
 					sspush 28416;
 					aload_3;
-					invokevirtual 116;		// getReason()S
+					invokevirtual 117;		// getReason()S
 					sor;
-					invokespecial 115;		// im/status/phonon/PhononApplet.handleException(Ljavacard/framework/APDU;S)V
-				L31:	goto L34;
-				L32:	astore_3;
-				L33:	aload_0;
+					invokespecial 116;		// im/status/phonon/PhononApplet.handleException(Ljavacard/framework/APDU;S)V
+				L33:	goto L36;
+				L34:	astore_3;
+				L35:	aload_0;
 					aload_1;
 					sspush 28416;
-					invokespecial 115;		// im/status/phonon/PhononApplet.handleException(Ljavacard/framework/APDU;S)V
-				L34:	aload_0;
+					invokespecial 116;		// im/status/phonon/PhononApplet.handleException(Ljavacard/framework/APDU;S)V
+				L36:	aload_0;
 					aload_1;
-					invokespecial 117;		// im/status/phonon/PhononApplet.shouldRespond(Ljavacard/framework/APDU;)Z
-					ifeq L36;
-				L35:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
+					invokespecial 118;		// im/status/phonon/PhononApplet.shouldRespond(Ljavacard/framework/APDU;)Z
+					ifeq L38;
+				L37:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_1;
 					sconst_0;
 					sspush -28672;
-					invokevirtual 118;		// respond(Ljavacard/framework/APDU;SS)V
-				L36:	return;
+					invokevirtual 119;		// respond(Ljavacard/framework/APDU;SS)V
+				L38:	return;
 			.exceptionTable {
 				// start_block end_block handler_block catch_type_index
-				L11 L25 L26 95;
-				L11 L25 L29 79;
-				L11 L25 L32 96;
+				L12 L27 L28 95;
+				L12 L27 L31 79;
+				L12 L27 L34 96;
 			}
 		}
 
@@ -2381,7 +2397,7 @@
 
 				L0:	aload_0;
 					aload_1;
-					invokespecial 117;		// im/status/phonon/PhononApplet.shouldRespond(Ljavacard/framework/APDU;)Z
+					invokespecial 118;		// im/status/phonon/PhononApplet.shouldRespond(Ljavacard/framework/APDU;)Z
 					ifeq L3;
 				L1:	sload_2;
 					sspush 27010;
@@ -2390,10 +2406,10 @@
 					aload_1;
 					sconst_0;
 					sload_2;
-					invokevirtual 118;		// respond(Ljavacard/framework/APDU;SS)V
+					invokevirtual 119;		// respond(Ljavacard/framework/APDU;SS)V
 					goto L4;
 				L3:	sload_2;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L4:	return;
 		}
 
@@ -2404,10 +2420,10 @@
 			.descriptor	Ljavacard/framework/APDU;	1.10;
 
 				L0:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
-					invokevirtual 119;		// isOpen()Z
+					invokevirtual 120;		// isOpen()Z
 					ifeq L3;
 				L1:	aload_1;
-					invokevirtual 120;		// getCurrentState()B
+					invokevirtual 121;		// getCurrentState()B
 					bspush 6;
 					if_scmpeq L3;
 				L2:	sconst_1;
@@ -2426,50 +2442,56 @@
 					sspush 512;
 					if_scmple L2;
 				L1:	sspush 27268;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					return;
 				L2:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
+					aaload;
+					ifnull L4;
+				L3:	sspush 27011;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L4:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
 					new 68;		// im/status/phonon/Phonon
 					dup;
-					invokespecial 121;		// im/status/phonon/Phonon.<init>()V
+					invokespecial 122;		// im/status/phonon/Phonon.<init>()V
 					aastore;
 					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
 					aaload;
-					new 122;		// javacard/security/KeyPair
+					new 123;		// javacard/security/KeyPair
 					dup;
 					sconst_5;
 					sspush 256;
-					invokespecial 123;		// javacard/security/KeyPair.<init>(BS)V
+					invokespecial 124;		// javacard/security/KeyPair.<init>(BS)V
 					putfield_a 46;		// reference im/status/phonon/Phonon.PhononKey
 					getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
 					aaload;
 					getfield_a 46;		// reference im/status/phonon/Phonon.PhononKey
-					invokevirtual 125;		// getPrivate()Ljavacard/security/PrivateKey;
-					checkcast 0 126;		// T_CLASSORINTERFACE javacard/security/ECKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 126;		// getPrivate()Ljavacard/security/PrivateKey;
+					checkcast 0 127;		// T_CLASSORINTERFACE javacard/security/ECKey
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
 					aaload;
 					getfield_a 46;		// reference im/status/phonon/Phonon.PhononKey
-					invokevirtual 128;		// getPublic()Ljavacard/security/PublicKey;
-					checkcast 0 126;		// T_CLASSORINTERFACE javacard/security/ECKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 129;		// getPublic()Ljavacard/security/PublicKey;
+					checkcast 0 127;		// T_CLASSORINTERFACE javacard/security/ECKey
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
 					aaload;
 					getfield_a 46;		// reference im/status/phonon/Phonon.PhononKey
-					invokevirtual 129;		// genKeyPair()V
+					invokevirtual 130;		// genKeyPair()V
 					aload_1;
 					invokevirtual 97;		// getBuffer()[B
 					astore_2;
-				L3:	sconst_0;
+				L5:	sconst_0;
 					sstore_3;
-				L4:	aload_2;
+				L6:	aload_2;
 					sload_3;
 					dup;
 					sconst_1;
@@ -2516,19 +2538,19 @@
 					sadd;
 					sstore_3;
 					sstore 4;
-				L5:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+				L7:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
 					aaload;
 					getfield_a 46;		// reference im/status/phonon/Phonon.PhononKey
-					invokevirtual 128;		// getPublic()Ljavacard/security/PublicKey;
+					invokevirtual 129;		// getPublic()Ljavacard/security/PublicKey;
 					checkcast 0 73;		// T_CLASSORINTERFACE javacard/security/ECPublicKey
 					astore 5;
-				L6:	aload 5;
+				L8:	aload 5;
 					aload_2;
 					sload_3;
 					invokeinterface 3 73 19;		// javacard/security/ECPublicKey
 					sstore 6;
-				L7:	aload_2;
+				L9:	aload_2;
 					sload 4;
 					sload 6;
 					s2b;
@@ -2547,7 +2569,7 @@
 					aload_1;
 					sconst_0;
 					sload_3;
-					invokevirtual 130;		// setOutgoingAndSend(SS)V
+					invokevirtual 131;		// setOutgoingAndSend(SS)V
 					aload_0;
 					dup;
 					getfield_b 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
@@ -2555,6 +2577,112 @@
 					sadd;
 					s2b;
 					putfield_b 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
+					return;
+		}
+
+		.method private DestroyPhonon(Ljavacard/framework/APDU;)V {
+			.stack 5;
+			.locals 9;
+
+			.descriptor	Ljavacard/framework/APDU;	1.10;
+
+				L0:	aload_1;
+					invokevirtual 97;		// getBuffer()[B
+					astore_2;
+				L1:	aload_2;
+					sconst_4;
+					baload;
+					sstore_3;
+				L2:	sload_3;
+					sconst_4;
+					if_scmple L4;
+				L3:	sspush 26368;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+					return;
+				L4:	new 132;		// im/status/phonon/Bertlv
+					dup;
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
+					astore 4;
+				L5:	aload_1;
+					invokevirtual 134;		// getIncomingLength()S
+					newarray 11;
+					astore 5;
+				L6:	aload_2;
+					aload_1;
+					invokevirtual 135;		// getOffsetCdata()S
+					aload 5;
+					sconst_0;
+					aload_1;
+					invokevirtual 134;		// getIncomingLength()S
+					invokestatic 76;		// javacard/framework/Util.arrayCopyNonAtomic([BS[BSS)S
+					pop;
+					aload 4;
+					aload 5;
+					invokevirtual 136;		// LoadTag([B)S
+					pop;
+					aload 4;
+					invokevirtual 137;		// GetTag()B
+					bspush 65;
+					if_scmpeq L8;
+				L7:	sspush 27264;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L8:	aload 4;
+					invokevirtual 138;		// GetData()[B
+					sconst_0;
+					invokestatic 139;		// javacard/framework/Util.getShort([BS)S
+					sstore 6;
+				L9:	sload 6;
+					ifne L11;
+				L10:	sspush 27011;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L11:	sinc 6 -1;
+					sload 6;
+					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
+					if_scmplt L13;
+				L12:	sspush 27011;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L13:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					sload 6;
+					aaload;
+					ifnonnull L15;
+				L14:	sspush 27011;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L15:	new 132;		// im/status/phonon/Bertlv
+					dup;
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
+					astore 7;
+				L16:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					sload 6;
+					aaload;
+					getfield_a 46;		// reference im/status/phonon/Phonon.PhononKey
+					invokevirtual 126;		// getPrivate()Ljavacard/security/PrivateKey;
+					checkcast 0 75;		// T_CLASSORINTERFACE javacard/security/ECPrivateKey
+					astore 8;
+				L17:	sspush 255;
+					newarray 11;
+					astore 9;
+				L18:	aload 8;
+					aload 9;
+					sconst_0;
+					invokeinterface 3 75 19;		// javacard/security/ECPrivateKey
+					sstore 10;
+				L19:	aload 7;
+					bspush -127;
+					sload 10;
+					aload 9;
+					aload_2;
+					invokevirtual 140;		// BuildTLVStructure(BS[B[B)[B
+					pop;
+					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					sload 6;
+					aconst_null;
+					aastore;
+					invokestatic 141;		// javacard/framework/JCSystem.requestObjectDeletion()V
+					aload_1;
+					sconst_0;
+					aload 7;
+					getfield_s 1;		// short im/status/phonon/Bertlv.BuildLength
+					invokevirtual 131;		// setOutgoingAndSend(SS)V
 					return;
 		}
 
@@ -2575,85 +2703,91 @@
 					bspush 16;
 					if_scmple L4;
 				L3:	sspush 26368;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					return;
-				L4:	new 131;		// im/status/phonon/Bertlv
+				L4:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 4;
 				L5:	aload_1;
-					invokevirtual 133;		// getIncomingLength()S
+					invokevirtual 134;		// getIncomingLength()S
 					newarray 11;
 					astore 5;
 				L6:	aload_2;
 					aload_1;
-					invokevirtual 134;		// getOffsetCdata()S
+					invokevirtual 135;		// getOffsetCdata()S
 					aload 5;
 					sconst_0;
 					aload_1;
-					invokevirtual 133;		// getIncomingLength()S
+					invokevirtual 134;		// getIncomingLength()S
 					invokestatic 76;		// javacard/framework/Util.arrayCopyNonAtomic([BS[BSS)S
 					pop;
 					aload 4;
 					aload 5;
-					invokevirtual 135;		// LoadTag([B)S
+					invokevirtual 136;		// LoadTag([B)S
 					pop;
 					aload 4;
-					invokevirtual 136;		// GetTag()B
+					invokevirtual 137;		// GetTag()B
 					bspush 80;
 					if_scmpeq L8;
 				L7:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L8:	aload 4;
-					invokevirtual 137;		// GetData()[B
+					invokevirtual 138;		// GetData()[B
 					astore 6;
-				L9:	new 131;		// im/status/phonon/Bertlv
+				L9:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 7;
 				L10:	aload 7;
 					aload 6;
-					invokevirtual 135;		// LoadTag([B)S
+					invokevirtual 136;		// LoadTag([B)S
 					pop;
 					aload 7;
 					getfield_a 0;		// reference im/status/phonon/Bertlv.bertag
 					getfield_s 3;		// short im/status/phonon/BerTag.nextData
 					sstore 8;
 				L11:	aload 7;
-					invokevirtual 136;		// GetTag()B
+					invokevirtual 137;		// GetTag()B
 					bspush 65;
 					if_scmpeq L13;
 				L12:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L13:	aload 7;
-					invokevirtual 137;		// GetData()[B
+					invokevirtual 138;		// GetData()[B
 					sconst_0;
-					invokestatic 138;		// javacard/framework/Util.getShort([BS)S
+					invokestatic 139;		// javacard/framework/Util.getShort([BS)S
 					sstore 9;
-				L14:	sload 9;
-					ifne L16;
+				L14:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					sload 9;
+					aaload;
+					ifnonnull L16;
 				L15:	sspush 27011;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L16:	sinc 9 -1;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L16:	sload 9;
+					ifne L18;
+				L17:	sspush 27011;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L18:	sinc 9 -1;
 					sload 9;
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
-					if_scmplt L18;
-				L17:	sspush 27011;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L18:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					if_scmplt L20;
+				L19:	sspush 27011;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L20:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 9;
 					aaload;
 					getfield_s 47;		// short im/status/phonon/Phonon.CurrencyType
-					ifeq L20;
-				L19:	sspush 27265;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L20:	new 131;		// im/status/phonon/Bertlv
+					ifeq L22;
+				L21:	sspush 27265;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L22:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 10;
-				L21:	aload 4;
+				L23:	aload 4;
 					sload 8;
-					invokevirtual 140;		// GetNextData(S)[B
+					invokevirtual 143;		// GetNextData(S)[B
 					astore 6;
 					sload 8;
 					aload 10;
@@ -2663,7 +2797,7 @@
 					sstore 8;
 					aload 10;
 					aload 6;
-					invokevirtual 135;		// LoadTag([B)S
+					invokevirtual 136;		// LoadTag([B)S
 					pop;
 					sload 8;
 					aload 10;
@@ -2672,38 +2806,38 @@
 					sadd;
 					sstore 8;
 					aload 10;
-					invokevirtual 136;		// GetTag()B
+					invokevirtual 137;		// GetTag()B
 					bspush -127;
-					if_scmpeq L23;
-				L22:	sspush 27011;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L23:	aload 10;
-					invokevirtual 137;		// GetData()[B
+					if_scmpeq L25;
+				L24:	sspush 27011;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L25:	aload 10;
+					invokevirtual 138;		// GetData()[B
 					astore 11;
-				L24:	aload 11;
+				L26:	aload 11;
 					sconst_0;
-					invokestatic 138;		// javacard/framework/Util.getShort([BS)S
+					invokestatic 139;		// javacard/framework/Util.getShort([BS)S
 					sstore 12;
-				L25:	sload 12;
-					ifne L27;
-				L26:	sspush 27012;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L27:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+				L27:	sload 12;
+					ifne L29;
+				L28:	sspush 27012;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L29:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 9;
 					aaload;
 					sload 12;
 					putfield_s 47;		// short im/status/phonon/Phonon.CurrencyType
-					new 131;		// im/status/phonon/Bertlv
+					new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 13;
-				L28:	aload 4;
+				L30:	aload 4;
 					sload 8;
-					invokevirtual 140;		// GetNextData(S)[B
+					invokevirtual 143;		// GetNextData(S)[B
 					astore 6;
 					aload 13;
 					aload 6;
-					invokevirtual 135;		// LoadTag([B)S
+					invokevirtual 136;		// LoadTag([B)S
 					pop;
 					sload 8;
 					aload 13;
@@ -2712,22 +2846,22 @@
 					sadd;
 					sstore 8;
 					aload 13;
-					invokevirtual 136;		// GetTag()B
+					invokevirtual 137;		// GetTag()B
 					bspush -125;
-					if_scmpeq L30;
-				L29:	sspush 27011;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L30:	aload 13;
-					invokevirtual 141;		// GetLength()S
+					if_scmpeq L32;
+				L31:	sspush 27011;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L32:	aload 13;
+					invokevirtual 144;		// GetLength()S
 					sstore 14;
-				L31:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+				L33:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 9;
 					aaload;
 					sload 14;
 					newarray 11;
 					putfield_a 48;		// reference im/status/phonon/Phonon.Value
 					aload 13;
-					invokevirtual 137;		// GetData()[B
+					invokevirtual 138;		// GetData()[B
 					sconst_0;
 					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 9;
@@ -2757,88 +2891,94 @@
 					sconst_4;
 					if_scmple L4;
 				L3:	sspush 26368;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					return;
-				L4:	new 131;		// im/status/phonon/Bertlv
+				L4:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 4;
 				L5:	aload_1;
-					invokevirtual 133;		// getIncomingLength()S
+					invokevirtual 134;		// getIncomingLength()S
 					newarray 11;
 					astore 5;
 				L6:	aload_2;
 					aload_1;
-					invokevirtual 134;		// getOffsetCdata()S
+					invokevirtual 135;		// getOffsetCdata()S
 					aload 5;
 					sconst_0;
 					aload_1;
-					invokevirtual 133;		// getIncomingLength()S
+					invokevirtual 134;		// getIncomingLength()S
 					invokestatic 76;		// javacard/framework/Util.arrayCopyNonAtomic([BS[BSS)S
 					pop;
 					aload 4;
 					aload 5;
-					invokevirtual 135;		// LoadTag([B)S
+					invokevirtual 136;		// LoadTag([B)S
 					pop;
 					aload 4;
-					invokevirtual 136;		// GetTag()B
+					invokevirtual 137;		// GetTag()B
 					bspush 65;
 					if_scmpeq L8;
 				L7:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L8:	aload 4;
-					invokevirtual 137;		// GetData()[B
+					invokevirtual 138;		// GetData()[B
 					sconst_0;
-					invokestatic 138;		// javacard/framework/Util.getShort([BS)S
+					invokestatic 139;		// javacard/framework/Util.getShort([BS)S
 					sstore 6;
 				L9:	sload 6;
 					ifne L11;
 				L10:	sspush 27011;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L11:	sinc 6 -1;
 					sload 6;
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
 					if_scmplt L13;
 				L12:	sspush 27011;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L13:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 6;
 					aaload;
-					getfield_s 47;		// short im/status/phonon/Phonon.CurrencyType
-					ifne L15;
+					ifnonnull L15;
 				L14:	sspush 27011;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L15:	new 131;		// im/status/phonon/Bertlv
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L15:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					sload 6;
+					aaload;
+					getfield_s 47;		// short im/status/phonon/Phonon.CurrencyType
+					ifne L17;
+				L16:	sspush 27011;
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L17:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 7;
-				L16:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+				L18:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 6;
 					aaload;
 					getfield_a 46;		// reference im/status/phonon/Phonon.PhononKey
-					invokevirtual 128;		// getPublic()Ljavacard/security/PublicKey;
+					invokevirtual 129;		// getPublic()Ljavacard/security/PublicKey;
 					checkcast 0 73;		// T_CLASSORINTERFACE javacard/security/ECPublicKey
 					astore 8;
-				L17:	sspush 255;
+				L19:	sspush 255;
 					newarray 11;
 					astore 9;
-				L18:	aload 8;
+				L20:	aload 8;
 					aload 9;
 					sconst_0;
 					invokeinterface 3 73 19;		// javacard/security/ECPublicKey
 					sstore 10;
-				L19:	aload 7;
+				L21:	aload 7;
 					bspush -128;
 					sload 10;
 					aload 9;
 					aload_2;
-					invokevirtual 143;		// BuildTLVStructure(BS[B[B)[B
+					invokevirtual 140;		// BuildTLVStructure(BS[B[B)[B
 					pop;
 					aload_1;
 					sconst_0;
 					aload 7;
 					getfield_s 1;		// short im/status/phonon/Bertlv.BuildLength
-					invokevirtual 130;		// setOutgoingAndSend(SS)V
+					invokevirtual 131;		// setOutgoingAndSend(SS)V
 					return;
 		}
 
@@ -2859,9 +2999,9 @@
 					sconst_1;
 					if_scmple L4;
 				L3:	sspush 27270;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L4:	sload_3;
-					ifne_w L67;
+					ifne_w L71;
 				L5:	aload_2;
 					sconst_3;
 					baload;
@@ -2870,59 +3010,59 @@
 					sconst_3;
 					if_scmple L8;
 				L7:	sspush 27270;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L8:	new 131;		// im/status/phonon/Bertlv
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L8:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 5;
 				L9:	aload_1;
-					invokevirtual 133;		// getIncomingLength()S
+					invokevirtual 134;		// getIncomingLength()S
 					newarray 11;
 					astore 6;
 				L10:	aload_2;
 					aload_1;
-					invokevirtual 134;		// getOffsetCdata()S
+					invokevirtual 135;		// getOffsetCdata()S
 					aload 6;
 					sconst_0;
 					aload_1;
-					invokevirtual 133;		// getIncomingLength()S
+					invokevirtual 134;		// getIncomingLength()S
 					invokestatic 76;		// javacard/framework/Util.arrayCopyNonAtomic([BS[BSS)S
 					pop;
 					aload 5;
 					aload 6;
-					invokevirtual 135;		// LoadTag([B)S
+					invokevirtual 136;		// LoadTag([B)S
 					pop;
 					aload 5;
-					invokevirtual 136;		// GetTag()B
+					invokevirtual 137;		// GetTag()B
 					bspush 96;
 					if_scmpeq L12;
 				L11:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L12:	aload 5;
 					bspush -127;
-					invokevirtual 144;		// FindTag(B)S
+					invokevirtual 146;		// FindTag(B)S
 					sstore 7;
 				L13:	sload 7;
 					sconst_m1;
 					if_scmpne L15;
 				L14:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L15:	new 131;		// im/status/phonon/Bertlv
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L15:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 8;
 				L16:	aload 8;
 					aload 5;
 					getfield_a 0;		// reference im/status/phonon/Bertlv.bertag
 					getfield_a 4;		// reference im/status/phonon/BerTag.data
 					sload 7;
-					invokevirtual 195;		// LoadTagBase([BS)S
+					invokevirtual 197;		// LoadTagBase([BS)S
 					pop;
 					aload 8;
 					getfield_a 0;		// reference im/status/phonon/Bertlv.bertag
 					getfield_a 4;		// reference im/status/phonon/BerTag.data
 					sconst_0;
-					invokestatic 138;		// javacard/framework/Util.getShort([BS)S
+					invokestatic 139;		// javacard/framework/Util.getShort([BS)S
 					sstore 9;
 				L17:	sconst_4;
 					newarray 11;
@@ -2931,7 +3071,7 @@
 					sconst_0;
 					sconst_4;
 					sconst_0;
-					invokestatic 124;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
+					invokestatic 125;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
 					pop;
 					sload 4;
 					sconst_1;
@@ -2941,23 +3081,23 @@
 					if_scmpne L24;
 				L20:	aload 5;
 					bspush -124;
-					invokevirtual 144;		// FindTag(B)S
+					invokevirtual 146;		// FindTag(B)S
 					sstore 7;
 					sload 7;
 					sconst_m1;
 					if_scmpne L22;
 				L21:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L22:	new 131;		// im/status/phonon/Bertlv
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L22:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 11;
 				L23:	aload 11;
 					aload 5;
 					getfield_a 0;		// reference im/status/phonon/Bertlv.bertag
 					getfield_a 4;		// reference im/status/phonon/BerTag.data
 					sload 7;
-					invokevirtual 195;		// LoadTagBase([BS)S
+					invokevirtual 197;		// LoadTagBase([BS)S
 					pop;
 					aload 11;
 					getfield_a 0;		// reference im/status/phonon/Bertlv.bertag
@@ -2975,7 +3115,7 @@
 					sconst_0;
 					sconst_4;
 					sconst_0;
-					invokestatic 124;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
+					invokestatic 125;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
 					pop;
 					sload 4;
 					sconst_2;
@@ -2985,23 +3125,23 @@
 					if_scmpne L31;
 				L27:	aload 5;
 					bspush -123;
-					invokevirtual 144;		// FindTag(B)S
+					invokevirtual 146;		// FindTag(B)S
 					sstore 7;
 					sload 7;
 					sconst_m1;
 					if_scmpne L29;
 				L28:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L29:	new 131;		// im/status/phonon/Bertlv
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L29:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 12;
 				L30:	aload 12;
 					aload 5;
 					getfield_a 0;		// reference im/status/phonon/Bertlv.bertag
 					getfield_a 4;		// reference im/status/phonon/BerTag.data
 					sload 7;
-					invokevirtual 195;		// LoadTagBase([BS)S
+					invokevirtual 197;		// LoadTagBase([BS)S
 					pop;
 					aload 12;
 					getfield_a 0;		// reference im/status/phonon/Bertlv.bertag
@@ -3019,19 +3159,23 @@
 					sconst_0;
 					putfield_s 26;		// short im/status/phonon/PhononApplet.PhononListLastSent
 					sload 4;
-					stableswitch L67 0 3 L32 L40 L49 L58;
+					stableswitch L71 0 3 L32 L41 L51 L61;
 				L32:	sconst_0;
 					sstore 12;
-				L33:	goto L38;
-				L34:	sload 9;
-					ifeq L36;
+				L33:	goto L39;
+				L34:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					sload 12;
+					aaload;
+					ifnull L38;
 				L35:	sload 9;
+					ifeq L37;
+				L36:	sload 9;
 					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 12;
 					aaload;
 					getfield_s 47;		// short im/status/phonon/Phonon.CurrencyType
-					if_scmpne L37;
-				L36:	getfield_a_this 24;		// reference im/status/phonon/PhononApplet.PhononList
+					if_scmpne L38;
+				L37:	getfield_a_this 24;		// reference im/status/phonon/PhononApplet.PhononList
 					getfield_s_this 25;		// short im/status/phonon/PhononApplet.PhononListCount
 					sload 12;
 					sastore;
@@ -3041,23 +3185,27 @@
 					sconst_1;
 					sadd;
 					putfield_s 25;		// short im/status/phonon/PhononApplet.PhononListCount
-				L37:	sinc 12 1;
-				L38:	sload 12;
+				L38:	sinc 12 1;
+				L39:	sload 12;
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
 					if_scmplt L34;
-				L39:	goto_w L67;
-				L40:	sconst_0;
+				L40:	goto_w L71;
+				L41:	sconst_0;
 					sstore 12;
-				L41:	goto L47;
-				L42:	sload 9;
-					ifeq L44;
-				L43:	sload 9;
+				L42:	goto L49;
+				L43:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					sload 12;
+					aaload;
+					ifnull L48;
+				L44:	sload 9;
+					ifeq L46;
+				L45:	sload 9;
 					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 12;
 					aaload;
 					getfield_s 47;		// short im/status/phonon/Phonon.CurrencyType
-					if_scmpne L46;
-				L44:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					if_scmpne L48;
+				L46:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 12;
 					aaload;
 					getfield_a 48;		// reference im/status/phonon/Phonon.Value
@@ -3065,10 +3213,10 @@
 					aload 10;
 					sconst_0;
 					sconst_4;
-					invokestatic 146;		// javacard/framework/Util.arrayCompare([BS[BSS)B
+					invokestatic 148;		// javacard/framework/Util.arrayCompare([BS[BSS)B
 					sconst_1;
-					if_scmpeq L46;
-				L45:	getfield_a_this 24;		// reference im/status/phonon/PhononApplet.PhononList
+					if_scmpeq L48;
+				L47:	getfield_a_this 24;		// reference im/status/phonon/PhononApplet.PhononList
 					getfield_s_this 25;		// short im/status/phonon/PhononApplet.PhononListCount
 					sload 12;
 					sastore;
@@ -3078,34 +3226,38 @@
 					sconst_1;
 					sadd;
 					putfield_s 25;		// short im/status/phonon/PhononApplet.PhononListCount
-				L46:	sinc 12 1;
-				L47:	sload 12;
+				L48:	sinc 12 1;
+				L49:	sload 12;
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
-					if_scmplt L42;
-				L48:	goto_w L67;
-				L49:	sconst_0;
+					if_scmplt L43;
+				L50:	goto_w L71;
+				L51:	sconst_0;
 					sstore 12;
-				L50:	goto L56;
-				L51:	sload 9;
-					ifeq L53;
-				L52:	sload 9;
-					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
-					sload 12;
-					aaload;
-					getfield_s 47;		// short im/status/phonon/Phonon.CurrencyType
-					if_scmpne L55;
+				L52:	goto L59;
 				L53:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 12;
 					aaload;
+					ifnull L58;
+				L54:	sload 9;
+					ifeq L56;
+				L55:	sload 9;
+					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					sload 12;
+					aaload;
+					getfield_s 47;		// short im/status/phonon/Phonon.CurrencyType
+					if_scmpne L58;
+				L56:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					sload 12;
+					aaload;
 					getfield_a 48;		// reference im/status/phonon/Phonon.Value
 					sconst_0;
 					aload 11;
 					sconst_0;
 					sconst_4;
-					invokestatic 146;		// javacard/framework/Util.arrayCompare([BS[BSS)B
+					invokestatic 148;		// javacard/framework/Util.arrayCompare([BS[BSS)B
 					sconst_m1;
-					if_scmpeq L55;
-				L54:	getfield_a_this 24;		// reference im/status/phonon/PhononApplet.PhononList
+					if_scmpeq L58;
+				L57:	getfield_a_this 24;		// reference im/status/phonon/PhononApplet.PhononList
 					getfield_s_this 25;		// short im/status/phonon/PhononApplet.PhononListCount
 					sload 12;
 					sastore;
@@ -3115,23 +3267,27 @@
 					sconst_1;
 					sadd;
 					putfield_s 25;		// short im/status/phonon/PhononApplet.PhononListCount
-				L55:	sinc 12 1;
-				L56:	sload 12;
+				L58:	sinc 12 1;
+				L59:	sload 12;
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
-					if_scmplt L51;
-				L57:	goto L67;
-				L58:	sconst_0;
+					if_scmplt L53;
+				L60:	goto L71;
+				L61:	sconst_0;
 					sstore 12;
-				L59:	goto L66;
-				L60:	sload 9;
-					ifeq L62;
-				L61:	sload 9;
+				L62:	goto L70;
+				L63:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					sload 12;
+					aaload;
+					ifnull L69;
+				L64:	sload 9;
+					ifeq L66;
+				L65:	sload 9;
 					getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 12;
 					aaload;
 					getfield_s 47;		// short im/status/phonon/Phonon.CurrencyType
-					if_scmpne L65;
-				L62:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					if_scmpne L69;
+				L66:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 12;
 					aaload;
 					getfield_a 48;		// reference im/status/phonon/Phonon.Value
@@ -3139,10 +3295,10 @@
 					aload 10;
 					sconst_0;
 					sconst_4;
-					invokestatic 146;		// javacard/framework/Util.arrayCompare([BS[BSS)B
+					invokestatic 148;		// javacard/framework/Util.arrayCompare([BS[BSS)B
 					sconst_1;
-					if_scmpeq L65;
-				L63:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
+					if_scmpeq L69;
+				L67:	getfield_a_this 23;		// reference im/status/phonon/PhononApplet.PhononArray
 					sload 12;
 					aaload;
 					getfield_a 48;		// reference im/status/phonon/Phonon.Value
@@ -3150,10 +3306,10 @@
 					aload 11;
 					sconst_0;
 					sconst_4;
-					invokestatic 146;		// javacard/framework/Util.arrayCompare([BS[BSS)B
+					invokestatic 148;		// javacard/framework/Util.arrayCompare([BS[BSS)B
 					sconst_m1;
-					if_scmpeq L65;
-				L64:	getfield_a_this 24;		// reference im/status/phonon/PhononApplet.PhononList
+					if_scmpeq L69;
+				L68:	getfield_a_this 24;		// reference im/status/phonon/PhononApplet.PhononList
 					getfield_s_this 25;		// short im/status/phonon/PhononApplet.PhononListCount
 					sload 12;
 					sastore;
@@ -3163,14 +3319,14 @@
 					sconst_1;
 					sadd;
 					putfield_s 25;		// short im/status/phonon/PhononApplet.PhononListCount
-				L65:	sinc 12 1;
-				L66:	sload 12;
+				L69:	sinc 12 1;
+				L70:	sload 12;
 					getfield_b_this 15;		// byte im/status/phonon/PhononApplet.phononKeyIndex
-					if_scmplt L60;
-				L67:	aload_0;
+					if_scmplt L63;
+				L71:	aload_0;
 					aload_1;
 					bspush 82;
-					invokespecial 145;		// im/status/phonon/PhononApplet.SendSelectPhononList(Ljavacard/framework/APDU;B)V
+					invokespecial 147;		// im/status/phonon/PhononApplet.SendSelectPhononList(Ljavacard/framework/APDU;B)V
 					return;
 		}
 
@@ -3200,9 +3356,9 @@
 					astore 8;
 				L7:	sconst_0;
 					sstore 9;
-				L8:	new 131;		// im/status/phonon/Bertlv
+				L8:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 10;
 				L9:	aload 10;
 					bspush -125;
@@ -3211,7 +3367,7 @@
 					sload 6;
 					aaload;
 					getfield_a 48;		// reference im/status/phonon/Phonon.Value
-					invokevirtual 147;		// BuildTLVStructure(BS[B)[B
+					invokevirtual 149;		// BuildTLVStructure(BS[B)[B
 					astore 11;
 				L10:	aload 11;
 					sconst_0;
@@ -3226,9 +3382,9 @@
 					getfield_s 1;		// short im/status/phonon/Bertlv.BuildLength
 					sadd;
 					sstore 9;
-					new 131;		// im/status/phonon/Bertlv
+					new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 12;
 				L11:	aload 12;
 					bspush -127;
@@ -3237,7 +3393,7 @@
 					sload 6;
 					aaload;
 					getfield_s 47;		// short im/status/phonon/Phonon.CurrencyType
-					invokevirtual 148;		// BuildTLVStructure(BSS)[B
+					invokevirtual 150;		// BuildTLVStructure(BSS)[B
 					astore 11;
 					aload 11;
 					sconst_0;
@@ -3252,9 +3408,9 @@
 					getfield_s 1;		// short im/status/phonon/Bertlv.BuildLength
 					sadd;
 					sstore 9;
-					new 131;		// im/status/phonon/Bertlv
+					new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 13;
 				L12:	aload 13;
 					bspush 65;
@@ -3262,7 +3418,7 @@
 					sload 6;
 					sconst_1;
 					sadd;
-					invokevirtual 148;		// BuildTLVStructure(BSS)[B
+					invokevirtual 150;		// BuildTLVStructure(BSS)[B
 					astore 11;
 					aload 11;
 					sconst_0;
@@ -3277,15 +3433,15 @@
 					getfield_s 1;		// short im/status/phonon/Bertlv.BuildLength
 					sadd;
 					sstore 9;
-					new 131;		// im/status/phonon/Bertlv
+					new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 14;
 				L13:	aload 14;
 					bspush 81;
 					sload 9;
 					aload 8;
-					invokevirtual 147;		// BuildTLVStructure(BS[B)[B
+					invokevirtual 149;		// BuildTLVStructure(BS[B)[B
 					astore 11;
 					aload 11;
 					sconst_0;
@@ -3311,23 +3467,23 @@
 				L16:	sload 7;
 					getfield_s_this 25;		// short im/status/phonon/PhononApplet.PhononListCount
 					if_scmplt_w L5;
-				L17:	new 131;		// im/status/phonon/Bertlv
+				L17:	new 132;		// im/status/phonon/Bertlv
 					dup;
-					invokespecial 132;		// im/status/phonon/Bertlv.<init>()V
+					invokespecial 133;		// im/status/phonon/Bertlv.<init>()V
 					astore 8;
 				L18:	aload 8;
 					bspush 82;
 					sload 5;
 					aload 4;
 					aload_3;
-					invokevirtual 143;		// BuildTLVStructure(BS[B[B)[B
+					invokevirtual 140;		// BuildTLVStructure(BS[B[B)[B
 					pop;
 					aload_1;
 					sconst_0;
 					sload 5;
 					sconst_2;
 					sadd;
-					invokevirtual 130;		// setOutgoingAndSend(SS)V
+					invokevirtual 131;		// setOutgoingAndSend(SS)V
 					sload 7;
 					getfield_s_this 25;		// short im/status/phonon/PhononApplet.PhononListCount
 					if_scmpge L21;
@@ -3343,7 +3499,7 @@
 					sadd;
 					sstore 9;
 				L20:	sload 9;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L21:	return;
 		}
 
@@ -3354,11 +3510,11 @@
 			.descriptor	Ljavacard/framework/APDU;	1.10;
 
 				L0:	getfield_a_this 45;		// reference im/status/phonon/PhononApplet.pin
-					invokevirtual 149;		// reset()V
+					invokevirtual 151;		// reset()V
 					getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
-					invokevirtual 150;		// reset()V
+					invokevirtual 152;		// reset()V
 					getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
-					invokevirtual 151;		// updateSecureChannelCounter()V
+					invokevirtual 153;		// updateSecureChannelCounter()V
 					aload_1;
 					invokevirtual 97;		// getBuffer()[B
 					astore_2;
@@ -3426,7 +3582,7 @@
 					sload_3;
 					sconst_1;
 					sadd;
-					invokevirtual 152;		// copyPublicKey([BS)S
+					invokevirtual 154;		// copyPublicKey([BS)S
 					sstore 5;
 				L6:	aload_2;
 					sload_3;
@@ -3486,7 +3642,7 @@
 					sadd;
 					sstore_3;
 					getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
-					invokevirtual 153;		// getRemainingPairingSlots()B
+					invokevirtual 155;		// getRemainingPairingSlots()B
 					bastore;
 					aload_2;
 					sload_3;
@@ -3524,7 +3680,7 @@
 					aload_1;
 					sconst_0;
 					sload_3;
-					invokevirtual 130;		// setOutgoingAndSend(SS)V
+					invokevirtual 131;		// setOutgoingAndSend(SS)V
 					return;
 		}
 
@@ -3534,28 +3690,28 @@
 
 				L0:	getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					getfield_a_this 27;		// reference im/status/phonon/PhononApplet.masterPublic
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					getfield_a_this 28;		// reference im/status/phonon/PhononApplet.masterPrivate
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					getfield_a_this 29;		// reference im/status/phonon/PhononApplet.parentPublicKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					getfield_a_this 30;		// reference im/status/phonon/PhononApplet.parentPrivateKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					getfield_a_this 31;		// reference im/status/phonon/PhononApplet.publicKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					getfield_a_this 32;		// reference im/status/phonon/PhononApplet.privateKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					getfield_a_this 33;		// reference im/status/phonon/PhononApplet.pinlessPublicKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 17;		// reference im/status/phonon/PhononApplet.secp256k1
 					getfield_a_this 34;		// reference im/status/phonon/PhononApplet.pinlessPrivateKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					return;
 		}
 
@@ -3569,7 +3725,7 @@
 					invokevirtual 97;		// getBuffer()[B
 					astore_2;
 				L1:	aload_1;
-					invokevirtual 154;		// setIncomingAndReceive()S
+					invokevirtual 156;		// setIncomingAndReceive()S
 					pop;
 					aload_0;
 					invokevirtual 100;		// selectingApplet()Z
@@ -3583,7 +3739,7 @@
 					getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_2;
 					sconst_2;
-					invokevirtual 152;		// copyPublicKey([BS)S
+					invokevirtual 154;		// copyPublicKey([BS)S
 					s2b;
 					bastore;
 					aload_1;
@@ -3593,7 +3749,7 @@
 					baload;
 					sconst_2;
 					sadd;
-					invokevirtual 130;		// setOutgoingAndSend(SS)V
+					invokevirtual 131;		// setOutgoingAndSend(SS)V
 					goto L11;
 				L3:	aload_2;
 					sconst_1;
@@ -3602,7 +3758,7 @@
 					if_scmpne L10;
 				L4:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_2;
-					invokevirtual 155;		// oneShotDecrypt([B)V
+					invokevirtual 157;		// oneShotDecrypt([B)V
 					aload_2;
 					sconst_4;
 					baload;
@@ -3616,31 +3772,31 @@
 					aload_2;
 					sconst_5;
 					bspush 6;
-					invokespecial 156;		// im/status/phonon/PhononApplet.allDigits([BSS)Z
+					invokespecial 158;		// im/status/phonon/PhononApplet.allDigits([BSS)Z
 					ifne L8;
 				L7:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
-				L8:	invokestatic 157;		// javacard/framework/JCSystem.beginTransaction()V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
+				L8:	invokestatic 159;		// javacard/framework/JCSystem.beginTransaction()V
 					getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_2;
 					bspush 11;
-					invokevirtual 158;		// initSecureChannel([BS)V
+					invokevirtual 160;		// initSecureChannel([BS)V
 					aload_0;
-					new 159;		// javacard/framework/OwnerPIN
+					new 161;		// javacard/framework/OwnerPIN
 					dup;
 					sconst_3;
 					bspush 6;
-					invokespecial 160;		// javacard/framework/OwnerPIN.<init>(BB)V
+					invokespecial 162;		// javacard/framework/OwnerPIN.<init>(BB)V
 					putfield_a 45;		// reference im/status/phonon/PhononApplet.pin
 					getfield_a_this 45;		// reference im/status/phonon/PhononApplet.pin
 					aload_2;
 					sconst_5;
 					bspush 6;
-					invokevirtual 161;		// update([BSB)V
-					invokestatic 162;		// javacard/framework/JCSystem.commitTransaction()V
+					invokevirtual 163;		// update([BSB)V
+					invokestatic 164;		// javacard/framework/JCSystem.commitTransaction()V
 				L9:	goto L11;
 				L10:	sspush 27904;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L11:	return;
 		}
 
@@ -3681,17 +3837,17 @@
 					astore_2;
 				L1:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_2;
-					invokevirtual 163;		// preprocessAPDU([B)S
+					invokevirtual 165;		// preprocessAPDU([B)S
 					pop;
 					getfield_a_this 45;		// reference im/status/phonon/PhononApplet.pin
-					invokevirtual 164;		// isValidated()Z
+					invokevirtual 166;		// isValidated()Z
 					ifeq L3;
 				L2:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_2;
-					invokevirtual 165;		// unpair([B)V
+					invokevirtual 167;		// unpair([B)V
 					goto L4;
 				L3:	sspush 27013;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L4:	return;
 		}
 
@@ -3706,20 +3862,20 @@
 					astore_2;
 				L1:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_2;
-					invokevirtual 163;		// preprocessAPDU([B)S
+					invokevirtual 165;		// preprocessAPDU([B)S
 					s2b;
 					sstore_3;
 				L2:	getfield_a_this 45;		// reference im/status/phonon/PhononApplet.pin
 					aload_2;
 					sconst_5;
 					sload_3;
-					invokevirtual 166;		// check([BSB)Z
+					invokevirtual 168;		// check([BSB)Z
 					ifne L4;
 				L3:	sspush 25536;
 					getfield_a_this 45;		// reference im/status/phonon/PhononApplet.pin
-					invokevirtual 167;		// getTriesRemaining()B
+					invokevirtual 169;		// getTriesRemaining()B
 					sor;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L4:	return;
 		}
 
@@ -3734,14 +3890,14 @@
 					astore_2;
 				L1:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_2;
-					invokevirtual 163;		// preprocessAPDU([B)S
+					invokevirtual 165;		// preprocessAPDU([B)S
 					s2b;
 					sstore_3;
 				L2:	getfield_a_this 45;		// reference im/status/phonon/PhononApplet.pin
-					invokevirtual 164;		// isValidated()Z
+					invokevirtual 166;		// isValidated()Z
 					ifne L4;
 				L3:	sspush 27013;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L4:	aload_2;
 					sconst_2;
 					baload;
@@ -3749,15 +3905,15 @@
 				L5:	aload_0;
 					aload_2;
 					sload_3;
-					invokespecial 168;		// im/status/phonon/PhononApplet.changeUserPIN([BB)V
+					invokespecial 170;		// im/status/phonon/PhononApplet.changeUserPIN([BB)V
 					goto L8;
 				L6:	aload_0;
 					aload_2;
 					sload_3;
-					invokespecial 169;		// im/status/phonon/PhononApplet.changePairingSecret([BB)V
+					invokespecial 171;		// im/status/phonon/PhononApplet.changePairingSecret([BB)V
 					goto L8;
 				L7:	sspush 27270;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L8:	return;
 		}
 
@@ -3772,20 +3928,20 @@
 					aload_1;
 					sconst_5;
 					sload_2;
-					invokespecial 156;		// im/status/phonon/PhononApplet.allDigits([BSS)Z
+					invokespecial 158;		// im/status/phonon/PhononApplet.allDigits([BSS)Z
 					ifne L3;
 				L2:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L3:	getfield_a_this 45;		// reference im/status/phonon/PhononApplet.pin
 					aload_1;
 					sconst_5;
 					sload_2;
-					invokevirtual 161;		// update([BSB)V
+					invokevirtual 163;		// update([BSB)V
 					getfield_a_this 45;		// reference im/status/phonon/PhononApplet.pin
 					aload_1;
 					sconst_5;
 					sload_2;
-					invokevirtual 166;		// check([BSB)Z
+					invokevirtual 168;		// check([BSB)Z
 					pop;
 					return;
 		}
@@ -3798,11 +3954,11 @@
 					bspush 32;
 					if_scmpeq L2;
 				L1:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L2:	getfield_a_this 18;		// reference im/status/phonon/PhononApplet.secureChannel
 					aload_1;
 					sconst_5;
-					invokevirtual 170;		// updatePairingSecret([BB)V
+					invokevirtual 172;		// updatePairingSecret([BB)V
 					return;
 		}
 
@@ -3840,14 +3996,14 @@
 			.locals 0;
 
 				L0:	aload_0;
-					invokespecial 186;		// java/lang/Object.<init>()V
+					invokespecial 188;		// java/lang/Object.<init>()V
 					aload_0;
 					aload_1;
 					putfield_a 49;		// reference im/status/phonon/SECP256k1.crypto
 					aload_0;
 					bspush 6;
 					sconst_0;
-					invokestatic 193;		// javacard/security/KeyAgreement.getInstance(BZ)Ljavacard/security/KeyAgreement;
+					invokestatic 195;		// javacard/security/KeyAgreement.getInstance(BZ)Ljavacard/security/KeyAgreement;
 					putfield_a 50;		// reference im/status/phonon/SECP256k1.ecPointMultiplier
 					aload_0;
 					bspush 12;
@@ -3858,7 +4014,7 @@
 					putfield_a 51;		// reference im/status/phonon/SECP256k1.tmpECPrivateKey
 					aload_0;
 					getfield_a_this 51;		// reference im/status/phonon/SECP256k1.tmpECPrivateKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					return;
 		}
 
@@ -3869,38 +4025,38 @@
 			.descriptor	Ljavacard/security/ECKey;	2.17;
 
 				L0:	aload_1;
-					getstatic_a 174;		// reference im/status/phonon/SECP256k1.SECP256K1_A
+					getstatic_a 176;		// reference im/status/phonon/SECP256k1.SECP256K1_A
 					sconst_0;
-					getstatic_a 174;		// reference im/status/phonon/SECP256k1.SECP256K1_A
+					getstatic_a 176;		// reference im/status/phonon/SECP256k1.SECP256K1_A
 					arraylength;
-					invokeinterface 4 126 3;		// javacard/security/ECKey
+					invokeinterface 4 127 3;		// javacard/security/ECKey
 					aload_1;
-					getstatic_a 175;		// reference im/status/phonon/SECP256k1.SECP256K1_B
+					getstatic_a 177;		// reference im/status/phonon/SECP256k1.SECP256K1_B
 					sconst_0;
-					getstatic_a 175;		// reference im/status/phonon/SECP256k1.SECP256K1_B
+					getstatic_a 177;		// reference im/status/phonon/SECP256k1.SECP256K1_B
 					arraylength;
-					invokeinterface 4 126 4;		// javacard/security/ECKey
+					invokeinterface 4 127 4;		// javacard/security/ECKey
 					aload_1;
-					getstatic_a 176;		// reference im/status/phonon/SECP256k1.SECP256K1_FP
+					getstatic_a 178;		// reference im/status/phonon/SECP256k1.SECP256K1_FP
 					sconst_0;
-					getstatic_a 176;		// reference im/status/phonon/SECP256k1.SECP256K1_FP
+					getstatic_a 178;		// reference im/status/phonon/SECP256k1.SECP256K1_FP
 					arraylength;
-					invokeinterface 4 126 0;		// javacard/security/ECKey
+					invokeinterface 4 127 0;		// javacard/security/ECKey
 					aload_1;
-					getstatic_a 177;		// reference im/status/phonon/SECP256k1.SECP256K1_G
+					getstatic_a 179;		// reference im/status/phonon/SECP256k1.SECP256K1_G
 					sconst_0;
-					getstatic_a 177;		// reference im/status/phonon/SECP256k1.SECP256K1_G
+					getstatic_a 179;		// reference im/status/phonon/SECP256k1.SECP256K1_G
 					arraylength;
-					invokeinterface 4 126 5;		// javacard/security/ECKey
+					invokeinterface 4 127 5;		// javacard/security/ECKey
 					aload_1;
 					getstatic_a 84;		// reference im/status/phonon/SECP256k1.SECP256K1_R
 					sconst_0;
 					getstatic_a 84;		// reference im/status/phonon/SECP256k1.SECP256K1_R
 					arraylength;
-					invokeinterface 4 126 6;		// javacard/security/ECKey
+					invokeinterface 4 127 6;		// javacard/security/ECKey
 					aload_1;
 					sconst_1;
-					invokeinterface 2 126 7;		// javacard/security/ECKey
+					invokeinterface 2 127 7;		// javacard/security/ECKey
 					return;
 		}
 
@@ -3912,13 +4068,13 @@
 
 				L0:	aload_0;
 					aload_1;
-					getstatic_a 177;		// reference im/status/phonon/SECP256k1.SECP256K1_G
+					getstatic_a 179;		// reference im/status/phonon/SECP256k1.SECP256K1_G
 					sconst_0;
-					getstatic_a 177;		// reference im/status/phonon/SECP256k1.SECP256K1_G
+					getstatic_a 179;		// reference im/status/phonon/SECP256k1.SECP256K1_G
 					arraylength;
 					aload_2;
 					sload_3;
-					invokevirtual 178;		// multiplyPoint(Ljavacard/security/ECPrivateKey;[BSS[BS)S
+					invokevirtual 180;		// multiplyPoint(Ljavacard/security/ECPrivateKey;[BSS[BS)S
 					sreturn;
 		}
 
@@ -3935,7 +4091,7 @@
 					getfield_a_this 51;		// reference im/status/phonon/SECP256k1.tmpECPrivateKey
 					aload_3;
 					sload 4;
-					invokevirtual 179;		// derivePublicKey(Ljavacard/security/ECPrivateKey;[BS)S
+					invokevirtual 181;		// derivePublicKey(Ljavacard/security/ECPrivateKey;[BS)S
 					sreturn;
 		}
 
@@ -3947,14 +4103,14 @@
 
 				L0:	getfield_a_this 50;		// reference im/status/phonon/SECP256k1.ecPointMultiplier
 					aload_1;
-					invokevirtual 180;		// init(Ljavacard/security/PrivateKey;)V
+					invokevirtual 182;		// init(Ljavacard/security/PrivateKey;)V
 					getfield_a_this 50;		// reference im/status/phonon/SECP256k1.ecPointMultiplier
 					aload_2;
 					sload_3;
 					sload 4;
 					aload 5;
 					sload 6;
-					invokevirtual 181;		// generateSecret([BSS[BS)S
+					invokevirtual 183;		// generateSecret([BSS[BS)S
 					sreturn;
 		}
 
@@ -4029,7 +4185,7 @@
 			.locals 0;
 
 				L0:	aload_0;
-					invokespecial 186;		// java/lang/Object.<init>()V
+					invokespecial 188;		// java/lang/Object.<init>()V
 					aload_0;
 					sconst_m1;
 					putfield_s 52;		// short im/status/phonon/SecureChannel.preassignedPairingOffset
@@ -4040,24 +4196,24 @@
 					aload_2;
 					putfield_a 54;		// reference im/status/phonon/SecureChannel.crypto
 					aload_0;
-					new 122;		// javacard/security/KeyPair
+					new 123;		// javacard/security/KeyPair
 					dup;
 					sconst_5;
 					sspush 256;
-					invokespecial 123;		// javacard/security/KeyPair.<init>(BS)V
+					invokespecial 124;		// javacard/security/KeyPair.<init>(BS)V
 					putfield_a 55;		// reference im/status/phonon/SecureChannel.idKeypair
 					aload_3;
 					getfield_a_this 55;		// reference im/status/phonon/SecureChannel.idKeypair
-					invokevirtual 125;		// getPrivate()Ljavacard/security/PrivateKey;
-					checkcast 0 126;		// T_CLASSORINTERFACE javacard/security/ECKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 126;		// getPrivate()Ljavacard/security/PrivateKey;
+					checkcast 0 127;		// T_CLASSORINTERFACE javacard/security/ECKey
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					aload_3;
 					getfield_a_this 55;		// reference im/status/phonon/SecureChannel.idKeypair
-					invokevirtual 128;		// getPublic()Ljavacard/security/PublicKey;
-					checkcast 0 126;		// T_CLASSORINTERFACE javacard/security/ECKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 129;		// getPublic()Ljavacard/security/PublicKey;
+					checkcast 0 127;		// T_CLASSORINTERFACE javacard/security/ECKey
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 55;		// reference im/status/phonon/SecureChannel.idKeypair
-					invokevirtual 129;		// genKeyPair()V
+					invokevirtual 130;		// genKeyPair()V
 					aload_0;
 					sspush 147;
 					newarray 11;
@@ -4090,24 +4246,24 @@
 					checkcast 0 71;		// T_CLASSORINTERFACE javacard/security/AESKey
 					putfield_a 61;		// reference im/status/phonon/SecureChannel.scMacKey
 					aload_0;
-					new 122;		// javacard/security/KeyPair
+					new 123;		// javacard/security/KeyPair
 					dup;
 					sconst_5;
 					sspush 256;
-					invokespecial 123;		// javacard/security/KeyPair.<init>(BS)V
+					invokespecial 124;		// javacard/security/KeyPair.<init>(BS)V
 					putfield_a 62;		// reference im/status/phonon/SecureChannel.scKeypair
 					aload_3;
 					getfield_a_this 62;		// reference im/status/phonon/SecureChannel.scKeypair
-					invokevirtual 125;		// getPrivate()Ljavacard/security/PrivateKey;
-					checkcast 0 126;		// T_CLASSORINTERFACE javacard/security/ECKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 126;		// getPrivate()Ljavacard/security/PrivateKey;
+					checkcast 0 127;		// T_CLASSORINTERFACE javacard/security/ECKey
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					aload_3;
 					getfield_a_this 62;		// reference im/status/phonon/SecureChannel.scKeypair
-					invokevirtual 128;		// getPublic()Ljavacard/security/PublicKey;
-					checkcast 0 126;		// T_CLASSORINTERFACE javacard/security/ECKey
-					invokevirtual 127;		// setCurveParameters(Ljavacard/security/ECKey;)V
+					invokevirtual 129;		// getPublic()Ljavacard/security/PublicKey;
+					checkcast 0 127;		// T_CLASSORINTERFACE javacard/security/ECKey
+					invokevirtual 128;		// setCurveParameters(Ljavacard/security/ECKey;)V
 					getfield_a_this 62;		// reference im/status/phonon/SecureChannel.scKeypair
-					invokevirtual 129;		// genKeyPair()V
+					invokevirtual 130;		// genKeyPair()V
 					aload_0;
 					bspush 64;
 					sconst_2;
@@ -4141,10 +4297,10 @@
 					getfield_a_this 66;		// reference im/status/phonon/SecureChannel.pairingSecret
 					sconst_0;
 					bspush 32;
-					invokestatic 197;		// javacard/framework/Util.arrayCopy([BS[BSS)S
+					invokestatic 199;		// javacard/framework/Util.arrayCopy([BS[BSS)S
 					pop;
 					getfield_a_this 62;		// reference im/status/phonon/SecureChannel.scKeypair
-					invokevirtual 129;		// genKeyPair()V
+					invokevirtual 130;		// genKeyPair()V
 					return;
 		}
 
@@ -4155,8 +4311,8 @@
 				L0:	getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 8;		// reference im/status/phonon/Crypto.ecdh
 					getfield_a_this 62;		// reference im/status/phonon/SecureChannel.scKeypair
-					invokevirtual 125;		// getPrivate()Ljavacard/security/PrivateKey;
-					invokevirtual 180;		// init(Ljavacard/security/PrivateKey;)V
+					invokevirtual 126;		// getPrivate()Ljavacard/security/PrivateKey;
+					invokevirtual 182;		// init(Ljavacard/security/PrivateKey;)V
 					bspush 6;
 					sstore_2;
 				L1:	getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
@@ -4168,7 +4324,7 @@
 					baload;
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
 					sconst_0;
-					invokevirtual 181;		// generateSecret([BSS[BS)S
+					invokevirtual 183;		// generateSecret([BSS[BS)S
 					pop;
 					sload_2;
 					aload_1;
@@ -4179,7 +4335,7 @@
 				L2:	goto L5;
 				L3:	astore_3;
 				L4:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					return;
 				L5:	getfield_a_this 60;		// reference im/status/phonon/SecureChannel.scEncKey
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
@@ -4240,7 +4396,7 @@
 					aload_2;
 					sconst_2;
 					baload;
-					invokespecial 198;		// im/status/phonon/SecureChannel.checkPairingIndexAndGetOffset(B)S
+					invokespecial 200;		// im/status/phonon/SecureChannel.checkPairingIndexAndGetOffset(B)S
 					sstore_3;
 				L2:	getfield_a_this 64;		// reference im/status/phonon/SecureChannel.pairingKeys
 					sload_3;
@@ -4248,14 +4404,14 @@
 					sconst_1;
 					if_scmpeq L4;
 				L3:	sspush 27270;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					goto L5;
 				L4:	sinc 3 1;
 				L5:	getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 8;		// reference im/status/phonon/Crypto.ecdh
 					getfield_a_this 62;		// reference im/status/phonon/SecureChannel.scKeypair
-					invokevirtual 125;		// getPrivate()Ljavacard/security/PrivateKey;
-					invokevirtual 180;		// init(Ljavacard/security/PrivateKey;)V
+					invokevirtual 126;		// getPrivate()Ljavacard/security/PrivateKey;
+					invokevirtual 182;		// init(Ljavacard/security/PrivateKey;)V
 				L6:	getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 8;		// reference im/status/phonon/Crypto.ecdh
 					aload_2;
@@ -4265,31 +4421,31 @@
 					baload;
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
 					sconst_0;
-					invokevirtual 181;		// generateSecret([BSS[BS)S
+					invokevirtual 183;		// generateSecret([BSS[BS)S
 					sstore 4;
 				L7:	goto L10;
 				L8:	astore 5;
 				L9:	sspush 27010;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					return;
 				L10:	getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 6;		// reference im/status/phonon/Crypto.random
 					aload_2;
 					sconst_0;
 					bspush 48;
-					invokevirtual 194;		// generateData([BSS)V
+					invokevirtual 196;		// generateData([BSS)V
 					getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 9;		// reference im/status/phonon/Crypto.sha512
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
 					sconst_0;
 					sload 4;
-					invokevirtual 139;		// update([BSS)V
+					invokevirtual 142;		// update([BSS)V
 					getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 9;		// reference im/status/phonon/Crypto.sha512
 					getfield_a_this 64;		// reference im/status/phonon/SecureChannel.pairingKeys
 					sload_3;
 					bspush 32;
-					invokevirtual 139;		// update([BSS)V
+					invokevirtual 142;		// update([BSS)V
 					getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 9;		// reference im/status/phonon/Crypto.sha512
 					aload_2;
@@ -4297,7 +4453,7 @@
 					bspush 32;
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
 					sconst_0;
-					invokevirtual 142;		// doFinal([BSS[BS)S
+					invokevirtual 145;		// doFinal([BSS[BS)S
 					pop;
 					getfield_a_this 60;		// reference im/status/phonon/SecureChannel.scEncKey
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
@@ -4321,12 +4477,12 @@
 					bspush 16;
 					ssub;
 					sconst_0;
-					invokestatic 124;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
+					invokestatic 125;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
 					pop;
 					aload_1;
 					sconst_0;
 					bspush 48;
-					invokevirtual 130;		// setOutgoingAndSend(SS)V
+					invokevirtual 131;		// setOutgoingAndSend(SS)V
 					return;
 			.exceptionTable {
 				// start_block end_block handler_block catch_type_index
@@ -4344,7 +4500,7 @@
 					invokeinterface 1 71 3;		// javacard/security/AESKey
 					ifne L2;
 				L1:	sspush 27013;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L2:	getfield_b_this 53;		// boolean im/status/phonon/SecureChannel.mutuallyAuthenticated
 					sstore_2;
 				L3:	aload_0;
@@ -4355,30 +4511,30 @@
 					astore_3;
 				L4:	aload_0;
 					aload_3;
-					invokevirtual 163;		// preprocessAPDU([B)S
+					invokevirtual 165;		// preprocessAPDU([B)S
 					sstore 4;
 				L5:	sload_2;
 					ifeq L7;
 				L6:	sspush 26753;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L7:	sload 4;
 					bspush 32;
 					if_scmpeq L9;
 				L8:	aload_0;
-					invokevirtual 150;		// reset()V
+					invokevirtual 152;		// reset()V
 					sspush 27010;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L9:	getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 6;		// reference im/status/phonon/Crypto.random
 					aload_3;
 					bspush 37;
 					bspush 32;
-					invokevirtual 194;		// generateData([BSS)V
+					invokevirtual 196;		// generateData([BSS)V
 					aload_0;
 					aload_1;
 					sload 4;
 					sspush -28672;
-					invokevirtual 118;		// respond(Ljavacard/framework/APDU;SS)V
+					invokevirtual 119;		// respond(Ljavacard/framework/APDU;SS)V
 					return;
 		}
 
@@ -4394,7 +4550,7 @@
 				L1:	getfield_b_this 57;		// byte im/status/phonon/SecureChannel.idCertStatus
 					ifeq L3;
 				L2:	sspush 27014;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L3:	aload_2;
 					sconst_4;
 					baload;
@@ -4416,7 +4572,7 @@
 					putfield_b 57;		// byte im/status/phonon/SecureChannel.idCertStatus
 					goto L6;
 				L5:	sspush 27012;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L6:	return;
 		}
 
@@ -4435,13 +4591,13 @@
 					bspush 32;
 					if_scmpeq L3;
 				L2:	sspush 27012;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L3:	bspush 37;
 					sstore_3;
 				L4:	sload_3;
 					sstore 4;
 				L5:	getfield_a_this 55;		// reference im/status/phonon/SecureChannel.idKeypair
-					invokevirtual 128;		// getPublic()Ljavacard/security/PublicKey;
+					invokevirtual 129;		// getPublic()Ljavacard/security/PublicKey;
 					checkcast 0 73;		// T_CLASSORINTERFACE javacard/security/ECPublicKey
 					astore 5;
 				L6:	aload 5;
@@ -4474,7 +4630,7 @@
 					sstore 4;
 					getfield_a_this 59;		// reference im/status/phonon/SecureChannel.eccSig
 					getfield_a_this 55;		// reference im/status/phonon/SecureChannel.idKeypair
-					invokevirtual 125;		// getPrivate()Ljavacard/security/PrivateKey;
+					invokevirtual 126;		// getPrivate()Ljavacard/security/PrivateKey;
 					sconst_1;
 					invokevirtual 93;		// init(Ljavacard/security/Key;B)V
 					getfield_a_this 59;		// reference im/status/phonon/SecureChannel.eccSig
@@ -4483,7 +4639,7 @@
 					bspush 32;
 					aload_2;
 					sload 4;
-					invokevirtual 199;		// signPreComputedHash([BSS[BS)S
+					invokevirtual 201;		// signPreComputedHash([BSS[BS)S
 					sstore 7;
 				L8:	sload 4;
 					sload 7;
@@ -4494,7 +4650,7 @@
 					sload 4;
 					sload_3;
 					ssub;
-					invokevirtual 130;		// setOutgoingAndSend(SS)V
+					invokevirtual 131;		// setOutgoingAndSend(SS)V
 					return;
 		}
 
@@ -4505,10 +4661,10 @@
 			.descriptor	Ljavacard/framework/APDU;	1.10;
 
 				L0:	aload_0;
-					invokevirtual 119;		// isOpen()Z
+					invokevirtual 120;		// isOpen()Z
 					ifeq L2;
 				L1:	sspush 27013;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L2:	aload_1;
 					invokevirtual 97;		// getBuffer()[B
 					astore_2;
@@ -4518,7 +4674,7 @@
 					ifne L6;
 				L4:	aload_0;
 					aload_2;
-					invokespecial 200;		// im/status/phonon/SecureChannel.pairStep1([B)S
+					invokespecial 202;		// im/status/phonon/SecureChannel.pairStep1([B)S
 					sstore_3;
 				L5:	goto L11;
 				L6:	aload_2;
@@ -4531,16 +4687,16 @@
 					if_scmpeq L10;
 				L8:	aload_0;
 					aload_2;
-					invokespecial 201;		// im/status/phonon/SecureChannel.pairStep2([B)S
+					invokespecial 203;		// im/status/phonon/SecureChannel.pairStep2([B)S
 					sstore_3;
 				L9:	goto L11;
 				L10:	sspush 27270;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					return;
 				L11:	aload_1;
 					sconst_0;
 					sload_3;
-					invokevirtual 130;		// setOutgoingAndSend(SS)V
+					invokevirtual 131;		// setOutgoingAndSend(SS)V
 					return;
 		}
 
@@ -4554,14 +4710,14 @@
 					bspush 99;
 					if_scmpeq L2;
 				L1:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					sconst_0;
 					sreturn;
 				L2:	getfield_b_this 57;		// byte im/status/phonon/SecureChannel.idCertStatus
 					sconst_m1;
 					if_scmpeq L4;
 				L3:	sspush 26754;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					sconst_0;
 					sreturn;
 				L4:	aload_0;
@@ -4572,8 +4728,8 @@
 				L5:	getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 8;		// reference im/status/phonon/Crypto.ecdh
 					getfield_a_this 55;		// reference im/status/phonon/SecureChannel.idKeypair
-					invokevirtual 125;		// getPrivate()Ljavacard/security/PrivateKey;
-					invokevirtual 180;		// init(Ljavacard/security/PrivateKey;)V
+					invokevirtual 126;		// getPrivate()Ljavacard/security/PrivateKey;
+					invokevirtual 182;		// init(Ljavacard/security/PrivateKey;)V
 					getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 8;		// reference im/status/phonon/Crypto.ecdh
 					aload_1;
@@ -4583,12 +4739,12 @@
 					baload;
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
 					sconst_0;
-					invokevirtual 181;		// generateSecret([BSS[BS)S
+					invokevirtual 183;		// generateSecret([BSS[BS)S
 					pop;
 				L6:	goto L9;
 				L7:	astore_3;
 				L8:	sspush 27010;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 					sconst_0;
 					sreturn;
 				L9:	getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
@@ -4596,7 +4752,7 @@
 					aload_1;
 					sconst_5;
 					bspush 32;
-					invokevirtual 139;		// update([BSS)V
+					invokevirtual 142;		// update([BSS)V
 					getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 7;		// reference im/status/phonon/Crypto.sha256
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
@@ -4604,7 +4760,7 @@
 					bspush 32;
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
 					sconst_0;
-					invokevirtual 142;		// doFinal([BSS[BS)S
+					invokevirtual 145;		// doFinal([BSS[BS)S
 					pop;
 					sconst_0;
 					sstore_3;
@@ -4613,7 +4769,7 @@
 					aload_1;
 					sload_3;
 					bspush 32;
-					invokevirtual 194;		// generateData([BSS)V
+					invokevirtual 196;		// generateData([BSS)V
 					sinc 3 32;
 					sconst_2;
 					getfield_a_this 56;		// reference im/status/phonon/SecureChannel.idCertificate
@@ -4636,7 +4792,7 @@
 					sstore_3;
 					getfield_a_this 59;		// reference im/status/phonon/SecureChannel.eccSig
 					getfield_a_this 55;		// reference im/status/phonon/SecureChannel.idKeypair
-					invokevirtual 125;		// getPrivate()Ljavacard/security/PrivateKey;
+					invokevirtual 126;		// getPrivate()Ljavacard/security/PrivateKey;
 					sconst_1;
 					invokevirtual 93;		// init(Ljavacard/security/Key;B)V
 					getfield_a_this 59;		// reference im/status/phonon/SecureChannel.eccSig
@@ -4645,7 +4801,7 @@
 					bspush 32;
 					aload_1;
 					sload_3;
-					invokevirtual 199;		// signPreComputedHash([BSS[BS)S
+					invokevirtual 201;		// signPreComputedHash([BSS[BS)S
 					sstore 5;
 				L12:	sload_3;
 					sload 5;
@@ -4656,7 +4812,7 @@
 					aload_1;
 					sconst_0;
 					bspush 32;
-					invokevirtual 139;		// update([BSS)V
+					invokevirtual 142;		// update([BSS)V
 					getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 7;		// reference im/status/phonon/Crypto.sha256
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
@@ -4664,7 +4820,7 @@
 					bspush 32;
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
 					bspush 32;
-					invokevirtual 142;		// doFinal([BSS[BS)S
+					invokevirtual 145;		// doFinal([BSS[BS)S
 					pop;
 					sload_3;
 					sreturn;
@@ -4684,31 +4840,31 @@
 					bspush 32;
 					if_scmpeq L2;
 				L1:	sspush 27264;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L2:	aload_1;
 					sconst_5;
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
 					bspush 32;
 					bspush 32;
-					invokestatic 146;		// javacard/framework/Util.arrayCompare([BS[BSS)B
+					invokestatic 148;		// javacard/framework/Util.arrayCompare([BS[BSS)B
 					ifeq L4;
 				L3:	aload_0;
 					sconst_m1;
 					putfield_s 52;		// short im/status/phonon/SecureChannel.preassignedPairingOffset
 					sspush 27010;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L4:	getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 6;		// reference im/status/phonon/Crypto.random
 					aload_1;
 					sconst_1;
 					bspush 32;
-					invokevirtual 194;		// generateData([BSS)V
+					invokevirtual 196;		// generateData([BSS)V
 					getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 7;		// reference im/status/phonon/Crypto.sha256
 					aload_1;
 					sconst_1;
 					bspush 32;
-					invokevirtual 139;		// update([BSS)V
+					invokevirtual 142;		// update([BSS)V
 					getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 7;		// reference im/status/phonon/Crypto.sha256
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
@@ -4718,7 +4874,7 @@
 					getfield_s_this 52;		// short im/status/phonon/SecureChannel.preassignedPairingOffset
 					sconst_1;
 					sadd;
-					invokevirtual 142;		// doFinal([BSS[BS)S
+					invokevirtual 145;		// doFinal([BSS[BS)S
 					pop;
 					getfield_a_this 64;		// reference im/status/phonon/SecureChannel.pairingKeys
 					getfield_s_this 52;		// short im/status/phonon/SecureChannel.preassignedPairingOffset
@@ -4753,7 +4909,7 @@
 					aload_1;
 					sconst_2;
 					baload;
-					invokespecial 198;		// im/status/phonon/SecureChannel.checkPairingIndexAndGetOffset(B)S
+					invokespecial 200;		// im/status/phonon/SecureChannel.checkPairingIndexAndGetOffset(B)S
 					sstore_2;
 				L1:	getfield_a_this 64;		// reference im/status/phonon/SecureChannel.pairingKeys
 					sload_2;
@@ -4764,7 +4920,7 @@
 					sload_2;
 					bspush 33;
 					sconst_0;
-					invokestatic 124;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
+					invokestatic 125;		// javacard/framework/Util.arrayFillNonAtomic([BSSB)S
 					pop;
 					aload_0;
 					dup;
@@ -4781,10 +4937,10 @@
 			.locals 2;
 
 				L0:	aload_0;
-					invokevirtual 119;		// isOpen()Z
+					invokevirtual 120;		// isOpen()Z
 					ifne L2;
 				L1:	sspush 27013;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L2:	aload_1;
 					sconst_4;
 					baload;
@@ -4794,12 +4950,12 @@
 				L3:	aload_0;
 					aload_1;
 					sload_2;
-					invokespecial 202;		// im/status/phonon/SecureChannel.verifyAESMAC([BS)Z
+					invokespecial 204;		// im/status/phonon/SecureChannel.verifyAESMAC([BS)Z
 					ifne L5;
 				L4:	aload_0;
-					invokevirtual 150;		// reset()V
+					invokevirtual 152;		// reset()V
 					sspush 27010;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L5:	getfield_a_this 54;		// reference im/status/phonon/SecureChannel.crypto
 					getfield_a 10;		// reference im/status/phonon/Crypto.aesCbcIso9797m2
 					getfield_a_this 60;		// reference im/status/phonon/SecureChannel.scEncKey
@@ -4847,12 +5003,12 @@
 					aload_1;
 					sconst_0;
 					sconst_5;
-					invokevirtual 203;		// update([BSS)V
+					invokevirtual 205;		// update([BSS)V
 					getfield_a_this 58;		// reference im/status/phonon/SecureChannel.scMac
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
 					bspush 16;
 					bspush 11;
-					invokevirtual 203;		// update([BSS)V
+					invokevirtual 205;		// update([BSS)V
 					getfield_a_this 58;		// reference im/status/phonon/SecureChannel.scMac
 					aload_1;
 					bspush 21;
@@ -4862,7 +5018,7 @@
 					aload_1;
 					sconst_5;
 					bspush 16;
-					invokevirtual 204;		// verify([BSS[BSS)Z
+					invokevirtual 206;		// verify([BSS[BSS)Z
 					sreturn;
 		}
 
@@ -4910,7 +5066,7 @@
 					aload_0;
 					sload_2;
 					aload 4;
-					invokespecial 205;		// im/status/phonon/SecureChannel.computeAESMAC(S[B)V
+					invokespecial 207;		// im/status/phonon/SecureChannel.computeAESMAC(S[B)V
 					aload 4;
 					sconst_5;
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
@@ -4922,7 +5078,7 @@
 					aload_1;
 					sconst_5;
 					sload_2;
-					invokevirtual 130;		// setOutgoingAndSend(SS)V
+					invokevirtual 131;		// setOutgoingAndSend(SS)V
 					return;
 		}
 
@@ -4938,12 +5094,12 @@
 					aload_2;
 					sconst_0;
 					sconst_1;
-					invokevirtual 203;		// update([BSS)V
+					invokevirtual 205;		// update([BSS)V
 					getfield_a_this 58;		// reference im/status/phonon/SecureChannel.scMac
 					getfield_a_this 63;		// reference im/status/phonon/SecureChannel.secret
 					bspush 16;
 					bspush 15;
-					invokevirtual 203;		// update([BSS)V
+					invokevirtual 205;		// update([BSS)V
 					getfield_a_this 58;		// reference im/status/phonon/SecureChannel.scMac
 					aload_2;
 					bspush 21;
@@ -4960,7 +5116,7 @@
 			.locals 1;
 
 				L0:	getfield_a_this 62;		// reference im/status/phonon/SecureChannel.scKeypair
-					invokevirtual 128;		// getPublic()Ljavacard/security/PublicKey;
+					invokevirtual 129;		// getPublic()Ljavacard/security/PublicKey;
 					checkcast 0 73;		// T_CLASSORINTERFACE javacard/security/ECPublicKey
 					astore_3;
 				L1:	aload_3;
@@ -5011,7 +5167,7 @@
 					putfield_s 67;		// short im/status/phonon/SecureChannel.scCounter
 					goto L3;
 				L2:	getfield_a_this 62;		// reference im/status/phonon/SecureChannel.scKeypair
-					invokevirtual 129;		// genKeyPair()V
+					invokevirtual 130;		// genKeyPair()V
 					aload_0;
 					sconst_0;
 					putfield_s 67;		// short im/status/phonon/SecureChannel.scCounter
@@ -5041,7 +5197,7 @@
 					getfield_a_this 66;		// reference im/status/phonon/SecureChannel.pairingSecret
 					sconst_0;
 					bspush 32;
-					invokestatic 197;		// javacard/framework/Util.arrayCopy([BS[BSS)S
+					invokestatic 199;		// javacard/framework/Util.arrayCopy([BS[BSS)S
 					pop;
 					return;
 		}
@@ -5059,7 +5215,7 @@
 					arraylength;
 					if_scmplt L3;
 				L2:	sspush 27270;
-					invokestatic 196;		// javacard/framework/ISOException.throwIt(S)V
+					invokestatic 198;		// javacard/framework/ISOException.throwIt(S)V
 				L3:	sload_2;
 					sreturn;
 		}
@@ -5084,7 +5240,7 @@
 			.locals 0;
 
 				L0:	aload_0;
-					invokespecial 186;		// java/lang/Object.<init>()V
+					invokespecial 188;		// java/lang/Object.<init>()V
 					return;
 		}
 
