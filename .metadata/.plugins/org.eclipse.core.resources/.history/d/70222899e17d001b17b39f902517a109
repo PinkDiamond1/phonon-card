@@ -824,8 +824,8 @@ public class PhononApplet extends Applet {
 	        	SendPhononList[ i ] = Util.getShort(PhononListTLV.GetData(), Offset);
 	        	Offset += 2;
 	        }
+	        SendPhononList( apdu, TLV_PHONON_TRANSFER_PACKET);
 	    }
-        SendPhononList( apdu, TLV_PHONON_TRANSFER_PACKET);
 		return;
 	}
 
@@ -838,12 +838,17 @@ public class PhononApplet extends Applet {
 	    short i,j;
 		for( j = SendPhononListLastSent; j< SendPhononListCount; j++)
 		{
-			i = SendPhononList[ j ];
-			i--;
-			byte [] PhononTLVData = new byte[100];
+			i = SendPhononList[ j ] - 1;
+			byte [] PhononTLVData = new byte[50];
 			short Offset = 0;
 			
 			byte [] tlvtemp;
+			
+/*			Bertlv berPhononIndex = new Bertlv();
+			tlvtemp = berPhononIndex.BuildTLVStructure( TLV_SET_PHONON_KEY_INDEX, (short)2, (short)(i+1) );
+			Util.arrayCopyNonAtomic(tlvtemp, (short)0, PhononTLVData, Offset, berPhononIndex.BuildLength);
+			Offset += berPhononIndex.BuildLength;
+*/
 			
 	        Bertlv berPhononKey = new Bertlv();
 	        ECPrivateKey pk = (ECPrivateKey)PhononArray[i].PhononKey.getPrivate();
@@ -853,6 +858,10 @@ public class PhononApplet extends Applet {
 		    short keyLength = pk.getS(tempbuffer, (short)0);
 	       
 		    tlvtemp = berPhononKey.BuildTLVStructure(TLV_PRIV_KEY, keyLength, tempbuffer);
+	        
+//			Bertlv berPhononPrivate = new Bertlv();
+//			tlvtemp = berPhononPrivate.BuildTLVStructure( TLV_SET_PHONON_KEY_INDEX, (short)2, (short)(i+1) );
+	        
 			Util.arrayCopyNonAtomic(tlvtemp, (short)0, PhononTLVData, Offset, berPhononKey.BuildLength);
 			Offset += berPhononKey.BuildLength;
 			

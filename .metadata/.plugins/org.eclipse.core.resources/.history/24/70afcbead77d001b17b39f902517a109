@@ -19,12 +19,6 @@ public class Bertlv {
 		return true;
 	}
 	
-	public short LoadNextTag( byte[] Indata, short Offset)
-	{
-		return LoadTagBase( Indata, Offset);
-		
-	}
-	
 	public short LoadTag(byte [] Indata)
 	{
 		short Offset = 0;

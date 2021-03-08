@@ -49,6 +49,18 @@
 /send 803200031260108102000184043f0d000085043f05000000
 /send 803300000441020001
 
-/send 803400000441020002
+#/send 803400000441020002
 
+#* CLA: 0x80
+#* INS: 0x35
+#* P1: 0x00 for initial request, 0x01 to request an extended transfer packet
+#* P2: 0x00 Number of phonons request
+
+#Command Data: 
+#|    Tag   |  Length  |            Value                       |
+#|:---------|:---------|:---------------------------------------|
+#|    0x42  | N * 2    | Phonon Key Index List                  |
+
+/send 8035000a16421400010003000400050006000700080009000a000b
+/send 8035010000
 

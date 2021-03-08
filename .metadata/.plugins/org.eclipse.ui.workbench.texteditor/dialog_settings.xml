@@ -2,12 +2,13 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="PhononList" key="selection"/>
+		<item value=".nextData" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value=".NextData"/>
 			<item value="PhononList"/>
 			<item value="TLV_PHONON"/>
 			<item value="PhononCurrencyTypeArray"/>
@@ -15,7 +16,6 @@
 			<item value="APPLICATION_CAPABILITIES"/>
 			<item value="APPLICATION_VERSION"/>
 			<item value="selectApplet"/>
-			<item value="      selectApplet(apdu);"/>
 		</list>
 		<list key="replacehistory">
 		</list>

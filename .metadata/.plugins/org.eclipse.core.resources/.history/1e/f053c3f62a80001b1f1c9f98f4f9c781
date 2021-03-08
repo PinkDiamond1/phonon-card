@@ -102,7 +102,7 @@ public class Bertlv {
 		}
 		else
 			bertag.data =  null;
-		bertag.nextData = (short)(bertag.length + Offset);
+//		bertag.nextData = (short)(bertag.length + Offset);
  		return bertag.length;
 	}
 	
