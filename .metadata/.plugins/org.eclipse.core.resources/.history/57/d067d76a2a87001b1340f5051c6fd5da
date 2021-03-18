@@ -33,6 +33,7 @@ public class PhononApplet extends Applet {
 	 static final byte INS_GET_PHONON_PUB_KEY		= (byte) 0x33;
 	 static final byte INS_DESTROY_PHONON			= (byte) 0x34;
 	 static final byte INS_SEND_PHONONS				= (byte) 0x35;
+	 static final byte INS_RECV_PHONONS				= (byte) 0x36;
 	 	
 	  static final byte PUK_LENGTH = 12;
 	  static final byte PUK_MAX_RETRIES = 5;
@@ -227,6 +228,7 @@ public class PhononApplet extends Applet {
 				&& (buf[ISO7816.OFFSET_INS] != INS_DESTROY_PHONON )
 				&& (buf[ISO7816.OFFSET_INS] != INS_GET_PHONON_PUB_KEY )
 				&& (buf[ISO7816.OFFSET_INS] != INS_SEND_PHONONS )
+				&& (buf[ISO7816.OFFSET_INS] != INS_RECV_PHONONS )
 			&& 	(buf[ISO7816.OFFSET_INS] != INS_SET_PHONON_DESCRIPTOR)	)
 		{
 		    if( buf[ISO7816.OFFSET_INS] != SecureChannel.INS_IDENTIFY_CARD &&
@@ -323,6 +325,12 @@ public class PhononApplet extends Applet {
 		        	break;
 		        }
 		        
+		        case INS_RECV_PHONONS:
+		        {
+		        	ReceivePhonons( apdu );
+		        	break;
+		        }
+		        
 		        default:
 				// good practice: If you don't know the INStruction, say so:
 				ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
@@ -372,10 +380,10 @@ public class PhononApplet extends Applet {
           	ISOException.throwIt(ISO7816.SW_FILE_INVALID);
 		}
 		PhononArray[phononKeyIndex] = new Phonon();
-	   PhononArray[phononKeyIndex].PhononKey = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
-	   secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPrivate());
-	   secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPublic());
-	   PhononArray[phononKeyIndex].PhononKey.genKeyPair();
+		PhononArray[phononKeyIndex].PhononKey = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
+		secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPrivate());
+		secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPublic());
+		PhononArray[phononKeyIndex].PhononKey.genKeyPair();
 
 	    byte[] apduBuffer = apdu.getBuffer();
 
@@ -399,6 +407,65 @@ public class PhononApplet extends Applet {
 	    apduBuffer[ 1 ] = (byte)(off - 1);
 	    apdu.setOutgoingAndSend((short) 0, off);
 	    phononKeyIndex++;
+	}
+	
+	private void ReceivePhonons( APDU apdu)
+	{
+	    byte[] apduBuffer = apdu.getBuffer();
+		if(phononKeyIndex > MAX_NUMBER_PHONONS)
+		{
+			ISOException.throwIt(ISO7816.SW_FILE_FULL);
+			return;
+		}
+	    
+        Bertlv RecievePhononTLV = new Bertlv();
+        byte [] IncomingPhonon = new byte[apdu.getIncomingLength()];
+        Util.arrayCopyNonAtomic(apduBuffer, apdu.getOffsetCdata(), IncomingPhonon, (short)0,apdu.getIncomingLength());
+        RecievePhononTLV.LoadTag(IncomingPhonon);
+        if( RecievePhononTLV.GetTag() != TLV_PHONON_TRANSFER_PACKET )
+        {
+        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+        }
+        short PhononCount = RecievePhononTLV.GetLength();
+        PhononCount = (short)(PhononCount / 46);
+        short Offset = 0;
+        for( short i = 0; i < PhononCount; i++)
+        {
+			if(phononKeyIndex > MAX_NUMBER_PHONONS)
+			{
+				ISOException.throwIt(ISO7816.SW_FILE_FULL);
+				return;
+			}
+			Bertlv PhononTLV = new Bertlv();
+		    PhononTLV.LoadNextTag(RecievePhononTLV.GetData(), Offset);
+		    Offset = PhononTLV.bertag.nextData;
+
+		    Bertlv PhononECCTLV = new Bertlv();
+		    PhononECCTLV.LoadTag( PhononTLV.GetData());
+		    Bertlv PhononValueTLV = new Bertlv();
+		    PhononValueTLV.LoadNextTag(PhononTLV.GetData(), PhononECCTLV.bertag.nextData);
+		    Bertlv PhononTypeTLV = new Bertlv();
+		    PhononTypeTLV.LoadNextTag(PhononTLV.GetData(), PhononValueTLV.bertag.nextData);
+
+			PhononArray[phononKeyIndex] = new Phonon();
+			PhononArray[phononKeyIndex].PhononKey = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
+			secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPrivate());
+			secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPublic());
+		    ECPrivateKey PrivateKey = (ECPrivateKey) PhononArray[phononKeyIndex].PhononKey.getPrivate();
+		    PrivateKey.setS(PhononECCTLV.GetData(), (short)0, PhononECCTLV.GetLength());
+		    byte [] PublicKeystr = new byte[100];
+		    short PublicKeyLength=0;
+		    
+		    secp256k1.derivePublicKey(PrivateKey, PublicKeystr, PublicKeyLength);
+		    ECPublicKey PublicKey = (ECPublicKey) PhononArray[phononKeyIndex].PhononKey.getPublic();
+		    PublicKey.setW(PublicKeystr, (short)0, PublicKeyLength);
+		    PhononArray[phononKeyIndex].CurrencyType = Util.getShort( PhononTypeTLV.GetData(), (short)0);
+			
+//			PhononArray[phononKeyIndex].PhononKey.genKeyPair();
+			
+			phononKeyIndex++;
+        }
+		return;
 	}
 	
 	private void DestroyPhonon( APDU apdu )

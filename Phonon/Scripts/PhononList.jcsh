@@ -38,6 +38,7 @@
 /send 8031000010500e410200108102000183043f100000
 /send 8031000010500e410200118102000183043f110000
 
+#List Phonons
 #Command Data: 
 #|    Tag   |  Length  |            Value                       |
 #|:---------|:---------|:---------------------------------------|
@@ -47,10 +48,30 @@
 #|    0x85  |  4       | Value Greater Than or Equal to 
 
 /send 803200031260108102000184043f0d000085043f05000000
+
+#GET_PHONON_PUB_KEY
+#* CLA: 0x80
+#* INS: 0x33
+#* P1: 0x00
+#* P2: 0x00
+
+#Command Data: 
+#|    Tag   |  Length  |            Value                       |
+#|:---------|:---------|:---------------------------------------|
+#|    0x41  |  2       | Phonon Key Index                       |
+
+#Response Data: 
+#|    Tag   |  Length  |            Value                       |
+#|:---------|:---------|:---------------------------------------|
+#|    0x43  | Variable | Transfer Phonon Packet                 |
+#|    0x44  |          | Phonon Complete Description  
+#|    0x80  | 65       | Phonon ECC Public Key Value            |
+
 /send 803300000441020001
 
 #/send 803400000441020002
 
+# send phonons
 #* CLA: 0x80
 #* INS: 0x35
 #* P1: 0x00 for initial request, 0x01 to request an extended transfer packet
@@ -61,6 +82,7 @@
 #|:---------|:---------|:---------------------------------------|
 #|    0x42  | N * 2    | Phonon Key Index List                  |
 
-/send 8035000a16421400010003000400050006000700080009000a000b
-/send 8035010000
+#/send 8035000a16421400010003000400050006000700080009000a000b
+#/send 8035010000
+/send 8035000206420400010002
 

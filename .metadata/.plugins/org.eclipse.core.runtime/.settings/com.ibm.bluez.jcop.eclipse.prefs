@@ -4,5 +4,5 @@ com.ibm.bluez.jcop.eclipse.token=23cb832f9bc9c8bffe21d53e8f02e5bc
 com.ibm.bluez.jcop.eclipse.views.bytecode.weights.0=666
 com.ibm.bluez.jcop.eclipse.views.bytecode.weights.1=333
 com.ibm.bluez.jcop.eclipse.views.shell.trace=true
-com.ibm.jcop.maskgenerator.installdir=C\:\\workspaceGridplus\\Phonon/JCOPCustomMaskGenerator
+com.ibm.jcop.maskgenerator.installdir=D\:\\workspaceGridplus\\Phonon/JCOPCustomMaskGenerator
 eclipse.preferences.version=1

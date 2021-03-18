@@ -449,19 +449,23 @@ public class PhononApplet extends Applet {
 
 			PhononArray[phononKeyIndex] = new Phonon();
 			PhononArray[phononKeyIndex].PhononKey = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
-			secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPrivate());
-			secp256k1.setCurveParameters((ECKey) PhononArray[phononKeyIndex].PhononKey.getPublic());
+			
+
+			secp256k1.setCurveParameters((ECKey)PhononArray[phononKeyIndex].PhononKey.getPublic());
+			secp256k1.setCurveParameters((ECKey)PhononArray[phononKeyIndex].PhononKey.getPrivate());
+
 		    ECPrivateKey PrivateKey = (ECPrivateKey) PhononArray[phononKeyIndex].PhononKey.getPrivate();
 		    PrivateKey.setS(PhononECCTLV.GetData(), (short)0, PhononECCTLV.GetLength());
 		    byte [] PublicKeystr = new byte[100];
-		    short PublicKeyLength=0;
-		    
-		    secp256k1.derivePublicKey(PrivateKey, PublicKeystr, PublicKeyLength);
+		   		    
+		    short PublicKeyLength = secp256k1.derivePublicKey(PrivateKey, PublicKeystr, (short)0);
 		    ECPublicKey PublicKey = (ECPublicKey) PhononArray[phononKeyIndex].PhononKey.getPublic();
 		    PublicKey.setW(PublicKeystr, (short)0, PublicKeyLength);
 		    PhononArray[phononKeyIndex].CurrencyType = Util.getShort( PhononTypeTLV.GetData(), (short)0);
 			
-//			PhononArray[phononKeyIndex].PhononKey.genKeyPair();
+	         short vLen = PhononValueTLV.GetLength();
+	         PhononArray[phononKeyIndex].Value = new byte[vLen];
+	         Util.arrayCopyNonAtomic(PhononValueTLV.GetData(), (short)0, PhononArray[phononKeyIndex].Value, (short)0, vLen);
 			
 			phononKeyIndex++;
         }
