@@ -82,6 +82,15 @@
 #|:---------|:---------|:---------------------------------------|
 #|    0x42  | N * 2    | Phonon Key Index List                  |
 
+#Response Data: 
+#|    Tag   |  Length  |            Value                       |
+#|:---------|:---------|:---------------------------------------|
+#|    0x43  | N * 46   | Phonon Transfer Packet                 |
+#|    0x44  |  44      | N Phonon Private Descriptions          |
+#|    0x81  |  32      | Phonon ECC Private Key Value           |
+#|    0x83  |  4       | Phonon Value                           |
+#|    0x81  |  2       | Coin Type                              |
+
 #/send 8035000a16421400010003000400050006000700080009000a000b
 #/send 8035010000
 /send 8035000206420400010002
