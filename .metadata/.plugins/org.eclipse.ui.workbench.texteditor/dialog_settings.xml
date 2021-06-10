@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="Deriv" key="selection"/>
+		<item value="PHONON_STATUS_INITIALIZED" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
-			<item value="deriv"/>
-			<item value="pinlessPrivateKey"/>
-			<item value="privateKey"/>
-			<item value="ECPrivateKey"/>
-			<item value=".NextData"/>
-			<item value="PhononList"/>
-			<item value="TLV_PHONON"/>
-			<item value="PhononCurrencyTypeArray"/>
+			<item value="PHONON_STATUS_INITIALIZED"/>
+			<item value="PHONON_STATUS_PERSONALIZED"/>
+			<item value="PHONON_STATUS_DELETED"/>
+			<item value="derivationOutput"/>
+			<item value="APPLICATION_VERSION"/>
+			<item value="pin."/>
+			<item value="Verify"/>
+			<item value="preprocessAPDU"/>
 		</list>
 		<list key="replacehistory">
 		</list>

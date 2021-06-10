@@ -8,7 +8,7 @@ import javacard.framework.ISO7816;
 public class Bertlv {
 	BerTag bertag = new BerTag();
 	short BuildLength = 0;
-
+//	BerTag bertag = JCSystem.makeTransientObjectArray(BerTag, JCSystem.CLEAR_ON_RESET);
 	public boolean LoadNextTag( Bertlv NextTag)
 	{
 		if( bertag.length >= bertag.nextData)

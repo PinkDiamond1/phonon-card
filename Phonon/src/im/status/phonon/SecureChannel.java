@@ -472,6 +472,13 @@ public class SecureChannel {
     len += SC_BLOCK_SIZE;
     apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, len);
   }
+  
+  public void respond( APDU apdu, byte[]OutgoingData, short len, short sw )
+  {
+	  byte[] apduBuffer = apdu.getBuffer();
+	  Util.arrayCopyNonAtomic( OutgoingData, (short)0, apduBuffer, (short)SC_OUT_OFFSET, len);
+	  respond( apdu, len, sw);
+  }
 
   /**
    * Computes the AES CBC-MAC, either natively or with a software implementation. Can only be called from the respond

@@ -1,11 +1,11 @@
 package im.status.phonon;
-import javacard.security.*;
+//import javacard.security.*;
 
 
-public class Phonon {
+//public class Phonon {
 	
-	KeyPair		PhononKey;
-	short		CurrencyType;
-	byte []		Value;
-	byte		Status;
-}
+//	KeyPair		PhononKey;
+//	short		CurrencyType;
+//	byte []		Value;
+//	byte		Status;
+//}

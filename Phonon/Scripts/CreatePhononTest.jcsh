@@ -1,0 +1,17 @@
+/atr
+/select A000000820000301
+
+/set-var x 256
+#while ${x}
+	/echo ${x}
+	#create 1 Phonons
+	/send 0030000000
+/set-var x $(/expr ${x} - 1)
+#end
+
+#set Descriptor
+#/send 8031000010500E410200018102000183043DCCCCCD
+
+# Get List
+#/send 80320000
+
