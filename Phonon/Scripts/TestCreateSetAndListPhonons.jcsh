@@ -1,0 +1,69 @@
+#RUN   TestCreateSetAndListPhonons
+/atr
+/select A000000820000301
+
+#sending CREATE_PHONON command
+/send 0030000000
+#sending SET_DESCRIPTOR command
+/send 8031000010500E410200018102000183043F80000000
+
+#sending CREATE_PHONON command
+/send 0030000000
+#sending SET_DESCRIPTOR command
+/send 8031000010500E41020002810200018304322BCC7700
+
+#sending CREATE_PHONON command
+/send 0030000000
+#sending SET_DESCRIPTOR command
+/send 8031000010500E410200038102000183044CBEBC2000
+
+#sending CREATE_PHONON command
+/send 0030000000
+#sending SET_DESCRIPTOR command
+/send 8031000010500E41020004810200028304219392EF00
+
+#sending CREATE_PHONON command
+/send 0030000000
+#sending SET_DESCRIPTOR command
+/send 8031000010500E410200058102000283045D5E0B6B00
+
+#sending CREATE_PHONON command
+/send 0030000000
+#sending SET_DESCRIPTOR command
+/send 8031000010500E410200068102000283043F80000000
+
+#createdPhonons: [{KeyIndex:1 PubKey:0xc000065f00 Value:1 CurrencyType:1} 
+#				{KeyIndex:2 PubKey:0xc000212020 Value:1e-08 CurrencyType:1}
+#				{KeyIndex:3 PubKey:0xc000212140 Value:1e+08 CurrencyType:1}
+#				{KeyIndex:4 PubKey:0xc000212260 Value:1e-18 CurrencyType:2}
+#				{KeyIndex:5 PubKey:0xc000212380 Value:1e+18 CurrencyType:2}
+#				{KeyIndex:6 PubKey:0xc0002124a0 Value:1 CurrencyType:2}]
+
+#listing phonons with filter: {currencyType:0 lessThanValue:0 greaterThanValue:0 expectedPhononCount:6}
+
+#sending list phonons command
+/send 003200001260108102000084040000000085040000000000
+#len of the received phonons:  5
+
+#sending GET_PHONON_PUB_KEY command
+/send 00330000044102000200
+#{KeyIndex:2 PubKey:0xc000212160 Value:1e-08 CurrencyType:1}
+
+#sending GET_PHONON_PUB_KEY command
+/send 00330000044102000300
+#{KeyIndex:3 PubKey:0xc000212440 Value:1e+08 CurrencyType:1}
+
+#sending GET_PHONON_PUB_KEY command
+/send 00330000044102000400
+#{KeyIndex:4 PubKey:0xc0002126a0 Value:1e-18 CurrencyType:2}
+
+#sending GET_PHONON_PUB_KEY command
+/send 00330000044102000500
+#{KeyIndex:5 PubKey:0xc0002128a0 Value:1e+18 CurrencyType:2}
+
+#sending GET_PHONON_PUB_KEY command
+/send 00330000044102000600
+#{KeyIndex:6 PubKey:0xc000212aa0 Value:1 CurrencyType:2}
+
+#phononCommandSet_test.go:196: expected 6 received phonons to match list but only 5 were found
+

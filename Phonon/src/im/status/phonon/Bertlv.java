@@ -6,9 +6,18 @@ import javacard.framework.Util;
 import javacard.framework.ISO7816;
 
 public class Bertlv {
+	
 	BerTag bertag = new BerTag();
+	byte [] NextTagData;
 	short BuildLength = 0;
 //	BerTag bertag = JCSystem.makeTransientObjectArray(BerTag, JCSystem.CLEAR_ON_RESET);
+	
+	public Bertlv()
+	{
+		bertag.data = JCSystem.makeTransientByteArray((short)255, JCSystem.CLEAR_ON_DESELECT); 
+		NextTagData = new byte[255];
+	}
+	
 	public boolean LoadNextTag( Bertlv NextTag)
 	{
 		if( bertag.length >= bertag.nextData)
@@ -97,7 +106,7 @@ public class Bertlv {
 		}
 		if( bertag.length != 0 )
 		{
-			bertag.data = JCSystem.makeTransientByteArray((short)bertag.length, JCSystem.CLEAR_ON_DESELECT);
+//			bertag.data = JCSystem.makeTransientByteArray((short)bertag.length, JCSystem.CLEAR_ON_DESELECT);
 			Util.arrayCopyNonAtomic(Indata, (short)Offset, bertag.data, (short)0, bertag.length);
 		}
 		else
@@ -121,14 +130,19 @@ public class Bertlv {
 		return bertag.data;
 	}
 	
-	public byte [] GetNextData( short Offset)
+	public byte [] GetNextData( byte [] InData, short Offset)
 	{	
-		byte [] NextTagData = JCSystem.makeTransientByteArray((short)((bertag.length)- Offset), JCSystem.CLEAR_ON_DESELECT );
+/*		byte [] NextTagData = JCSystem.makeTransientByteArray((short)((bertag.length)- Offset), JCSystem.CLEAR_ON_DESELECT );
 		Util.arrayCopyNonAtomic( bertag.data, Offset, NextTagData, (short)0, (short)( bertag.length - Offset ));
 		bertag.nextData = (short)(Offset + bertag.length);
 		return NextTagData;
+*/
+//		byte [] NextTagData = JCSystem.makeTransientByteArray((short)((bertag.length)- bertag.nextData), JCSystem.CLEAR_ON_DESELECT );
+		Util.arrayCopyNonAtomic( InData, Offset, NextTagData, (short)0, (short)( bertag.length - bertag.nextData ));
+		bertag.nextData = (short)(bertag.nextData + bertag.length);
+		return NextTagData;
 	}
-	
+
 	public byte [] BuildTLVStructure( byte tag, short length, byte [] Data)
 	{
 		short totallength = (short) ((short)length + (short)2);
@@ -264,7 +278,7 @@ public class Bertlv {
 		OutData[ Offset++ ] = tag;
 		OutData[ Offset++] = (byte)length;
 
-		Util.setShort( OutData,  Offset,  length);
+		Util.setShort( OutData,  Offset,  InData);
 		
 		BuildLength = (short)(Offset + 2);
 		return OutData;

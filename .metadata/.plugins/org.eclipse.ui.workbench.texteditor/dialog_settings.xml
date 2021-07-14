@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="idCertificate" key="selection"/>
+		<item value="Bertlv()" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="Bertlv()"/>
+			<item value="Bertlv"/>
+			<item value="PhononKey."/>
+			<item value="PhononKey"/>
+			<item value="setCurveParameters"/>
 			<item value="idCertificate"/>
 			<item value="loadCert"/>
 			<item value="LoadCert"/>
-			<item value="MAX_NUMBER_PHONONS"/>
-			<item value="PHONON_STATUS_INITIALIZED"/>
-			<item value="PHONON_STATUS_PERSONALIZED"/>
-			<item value="PHONON_STATUS_DELETED"/>
-			<item value="derivationOutput"/>
 		</list>
 		<list key="replacehistory">
 		</list>
