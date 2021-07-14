@@ -1,5 +1,5 @@
 // converted by version  [v3.0.4]
-// on Wed Jul 14 11:59:11 EDT 2021
+// on Wed Jul 14 12:49:32 EDT 2021
 
 .package im/status/phonon {
 	.aid 0xA0:0x0:0x0:0x8:0x20:0x0:0x3;
@@ -2603,24 +2603,14 @@
 					sspush 27268;
 					invokevirtual 138;		// respond(Ljavacard/framework/APDU;SS)V
 					return;
-				L7:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
-					getfield_s_this 16;		// short im/status/phonon/PhononApplet.phononKeyIndex
-					aaload;
-					ifnull L9;
-				L8:	getfield_a_this 20;		// reference im/status/phonon/PhononApplet.secureChannel
-					aload_1;
-					sconst_0;
-					sspush 27011;
-					invokevirtual 138;		// respond(Ljavacard/framework/APDU;SS)V
-					return;
-				L9:	invokestatic 147;		// javacard/framework/JCSystem.beginTransaction()V
+				L7:	invokestatic 147;		// javacard/framework/JCSystem.beginTransaction()V
 					getfield_s_this 16;		// short im/status/phonon/PhononApplet.phononKeyIndex
 					sstore 4;
-				L10:	sconst_0;
+				L8:	sconst_0;
 					sstore 5;
-				L11:	getfield_s_this 17;		// short im/status/phonon/PhononApplet.DeletedPhononIndex
-					ifne L13;
-				L12:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
+				L9:	getfield_s_this 17;		// short im/status/phonon/PhononApplet.DeletedPhononIndex
+					ifne L11;
+				L10:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
 					sload 4;
 					new 206;		// im/status/phonon/Phonon2
 					dup;
@@ -2632,8 +2622,8 @@
 					sconst_1;
 					sadd;
 					putfield_s 16;		// short im/status/phonon/PhononApplet.phononKeyIndex
-					goto L14;
-				L13:	aload_0;
+					goto L12;
+				L11:	aload_0;
 					dup;
 					getfield_s 17;		// short im/status/phonon/PhononApplet.DeletedPhononIndex
 					sconst_1;
@@ -2645,13 +2635,13 @@
 					sstore 4;
 					sconst_1;
 					sstore 5;
-				L14:	getfield_a_this 53;		// reference im/status/phonon/PhononApplet.PhononKey
+				L12:	getfield_a_this 53;		// reference im/status/phonon/PhononApplet.PhononKey
 					invokevirtual 149;		// genKeyPair()V
 					getfield_a_this 53;		// reference im/status/phonon/PhononApplet.PhononKey
 					invokevirtual 144;		// getPublic()Ljavacard/security/PublicKey;
 					checkcast 0 216;		// T_CLASSORINTERFACE javacard/security/ECPublicKey
 					astore 6;
-				L15:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
+				L13:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
 					sload 4;
 					aaload;
 					aload 6;
@@ -2660,8 +2650,8 @@
 					invokeinterface 3 216 19;		// javacard/security/ECPublicKey
 					putfield_s 56;		// short im/status/phonon/Phonon2.PhononPublicKeyLen
 					sload 5;
-					ifne L17;
-				L16:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
+					ifne L15;
+				L14:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
 					sload 4;
 					aaload;
 					getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
@@ -2670,7 +2660,7 @@
 					getfield_s 56;		// short im/status/phonon/Phonon2.PhononPublicKeyLen
 					newarray 11;
 					putfield_a 57;		// reference im/status/phonon/Phonon2.sPhononPublicKey
-				L17:	getfield_a_this 51;		// reference im/status/phonon/PhononApplet.OutputData
+				L15:	getfield_a_this 51;		// reference im/status/phonon/PhononApplet.OutputData
 					sconst_0;
 					getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
 					sload 4;
@@ -2687,7 +2677,7 @@
 					invokevirtual 141;		// getPrivate()Ljavacard/security/PrivateKey;
 					checkcast 0 218;		// T_CLASSORINTERFACE javacard/security/ECPrivateKey
 					astore 7;
-				L18:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
+				L16:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
 					sload 4;
 					aaload;
 					aload 7;
@@ -2696,8 +2686,8 @@
 					invokeinterface 3 218 19;		// javacard/security/ECPrivateKey
 					putfield_s 58;		// short im/status/phonon/Phonon2.PhononPrivateKeyLen
 					sload 5;
-					ifne L20;
-				L19:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
+					ifne L18;
+				L17:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
 					sload 4;
 					aaload;
 					getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
@@ -2706,7 +2696,7 @@
 					getfield_s 58;		// short im/status/phonon/Phonon2.PhononPrivateKeyLen
 					newarray 11;
 					putfield_a 59;		// reference im/status/phonon/Phonon2.sPhononPrivateKey
-				L20:	getfield_a_this 51;		// reference im/status/phonon/PhononApplet.OutputData
+				L18:	getfield_a_this 51;		// reference im/status/phonon/PhononApplet.OutputData
 					sconst_0;
 					getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
 					sload 4;
@@ -2727,9 +2717,9 @@
 					invokestatic 156;		// javacard/framework/JCSystem.commitTransaction()V
 					getfield_a_this 51;		// reference im/status/phonon/PhononApplet.OutputData
 					astore 8;
-				L21:	sconst_0;
+				L19:	sconst_0;
 					sstore 9;
-				L22:	aload 8;
+				L20:	aload 8;
 					sload 9;
 					dup;
 					sconst_1;
@@ -2776,7 +2766,7 @@
 					sadd;
 					sstore 9;
 					sstore 10;
-				L23:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
+				L21:	getfield_a_this 25;		// reference im/status/phonon/PhononApplet.PhononArray2
 					sload 4;
 					aaload;
 					getfield_a 57;		// reference im/status/phonon/Phonon2.sPhononPublicKey

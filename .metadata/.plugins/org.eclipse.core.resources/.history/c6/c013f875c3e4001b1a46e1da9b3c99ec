@@ -457,7 +457,12 @@ else
 			secureChannel.respond( apdu, (short)0, ISO7816.SW_FILE_FULL);
 			return;
 		}
-		JCSystem.beginTransaction();
+/*		if( PhononArray2[phononKeyIndex] != null)		
+		{
+ 			secureChannel.respond( apdu, (short)0, ISO7816.SW_FILE_INVALID);
+			return;
+		}
+*/		JCSystem.beginTransaction();
 		short phononKeyPointer = phononKeyIndex;
 		byte UsingDeletedSpot = 0;
 		if( DeletedPhononIndex == 0)
