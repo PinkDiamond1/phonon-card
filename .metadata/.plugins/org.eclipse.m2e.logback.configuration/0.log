@@ -845,3 +845,5 @@ Caused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find
 2021-09-02 12:49:16,424 [Start Help Server] INFO  o.e.j.server.handler.ContextHandler - Started o.e.j.s.ServletContextHandler@1ebb6c5{/help,null,AVAILABLE}
 2021-09-02 12:49:16,475 [Start Help Server] INFO  o.e.jetty.server.ServerConnector - Started ServerConnector@4ec0a7bd{HTTP/1.1}{127.0.0.1:52027}
 2021-09-02 12:49:16,475 [Start Help Server] INFO  org.eclipse.jetty.server.Server - Started @6293531ms
+2021-09-02 12:58:29,683 [Stop Help Server] INFO  o.e.jetty.server.ServerConnector - Stopped ServerConnector@4ec0a7bd{HTTP/1.1}{127.0.0.1:0}
+2021-09-02 12:58:29,715 [Stop Help Server] INFO  o.e.j.server.handler.ContextHandler - Stopped o.e.j.s.ServletContextHandler@1ebb6c5{/help,null,UNAVAILABLE}
