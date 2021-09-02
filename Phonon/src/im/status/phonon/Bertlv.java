@@ -225,8 +225,6 @@ public class Bertlv {
 	{
 		short totallength = (short) ((short)length + (short)2);
 		if( length > 255 ) totallength = (short)(totallength+2);
-//		short availablememory = JCSystem.getAvailableMemory(JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-//		byte [] TLVString = JCSystem.makeTransientByteArray(totallength, JCSystem.CLEAR_ON_DESELECT );
 		short Offset = 0;
 		OutData[ Offset++ ] = tag;
 		if( length > 255)
@@ -249,7 +247,6 @@ public class Bertlv {
 	{
 		short totallength = (short) ((short)length + (short)3);
 		if( length > 255 ) totallength = (short)(totallength+2);
-//		byte [] TLVString = JCSystem.makeTransientByteArray(totallength, JCSystem.CLEAR_ON_DESELECT );
 		short Offset = 0;
 		Util.setShort(OutputData, Offset, tag);
 		Offset = (short)(Offset+2);
@@ -272,8 +269,6 @@ public class Bertlv {
 	{
 		short totallength = (short) ((short)2 + (short)2);
 		if( length > 255 ) totallength = (short)(totallength+2);
-//		short availablememory = JCSystem.getAvailableMemory(JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-//		byte [] TLVString = JCSystem.makeTransientByteArray(totallength, JCSystem.CLEAR_ON_DESELECT );
 		short Offset = 0;
 		OutData[ Offset++ ] = tag;
 		OutData[ Offset++] = (byte)length;

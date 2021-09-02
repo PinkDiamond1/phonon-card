@@ -1,15 +1,25 @@
 package im.status.phonon;
 
 import javacard.framework.*;
-import javacard.security.*;
+//
+import javacard.security.ECKey;
+import javacard.security.ECPrivateKey;
+import javacard.security.KeyAgreement;
+import javacard.security.KeyBuilder;
+import javacard.security.MessageDigest;
+import javacard.security.RandomData;
+import javacard.security.KeyPair;
+import javacard.security.AESKey;
+import javacard.security.ECPublicKey;
+import javacard.security.Signature;
 import javacardx.crypto.Cipher;
 
 /**
  * Implements all methods related to the secure channel as specified in the SECURE_CHANNEL.md document.
  */
 public class SecureChannel {
-  static final byte ID_CERTIFICATE_EMPTY = (byte) 0x00;
-  static final byte ID_CERTIFICATE_LOCKED = (byte) 0xFF;
+  public static final byte ID_CERTIFICATE_EMPTY = (byte) 0x00;
+  public static final byte ID_CERTIFICATE_LOCKED = (byte) 0xFF;
 
   // cert = [permissions (2), certified pubKey (65), ECDSA signature from CA (74)]
   static final short ECDSA_MAX_LEN = 74;
@@ -284,6 +294,27 @@ public class SecureChannel {
     apdu.setOutgoingAndSend((short) 0, len);
   }
 
+  public KeyPair GetKeyPair()
+  {
+	  return idKeypair;
+  }
+  
+  public short GetCardCertificate( byte[] ReturnBuffer)
+  {
+	    // Copy card certificate to response buffer
+	    short certLen = (short) (2 + (idCertificate[1] & 0xff));
+	    Util.arrayCopyNonAtomic(idCertificate, (short) 0, ReturnBuffer, (short)0, (short) certLen);
+	    return(certLen);
+  }
+  
+  public short GetCardPublicKey( byte[] ReturnBuffer)
+  {
+	    ECPublicKey pk = (ECPublicKey) idKeypair.getPublic();
+	    short pubkeyLen = pk.getW(ReturnBuffer, (short) (0)); // Copy pubkey after TLV type and len
+	    return pubkeyLen;
+
+  }
+
   /**
    * Performs the first step of certificate based pairing. In this step, the card provides a CA signed certificate
    * of its card ID key, and proves ownership of this key with a signature on a challenge hash. The challenge hash
@@ -400,6 +431,11 @@ public class SecureChannel {
       Util.arrayFillNonAtomic(pairingKeys, off, PAIRING_KEY_LENGTH, (byte) 0);
       remainingSlots++;
     }
+  }
+  
+  public byte GetCertStatus()
+  {
+	  return idCertStatus;
   }
 
   /**
@@ -558,13 +594,15 @@ public class SecureChannel {
    * @param idx the index
    * @return the offset
    */
-  private short checkPairingIndexAndGetOffset(byte idx) {
+  private short checkPairingIndexAndGetOffset(byte idx) 
+  {
     short off = (short) (idx * PAIRING_KEY_LENGTH);
 
-    if (off >= ((short) pairingKeys.length)) {
+    if (off >= ((short) pairingKeys.length))
+    {
       ISOException.throwIt(ISO7816.SW_INCORRECT_P1P2);
     }
-
     return off;
   }
 }
+

@@ -2,8 +2,21 @@ package im.status.phonon;
 
 import javacard.framework.JCSystem;
 import javacard.framework.Util;
-import javacard.security.*;
+//import javacard.security.*;
+import javacard.security.ECKey;
+import javacard.security.ECPrivateKey;
+import javacard.security.KeyAgreement;
+import javacard.security.KeyBuilder;
+import javacard.security.MessageDigest;
+import javacard.security.RandomData;
+import javacard.security.Signature;
+import javacard.security.AESKey;
 import javacardx.crypto.Cipher;
+import javacard.security.AESKey;
+import javacard.security.ECPublicKey;
+import javacard.security.KeyPair;
+import javacard.security.CryptoException;
+import javacard.security.HMACKey;
 
 /**
  * Crypto utilities, mostly BIP32 related. The init method must be called during application installation. This class
@@ -58,7 +71,12 @@ public class Crypto {
     }
 
   }
-
+ /* public KeyAgreement GetKeyAgreement()
+  {
+	  return ecdh;
+  }
+*/
+  
   public short oneShotAES(byte mode, byte[] src, short sOff, short sLen, byte[] dst, short dOff, byte[] key, short keyOff) {
     tmpAES256.setKey(key, keyOff);
     aesCbcIso9797m2.init(tmpAES256, mode, src, sOff, AES_BLOCK_SIZE);
