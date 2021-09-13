@@ -22,7 +22,7 @@ import javacard.security.HMACKey;
  * Crypto utilities, mostly BIP32 related. The init method must be called during application installation. This class
  * is not meant to be instantiated.
  */
-public class Crypto {
+public class CardCrypto {
   final static public short AES_BLOCK_SIZE = 16;
 
   final static short KEY_SECRET_SIZE = 32;
@@ -40,11 +40,11 @@ public class Crypto {
   final static private byte[] KEY_BITCOIN_SEED = {'B', 'i', 't', 'c', 'o', 'i', 'n', ' ', 's', 'e', 'e', 'd'};
 
   // The below 5 objects can be accessed anywhere from the entire applet
-  private RandomData random;
-  private KeyAgreement ecdh;
-  private MessageDigest sha256;
-  private MessageDigest sha512;
-  private Cipher aesCbcIso9797m2;
+  RandomData random;
+  KeyAgreement ecdh;
+  MessageDigest sha256;
+  MessageDigest sha512;
+  Cipher aesCbcIso9797m2;
 
   private Signature hmacSHA512;
   private HMACKey hmacKey;
@@ -53,7 +53,7 @@ public class Crypto {
 
   private byte[] hmacBlock;
 
-  Crypto() {
+  CardCrypto() {
     random = RandomData.getInstance(RandomData.ALG_SECURE_RANDOM);
     sha256 = MessageDigest.getInstance(MessageDigest.ALG_SHA_256, false);
     ecdh = KeyAgreement.getInstance(KeyAgreement.ALG_EC_SVDP_DH_PLAIN, false);
@@ -71,7 +71,12 @@ public class Crypto {
     }
 
   }
-
+ /* public KeyAgreement GetKeyAgreement()
+  {
+	  return ecdh;
+  }
+*/
+  
   public short oneShotAES(byte mode, byte[] src, short sOff, short sLen, byte[] dst, short dOff, byte[] key, short keyOff) {
     tmpAES256.setKey(key, keyOff);
     aesCbcIso9797m2.init(tmpAES256, mode, src, sOff, AES_BLOCK_SIZE);

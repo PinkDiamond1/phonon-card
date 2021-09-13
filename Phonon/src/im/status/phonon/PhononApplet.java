@@ -15,7 +15,8 @@ import javacard.security.*;
  */
 public class PhononApplet extends Applet {	//implements ExtendedLength {
 	
-	private static final boolean DEBUG_MODE	= false;
+	private static final boolean DEBUG_MODE	= true;
+	public static final boolean SECURE_CHANNEL_DEBUG = true;
 	private static final short EXTENDED_BUFFER_LENGTH = 0x10;
 	
 	static final byte PHONON_STATUS_UNINITIALIZED	= (byte) 0x00;
@@ -100,7 +101,7 @@ public class PhononApplet extends Applet {	//implements ExtendedLength {
 	  private SecureChannel secureChannel2;
 	  
 	  private Crypto cardcrypto;
-	  private SECP256k1 cardsecp256k1;
+//	  private SECP256k1 cardsecp256k1;
 	  private CardSecureChannel cardsecureChannel;
 	  
 	  private byte[] uid;
@@ -472,9 +473,9 @@ else
 	    byte[] apduBuffer1 = apdu.getBuffer();
 	    short len;
 
-		if(DEBUG_MODE)
+//		if(DEBUG_MODE)
 		    len = apdu.getIncomingLength();
-	    else
+/*	    else
 	    {
 	    	len = secureChannel.preprocessAPDU(apduBuffer1);
 	    	if (!pin.isValidated())
@@ -483,14 +484,14 @@ else
 				return;
 	    	}
 	    }
+*/		byte CertStatusTest = secureChannel.GetCertStatus();
 
-/*		if( cardsecureChannel == null)
+		if( cardsecureChannel == null)
 		{
 			cardcrypto = new Crypto();
-			cardsecp256k1 = new SECP256k1(cardcrypto);
-			cardsecureChannel = new CardSecureChannel(PAIRING_MAX_CLIENT_COUNT, cardcrypto, cardsecp256k1 ); // secureChannel.GetKeyPair());
+			cardsecureChannel = new CardSecureChannel(PAIRING_MAX_CLIENT_COUNT, cardcrypto, secp256k1 );
 		}
-*/		byte CertStatus = secureChannel.GetCertStatus();
+		byte CertStatus = secureChannel.GetCertStatus();
 	    if (CertStatus == 0x00 ) {
 	        // Card cert was not initialized
 	        ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
@@ -498,25 +499,18 @@ else
 
         short Offset = 0;
 		byte[] apduBuffer;
-		if( DEBUG_MODE)
+//		if( DEBUG_MODE)
 			apduBuffer = apdu.getBuffer();
-		else
+/*		else
 			apduBuffer = OutputData;
-       
-//        byte [] tlvtemp = JCSystem.makeTransientByteArray((short)100, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
+*/
+			
         short CardCertLen =secureChannel.GetCardCertificate(OutputData);
 		Bertlv berCert = BertlvArray[0];
 		berCert.BuildTLVStructure( TLV_CARD_CERTIFICATE, CardCertLen, OutputData, OutputData2 );
 		Util.arrayCopyNonAtomic(OutputData2, (short)0, apduBuffer, Offset, berCert.BuildLength);
 		Offset += berCert.BuildLength;
        
-/*        short CardPubKeyLen = secureChannel.GetCardPublicKey(OutputData2);
-		Bertlv berPubKey = BertlvArray[0];
-		berPubKey.BuildTLVStructure( TLV_PHONON_PUBLIC_KEY, CardPubKeyLen, OutputData2, tlvtemp );
-		Util.arrayCopyNonAtomic(tlvtemp, (short)0, apduBuffer, Offset, berPubKey.BuildLength);
-		Offset += berPubKey.BuildLength;
-*/
-//		byte [] salt = JCSystem.makeTransientByteArray((short)32, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
 		byte [] salt = new byte[32];
         crypto.random.generateData(salt, (short)0, (short)32);
         
@@ -524,10 +518,10 @@ else
 		berCardSalt.BuildTLVStructure( TLV_SALT, (short)32, salt, OutputData2 );
 		Util.arrayCopyNonAtomic(OutputData2, (short)0, apduBuffer, Offset, berCardSalt.BuildLength);
 		Offset += berCardSalt.BuildLength;
-	    if( DEBUG_MODE)
+//	    if( DEBUG_MODE)
 	    	apdu.setOutgoingAndSend((short) 0, Offset);
-	    else
-	    	secureChannel.respond( apdu,  apduBuffer,  Offset, ISO7816.SW_NO_ERROR);  	
+//	    else
+//	    	secureChannel.respond( apdu,  apduBuffer,  Offset, ISO7816.SW_NO_ERROR);  	
 		return;
 	}
 	

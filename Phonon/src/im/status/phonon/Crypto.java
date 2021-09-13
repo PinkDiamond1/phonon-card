@@ -71,12 +71,7 @@ public class Crypto {
     }
 
   }
- /* public KeyAgreement GetKeyAgreement()
-  {
-	  return ecdh;
-  }
-*/
-  
+   
   public short oneShotAES(byte mode, byte[] src, short sOff, short sLen, byte[] dst, short dOff, byte[] key, short keyOff) {
     tmpAES256.setKey(key, keyOff);
     aesCbcIso9797m2.init(tmpAES256, mode, src, sOff, AES_BLOCK_SIZE);

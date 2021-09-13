@@ -15,7 +15,8 @@ import javacard.security.*;
  */
 public class PhononApplet extends Applet {	//implements ExtendedLength {
 	
-	private static final boolean DEBUG_MODE	= false;
+	private static final boolean DEBUG_MODE	= true;
+	public static final boolean SECURE_CHANNEL_DEBUG = true;
 	private static final short EXTENDED_BUFFER_LENGTH = 0x10;
 	
 	static final byte PHONON_STATUS_UNINITIALIZED	= (byte) 0x00;
@@ -100,7 +101,7 @@ public class PhononApplet extends Applet {	//implements ExtendedLength {
 	  private SecureChannel secureChannel2;
 	  
 	  private Crypto cardcrypto;
-	  private SECP256k1 cardsecp256k1;
+//	  private SECP256k1 cardsecp256k1;
 	  private CardSecureChannel cardsecureChannel;
 	  
 	  private byte[] uid;
@@ -477,18 +478,18 @@ else
 	    else
 	    {
 	    	len = secureChannel.preprocessAPDU(apduBuffer1);
-/*	    	if (!pin.isValidated())
+	    	if (!pin.isValidated())
 	    	{
 				secureChannel.respond( apdu, (short)0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
 				return;
 	    	}
-*/	    }
+	    }
+		byte CertStatusTest = secureChannel.GetCertStatus();
 
 		if( cardsecureChannel == null)
 		{
 			cardcrypto = new Crypto();
-			cardsecp256k1 = new SECP256k1(crypto);
-			cardsecureChannel = new CardSecureChannel(PAIRING_MAX_CLIENT_COUNT, crypto, secp256k1 ); // secureChannel.GetKeyPair());
+			cardsecureChannel = new CardSecureChannel(PAIRING_MAX_CLIENT_COUNT, cardcrypto, secp256k1 );
 		}
 		byte CertStatus = secureChannel.GetCertStatus();
 	    if (CertStatus == 0x00 ) {
@@ -527,8 +528,7 @@ else
 //	    if( DEBUG_MODE)
 	    	apdu.setOutgoingAndSend((short) 0, Offset);
 //	    else
-//	    	secureChannel.respond( apdu,  apduBuffer,  Offset, ISO7816.SW_NO_ERROR);  
-		
+//	    	secureChannel.respond( apdu,  apduBuffer,  Offset, ISO7816.SW_NO_ERROR);  	
 		return;
 	}
 	

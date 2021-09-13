@@ -78,7 +78,7 @@ public class CardSecureChannel {
   private byte remainingSlots;
   private boolean mutuallyAuthenticated = false;
 
-  private Crypto crypto;
+  private Crypto Cardcrypto;
 
   /**
    * Instantiates a Secure Channel. All memory allocations (except pairing secret) needed for the secure channel are
@@ -86,7 +86,7 @@ public class CardSecureChannel {
    */
   public CardSecureChannel(byte pairingLimit, Crypto crypto, SECP256k1 secp256k1 ) //, KeyPair orgKeyPair)
   {
-    this.crypto = crypto;
+    this.Cardcrypto = crypto;
 
 //    idKeypair = new KeyPair(KeyPair.ALG_EC_FP, SC_KEY_LENGTH);
 //    idKeypair = orgKeyPair;
@@ -134,12 +134,12 @@ public class CardSecureChannel {
    * @param apduBuffer the APDU buffer
    */
   public void CardoneShotDecrypt(byte[] apduBuffer) {
-    crypto.ecdh.init(scKeypair.getPrivate());
+	  Cardcrypto.ecdh.init(scKeypair.getPrivate());
 //    KeyAgreement tecdh = crypto.GetKeyAgreement();
 
     short off = (short)(ISO7816.OFFSET_CDATA + 1);
     try {
-      crypto.ecdh.generateSecret(apduBuffer, off, apduBuffer[ISO7816.OFFSET_CDATA], secret, (short) 0);
+    	Cardcrypto.ecdh.generateSecret(apduBuffer, off, apduBuffer[ISO7816.OFFSET_CDATA], secret, (short) 0);
       off = (short)(off + apduBuffer[ISO7816.OFFSET_CDATA]);
     } catch(Exception e) {
       ISOException.throwIt(ISO7816.SW_WRONG_DATA);
@@ -147,10 +147,10 @@ public class CardSecureChannel {
     }
 
     scEncKey.setKey(secret, (short) 0);
-    crypto.aesCbcIso9797m2.init(scEncKey, Cipher.MODE_DECRYPT, apduBuffer, off, SC_BLOCK_SIZE);
+    Cardcrypto.aesCbcIso9797m2.init(scEncKey, Cipher.MODE_DECRYPT, apduBuffer, off, SC_BLOCK_SIZE);
     off = (short)(off + SC_BLOCK_SIZE);
 
-    apduBuffer[ISO7816.OFFSET_LC] = (byte) crypto.aesCbcIso9797m2.doFinal(apduBuffer, off, (short)((short)(apduBuffer[ISO7816.OFFSET_LC] & 0xff) - off + ISO7816.OFFSET_CDATA), apduBuffer, ISO7816.OFFSET_CDATA);
+    apduBuffer[ISO7816.OFFSET_LC] = (byte) Cardcrypto.aesCbcIso9797m2.doFinal(apduBuffer, off, (short)((short)(apduBuffer[ISO7816.OFFSET_LC] & 0xff) - off + ISO7816.OFFSET_CDATA), apduBuffer, ISO7816.OFFSET_CDATA);
   }
 
   /**
@@ -172,20 +172,20 @@ public class CardSecureChannel {
       pairingKeyOff++;
     }
 
-    crypto.ecdh.init(scKeypair.getPrivate());
+    Cardcrypto.ecdh.init(scKeypair.getPrivate());
     short len;
 
     try {
-      len = crypto.ecdh.generateSecret(apduBuffer, ISO7816.OFFSET_CDATA, apduBuffer[ISO7816.OFFSET_LC], secret, (short) 0);
+      len = Cardcrypto.ecdh.generateSecret(apduBuffer, ISO7816.OFFSET_CDATA, apduBuffer[ISO7816.OFFSET_LC], secret, (short) 0);
     } catch(Exception e) {
       ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
       return;
     }
 
-    crypto.random.generateData(apduBuffer, (short) 0, (short) (SC_SECRET_LENGTH + SC_BLOCK_SIZE));
-    crypto.sha512.update(secret, (short) 0, len);
-    crypto.sha512.update(pairingKeys, pairingKeyOff, SC_SECRET_LENGTH);
-    crypto.sha512.doFinal(apduBuffer, (short) 0, SC_SECRET_LENGTH, secret, (short) 0);
+    Cardcrypto.random.generateData(apduBuffer, (short) 0, (short) (SC_SECRET_LENGTH + SC_BLOCK_SIZE));
+    Cardcrypto.sha512.update(secret, (short) 0, len);
+    Cardcrypto.sha512.update(pairingKeys, pairingKeyOff, SC_SECRET_LENGTH);
+    Cardcrypto.sha512.doFinal(apduBuffer, (short) 0, SC_SECRET_LENGTH, secret, (short) 0);
     scEncKey.setKey(secret, (short) 0);
     scMacKey.setKey(secret, SC_SECRET_LENGTH);
     Util.arrayCopyNonAtomic(apduBuffer, SC_SECRET_LENGTH, secret, (short) 0, SC_BLOCK_SIZE);
@@ -218,7 +218,7 @@ public class CardSecureChannel {
       ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
     }
 
-    crypto.random.generateData(apduBuffer, SC_OUT_OFFSET, SC_SECRET_LENGTH);
+    Cardcrypto.random.generateData(apduBuffer, SC_OUT_OFFSET, SC_SECRET_LENGTH);
     Cardrespond(apdu, len, ISO7816.SW_NO_ERROR);
   }
 
@@ -354,7 +354,7 @@ public class CardSecureChannel {
     // Compute ECDH secret
  //   final short pubKeyOff = (short)(ISO7816.OFFSET_CDATA + SC_SECRET_LENGTH);
     try {
-      crypto.ecdh.init(idKeypair.getPrivate());
+    	Cardcrypto.ecdh.init(idKeypair.getPrivate());
 
       // generate secret, pass public key from cert , offset into cert, length of cert
 //      crypto.ecdh.generateSecret(apduBuffer, (short) (pubKeyOff + 2), apduBuffer[pubKeyOff + 1], secret, (short) 0);
@@ -362,7 +362,7 @@ public class CardSecureChannel {
       byte [] SenderPublicKey;
       SenderPublicKey = JCSystem.makeTransientByteArray((short)100, JCSystem.CLEAR_ON_DESELECT);
       short SenderPublicKeyLen = CardGetCardPublicKey(SenderPublicKey);
-      crypto.ecdh.generateSecret(SenderPublicKey,(short)0, SenderPublicKeyLen, secret, (short)0);
+      Cardcrypto.ecdh.generateSecret(SenderPublicKey,(short)0, SenderPublicKeyLen, secret, (short)0);
       
     } catch(Exception e) {
       ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
@@ -371,15 +371,15 @@ public class CardSecureChannel {
 
     // Hash client salt and ECDH secret and store in secret buffer
     // secretHash = sha256(clientSalt, ECDH secret)
-    crypto.sha256.update(SenderSalt, (short)0, SC_SECRET_LENGTH);
-    crypto.sha256.update(receiverSalt, (short)0, SC_SECRET_LENGTH);
-    crypto.sha256.doFinal(secret, (short) 0, SC_SECRET_LENGTH, secret, (short) 0);
+    Cardcrypto.sha256.update(SenderSalt, (short)0, SC_SECRET_LENGTH);
+    Cardcrypto.sha256.update(receiverSalt, (short)0, SC_SECRET_LENGTH);
+    Cardcrypto.sha256.doFinal(secret, (short) 0, SC_SECRET_LENGTH, secret, (short) 0);
 
     // Response buffer offset (previous APDU buffer use was for temporary storage)
     short off = 0;
 
     // Generate random card salt
-    crypto.random.generateData(receiverSalt, (short)0, SC_SECRET_LENGTH);
+    Cardcrypto.random.generateData(receiverSalt, (short)0, SC_SECRET_LENGTH);
 //    off += SC_SECRET_LENGTH;
     
     // Copy card certificate to response buffer
@@ -396,7 +396,7 @@ public class CardSecureChannel {
     // in second half of the secret buffer.
     // expectedCryptogram = sha256(cardSalt, secretHash)
 //    crypto.sha256.update(apduBuffer, (short) 0, SC_SECRET_LENGTH);
-    crypto.sha256.doFinal(secret, (short) 0, SC_SECRET_LENGTH, secret, SC_SECRET_LENGTH);
+    Cardcrypto.sha256.doFinal(secret, (short) 0, SC_SECRET_LENGTH, secret, SC_SECRET_LENGTH);
 
     // Return total response length
     return off;
@@ -426,9 +426,9 @@ public class CardSecureChannel {
 
     // Generate random pairing salt & save pairing key. Copy pairing index and pairing salt into response buffer
     // pairingKey = sha256(pairingSalt, secretHash)
-    crypto.random.generateData(apduBuffer, (short) 1, SC_SECRET_LENGTH);
-    crypto.sha256.update(apduBuffer, (short) 1, SC_SECRET_LENGTH);
-    crypto.sha256.doFinal(secret, (short) 0, SC_SECRET_LENGTH, pairingKeys, (short) (preassignedPairingOffset + 1));
+    Cardcrypto.random.generateData(apduBuffer, (short) 1, SC_SECRET_LENGTH);
+    Cardcrypto.sha256.update(apduBuffer, (short) 1, SC_SECRET_LENGTH);
+    Cardcrypto.sha256.doFinal(secret, (short) 0, SC_SECRET_LENGTH, pairingKeys, (short) (preassignedPairingOffset + 1));
     pairingKeys[preassignedPairingOffset] = 1;
     remainingSlots--;
     apduBuffer[0] = (byte) (preassignedPairingOffset / PAIRING_KEY_LENGTH); // Pairing index
@@ -477,9 +477,9 @@ public class CardSecureChannel {
       ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
     }
 
-    crypto.aesCbcIso9797m2.init(scEncKey, Cipher.MODE_DECRYPT, secret, (short) 0, SC_BLOCK_SIZE);
+    Cardcrypto.aesCbcIso9797m2.init(scEncKey, Cipher.MODE_DECRYPT, secret, (short) 0, SC_BLOCK_SIZE);
     Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, secret, (short) 0, SC_BLOCK_SIZE);
-    short len = crypto.aesCbcIso9797m2.doFinal(apduBuffer, (short)(ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE), (short) (apduLen - SC_BLOCK_SIZE), apduBuffer, ISO7816.OFFSET_CDATA);
+    short len = Cardcrypto.aesCbcIso9797m2.doFinal(apduBuffer, (short)(ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE), (short) (apduLen - SC_BLOCK_SIZE), apduBuffer, ISO7816.OFFSET_CDATA);
 
     apduBuffer[ISO7816.OFFSET_LC] = (byte) len;
 
@@ -515,8 +515,8 @@ public class CardSecureChannel {
     Util.setShort(apduBuffer, (short) (SC_OUT_OFFSET + len), sw);
     len += 2;
 
-    crypto.aesCbcIso9797m2.init(scEncKey, Cipher.MODE_ENCRYPT, secret, (short) 0, SC_BLOCK_SIZE);
-    len = crypto.aesCbcIso9797m2.doFinal(apduBuffer, SC_OUT_OFFSET, len, apduBuffer, (short)(ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE));
+    Cardcrypto.aesCbcIso9797m2.init(scEncKey, Cipher.MODE_ENCRYPT, secret, (short) 0, SC_BLOCK_SIZE);
+    len = Cardcrypto.aesCbcIso9797m2.doFinal(apduBuffer, SC_OUT_OFFSET, len, apduBuffer, (short)(ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE));
 
     apduBuffer[0] = (byte) (len + SC_BLOCK_SIZE);
 

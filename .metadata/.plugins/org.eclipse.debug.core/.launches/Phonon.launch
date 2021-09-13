@@ -27,16 +27,11 @@
 <listEntry value="com.ibm.bluez.jcop.eclipse.lcc.target"/>
 <listEntry value="com.ibm.bluez.jcop.eclipse.lcc.target/simulconfig"/>
 </listAttribute>
-<mapAttribute key="com.ibm.bluez.jcop.eclipse.lcc.target/cmkeys">
-<mapEntry key="0" value="1/1/DES-ECB/c212e073ff8b4bbfaff4de8ab655221f"/>
-<mapEntry key="1" value="1/2/DES-ECB/c212e073ff8b4bbfaff4de8ab655221f"/>
-<mapEntry key="2" value="1/3/DES-ECB/c212e073ff8b4bbfaff4de8ab655221f"/>
-</mapAttribute>
 <mapAttribute key="com.ibm.bluez.jcop.eclipse.lcc.target/simulconfig">
 <mapEntry key="ADDITIONAL_INPUT_CHECK_BOX" value="false"/>
 <mapEntry key="addParams" value=""/>
 <mapEntry key="fabKey" value="com.ibm.bluez.jcop.eclipse.targetpack.smartmx.SECIDCSP60"/>
-<mapEntry key="keyversionFilter" value="false"/>
+<mapEntry key="keyversionFilter" value="true"/>
 <mapEntry key="useRunSimulResetDebugConfigSelection" value="false"/>
 <mapEntry key="useRunSimulTerminationSelection" value="false"/>
 <mapEntry key="useRunSimulationSelection" value="false"/>
