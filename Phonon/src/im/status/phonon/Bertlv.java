@@ -50,7 +50,7 @@ public class Bertlv {
 			i++;
 			final byte firstLen = bertag.data[i++];
 			short DataLen = 0;
-			switch (firstLen) {
+/*			switch (firstLen) {
 			case (byte)0x81:
 				DataLen = (short)(
 				    (short)bertag.data[i] & (short)0x00FF);
@@ -68,9 +68,9 @@ public class Bertlv {
 					ISOException.throwIt(ISO7816.SW_DATA_INVALID);
 					return (0);
 				}
-				DataLen = (short)firstLen;
-				break;
-			}
+*/				DataLen = (short)firstLen;
+//				break;
+//			}
 			if( DataLen != 0 )
 			{
 				i = (short)(i + DataLen - 1);
@@ -82,7 +82,7 @@ public class Bertlv {
 	public short LoadTagBase( byte [] Indata, short Offset)
 	{
 		bertag.tag = Indata[Offset++];
-		final byte firstLen = Indata[Offset++];
+		final short firstLen = Indata[Offset++];
 		switch (firstLen) {
 		case (byte)0x81:
 			bertag.length = (short)(
