@@ -1,20 +1,18 @@
-/**
- * 
- */
+
 package im.status.phonon;
 
 import javacard.framework.*;
 import javacard.security.*;
 //import javacardx.apdu.ExtendedLength;
 
-
 /**
  * @author MikeZercher
  *
  */
-public class PhononApplet extends Applet {
+public class PhononApplet extends Applet {	//implements ExtendedLength {
 	
 	private static final boolean DEBUG_MODE	= false;
+	private static final short EXTENDED_BUFFER_LENGTH = 0x10;
 	
 	static final byte PHONON_STATUS_UNINITIALIZED	= (byte) 0x00;
 	static final byte PHONON_STATUS_INITIALIZED		= (byte) 0x01;
@@ -41,6 +39,10 @@ public class PhononApplet extends Applet {
 	 static final byte INS_RECV_PHONONS				= (byte) 0x36;
 	 static final byte INS_SET_RECV_LIST			= (byte) 0x37;
 	 static final byte INS_TRANSACTION_ACK			= (byte) 0x38;
+	 static final byte INS_INIT_CARD_PAIRING		= (byte) 0x50;
+	 static final byte INS_CARD_SENDER_PAIR			= (byte) 0x51;
+	 static final byte INS_CARD_RECEIVER_PAIR		= (byte) 0x52;
+	 static final byte INS_CARD_FINALIZE			= (byte) 0x53;
 	 	
 	  static final byte PUK_LENGTH = 12;
 	  static final byte PUK_MAX_RETRIES = 5;
@@ -71,9 +73,6 @@ public class PhononApplet extends Applet {
 	  static final byte TLV_PHONON_KEY = (byte) 0x40;
 	  static final byte TLV_PHONON_INDEX = (byte) 0x41;
 	  
-	  static final byte TLV_SALT = (byte)0x91;
-	  static final byte TLV_RECIEVER_SIG = (byte) 0x93;
-
 	  static final byte TLV_APPLICATION_STATUS_TEMPLATE = (byte) 0xA3;
 	  static final byte TLV_PAIRING_SLOT = (byte)0x03;
 	  static final byte TLV_INT = (byte) 0x02;
@@ -94,13 +93,11 @@ public class PhononApplet extends Applet {
 	  private Crypto crypto;
 	  private SECP256k1 secp256k1;
 	  private SecureChannel secureChannel;
-
 	  private Crypto crypto2;
 	  private SECP256k1 secp256k12;
 	  private SecureChannel secureChannel2;
 	  
 	  private Crypto cardcrypto;
-	  
       private byte[] uid;
 	  private byte[] savedData;
 	  private byte masterSeedStatus; // Invalid / valid, but non-exportable / valid and exportable
@@ -165,6 +162,11 @@ public class PhononApplet extends Applet {
 	  static final byte LIST_FILTER_LAST			= (byte) 0x03;
 	  
 	  static final short TLV_NOT_FOUND				= (short)0xffff;
+	  
+	  static final byte TLV_CARD_CERTIFICATE		= (byte) 0x90;
+	  static final byte TLV_SALT					= (byte) 0x91;
+	  static final byte TLV_AESIV					= (byte) 0x92;
+	  static final byte TLV_RECEIVER_SIG			= (byte) 0x93;
 	  
 	  private short phononKeyIndex = 0;
 	  private short DeletedPhononIndex = 0;
@@ -237,16 +239,15 @@ public class PhononApplet extends Applet {
 		    duplicationEncKey = new byte[(short)(KeyBuilder.LENGTH_AES_256/8)];
 		    expectedEntropy = -1;
 
-//		    derivationOutput = JCSystem.makeTransientByteArray((short) (Crypto.KEY_SECRET_SIZE + CHAIN_CODE_SIZE), JCSystem.CLEAR_ON_RESET);
 		    OutputData = JCSystem.makeTransientByteArray((short) 255, JCSystem.CLEAR_ON_RESET);
 		    OutputData2 = JCSystem.makeTransientByteArray((short) 255, JCSystem.CLEAR_ON_RESET);
 		    
 		    PhononKey = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
-		    
-		    BertlvArray = new Bertlv[5];
+		    DebugKeySet = false;
+ 		    BertlvArray = new Bertlv[5];
 		    for( short i =0; i<5 ;i++ )
 		    	BertlvArray[i] = new Bertlv();
-		    
+//		    ExtendedBuffer = new byte[ EXTENDED_BUFFER_LENGTH];
 		  }
 	  
 	public static void install(byte[] bArray, short bOffset, byte bLength)
@@ -260,6 +261,12 @@ public class PhononApplet extends Applet {
 	{
 		// Good practice: Return 9000 on SELECT
 		byte[] buf = apdu.getBuffer();
+	    if(secureChannel.SECURE_CHANNEL_DEBUG == true && DebugKeySet == false)
+	    {
+	    	secureChannel.SetDebugKey();
+	    	DebugKeySet = true;
+	    }
+
 if(DEBUG_MODE)
 {
 	if((buf[ISO7816.OFFSET_INS] != INS_CREATE_PHONON  )
@@ -270,6 +277,10 @@ if(DEBUG_MODE)
 				&& (buf[ISO7816.OFFSET_INS] != INS_RECV_PHONONS )
 				&& (buf[ISO7816.OFFSET_INS] != INS_SET_RECV_LIST )
 				&& (buf[ISO7816.OFFSET_INS] != INS_TRANSACTION_ACK )
+				&& (buf[ISO7816.OFFSET_INS] != INS_INIT_CARD_PAIRING)
+				&& (buf[ISO7816.OFFSET_INS] != INS_CARD_SENDER_PAIR)
+				&& (buf[ISO7816.OFFSET_INS] != INS_CARD_RECEIVER_PAIR)	
+				&& (buf[ISO7816.OFFSET_INS] != INS_CARD_FINALIZE)			
 			&& 	(buf[ISO7816.OFFSET_INS] != INS_SET_PHONON_DESCRIPTOR)
 				)
 		{
@@ -407,6 +418,29 @@ else
 		        	break;
 		        }
 		        
+		        case INS_INIT_CARD_PAIRING:
+		        {
+		        	InitCardPairing( apdu );		        	
+		        	break;
+		        }
+		        
+		        case INS_CARD_SENDER_PAIR:
+		        {
+		        	SenderPairing( apdu );
+		        	break;
+		        }
+		        
+		        case INS_CARD_RECEIVER_PAIR:
+		        {
+		        	ReceiverPairing( apdu );
+		        	break;
+		        }
+		        
+		        case INS_CARD_FINALIZE:
+		        {
+		        	FinalizeCardPairing( apdu );
+		        }
+		        
 		        default:
 				// good practice: If you don't know the INStruction, say so:
 				ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
@@ -450,7 +484,6 @@ else
 	    short len;
 
 	    len = apdu.getIncomingLength();
-
 	   byte [] IncomingData = apduBuffer1;
 	   
        short ptr = ISO7816.OFFSET_CDATA;
@@ -491,7 +524,6 @@ else
 			Util.arrayFillNonAtomic(salt, (short)0, (short)32, (byte)0x01);
 		else
 			crypto.random.generateData(salt, (short)0, (short)32);
-		
 		secureChannel.SetSenderSalt( salt );
         
 		Bertlv berCardSalt = BertlvArray[0];
@@ -566,7 +598,7 @@ else
 		berCardSig.BuildTLVStructure( TLV_RECEIVER_SIG, sigLen, OutputData, OutputData2);
 		Util.arrayCopyNonAtomic(OutputData2, (short) 0, apduBuffer, Offset, berCardSig.BuildLength);
 		Offset += berCardSig.BuildLength;
-
+		
     	apdu.setOutgoingAndSend((short) 0, Offset);
 		return;	
 	}
@@ -1583,7 +1615,11 @@ else
 
 	    byte[] apduBuffer = apdu.getBuffer();
 
-	    short off = 0;
+/*	    if(secureChannel.SECURE_CHANNEL_DEBUG == true)
+	    {
+	    	secureChannel.SetDebugKey();
+	    }
+*/	    short off = 0;
 
 	    apduBuffer[off++] = TLV_APPLICATION_INFO_TEMPLATE;
 

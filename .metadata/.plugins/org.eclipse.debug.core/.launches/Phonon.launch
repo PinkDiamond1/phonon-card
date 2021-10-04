@@ -31,7 +31,7 @@
 <mapEntry key="ADDITIONAL_INPUT_CHECK_BOX" value="false"/>
 <mapEntry key="addParams" value=""/>
 <mapEntry key="fabKey" value="com.ibm.bluez.jcop.eclipse.targetpack.smartmx.SECIDCSP60"/>
-<mapEntry key="keyversionFilter" value="false"/>
+<mapEntry key="keyversionFilter" value="true"/>
 <mapEntry key="useRunSimulResetDebugConfigSelection" value="false"/>
 <mapEntry key="useRunSimulTerminationSelection" value="false"/>
 <mapEntry key="useRunSimulationSelection" value="false"/>

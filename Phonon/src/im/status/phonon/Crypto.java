@@ -2,8 +2,21 @@ package im.status.phonon;
 
 import javacard.framework.JCSystem;
 import javacard.framework.Util;
-import javacard.security.*;
+//import javacard.security.*;
+import javacard.security.ECKey;
+import javacard.security.ECPrivateKey;
+import javacard.security.KeyAgreement;
+import javacard.security.KeyBuilder;
+import javacard.security.MessageDigest;
+import javacard.security.RandomData;
+import javacard.security.Signature;
+import javacard.security.AESKey;
 import javacardx.crypto.Cipher;
+import javacard.security.AESKey;
+import javacard.security.ECPublicKey;
+import javacard.security.KeyPair;
+import javacard.security.CryptoException;
+import javacard.security.HMACKey;
 
 /**
  * Crypto utilities, mostly BIP32 related. The init method must be called during application installation. This class
@@ -31,6 +44,9 @@ public class Crypto {
   KeyAgreement ecdh;
   MessageDigest sha256;
   MessageDigest sha512;
+  KeyAgreement Cardecdh;
+  MessageDigest Cardsha256;
+  MessageDigest Cardsha512;
   Cipher aesCbcIso9797m2;
 
   private Signature hmacSHA512;
@@ -42,9 +58,12 @@ public class Crypto {
 
   Crypto() {
     random = RandomData.getInstance(RandomData.ALG_SECURE_RANDOM);
-    sha256 = MessageDigest.getInstance(MessageDigest.ALG_SHA_256, false);
     ecdh = KeyAgreement.getInstance(KeyAgreement.ALG_EC_SVDP_DH_PLAIN, false);
     sha512 = MessageDigest.getInstance(MessageDigest.ALG_SHA_512, false);
+    sha256 = MessageDigest.getInstance(MessageDigest.ALG_SHA_256, false);
+//    Cardecdh = KeyAgreement.getInstance(KeyAgreement.ALG_EC_SVDP_DH_PLAIN, false);
+//   Cardsha256 = MessageDigest.getInstance(MessageDigest.ALG_SHA_256, false);
+//    Cardsha512 = MessageDigest.getInstance(MessageDigest.ALG_SHA_512, false);
     aesCbcIso9797m2 = Cipher.getInstance(Cipher.ALG_AES_CBC_ISO9797_M2,false);
 
     tmpAES256 = (AESKey) KeyBuilder.buildKey(KeyBuilder.TYPE_AES_TRANSIENT_DESELECT, KeyBuilder.LENGTH_AES_256, false);
@@ -58,7 +77,7 @@ public class Crypto {
     }
 
   }
-
+   
   public short oneShotAES(byte mode, byte[] src, short sOff, short sLen, byte[] dst, short dOff, byte[] key, short keyOff) {
     tmpAES256.setKey(key, keyOff);
     aesCbcIso9797m2.init(tmpAES256, mode, src, sOff, AES_BLOCK_SIZE);

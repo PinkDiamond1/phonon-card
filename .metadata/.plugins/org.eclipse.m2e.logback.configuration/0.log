@@ -648,8 +648,11 @@ Caused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find
 2021-07-14 11:59:18,107 [Stop Help Server] INFO  o.e.jetty.server.ServerConnector - Stopped ServerConnector@328e2ece{HTTP/1.1}{127.0.0.1:0}
 2021-07-14 11:59:18,131 [Stop Help Server] INFO  o.e.j.server.handler.ContextHandler - Stopped o.e.j.s.ServletContextHandler@65556ee7{/help,null,UNAVAILABLE}
 2021-07-14 12:16:47,854 [main] INFO  c.g.t.t.d.PublishedGradleVersions - Gradle version information cache file is not out-of-date. No remote download required.
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
+=======
+>>>>>>> bd95e7bd3eaa647100c6a40c4702682f72efdc72
 2021-07-14 13:54:56,532 [main] INFO  c.g.t.t.d.PublishedGradleVersions - Gradle version information cache file is not out-of-date. No remote download required.
 2021-07-14 16:32:51,452 [Worker-52] WARN  o.e.r.models.ModelRepository - Failed to download org.eclipse.recommenders:index::zip:0.0.0
 org.eclipse.aether.resolution.ArtifactResolutionException: Could not find artifact org.eclipse.recommenders:index:zip:0.0.0-SNAPSHOT in models (http://download.eclipse.org/recommenders/models/mars/)
@@ -1080,6 +1083,7 @@ Caused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find
 	at org.eclipse.aether.internal.impl.DefaultArtifactResolver.performDownloads(DefaultArtifactResolver.java:520) ~[na:na]
 	at org.eclipse.aether.internal.impl.DefaultArtifactResolver.resolve(DefaultArtifactResolver.java:421) ~[na:na]
 	... 8 common frames omitted
+<<<<<<< HEAD
 2021-09-30 13:27:15,622 [Stop Help Server] INFO  o.e.jetty.server.ServerConnector - Stopped ServerConnector@7dd7f5d6{HTTP/1.1}{127.0.0.1:0}
 2021-09-30 13:27:15,771 [Stop Help Server] INFO  o.e.j.server.handler.ContextHandler - Stopped o.e.j.s.ServletContextHandler@a700a66{/help,null,UNAVAILABLE}
 2021-09-30 13:28:06,270 [main] INFO  c.g.t.t.d.PublishedGradleVersions - Gradle version information cache file is out-of-date. Remote download required.
@@ -1119,3 +1123,7 @@ Caused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find
 2021-10-04 14:35:42,423 [Stop Help Server] INFO  o.e.jetty.server.ServerConnector - Stopped ServerConnector@44c0105a{HTTP/1.1}{127.0.0.1:0}
 2021-10-04 14:35:42,437 [Stop Help Server] INFO  o.e.j.server.handler.ContextHandler - Stopped o.e.j.s.ServletContextHandler@5de9fe42{/help,null,UNAVAILABLE}
 2021-10-04 14:47:22,364 [Worker-11] INFO  c.g.t.t.d.PublishedGradleVersions - Gradle version information cache file is out-of-date. Remote download required.
+=======
+>>>>>>> bd95e7bd3eaa647100c6a40c4702682f72efdc72
+2021-10-04 15:36:50,812 [Worker-5] INFO  c.g.t.t.d.PublishedGradleVersions - Gradle version information cache file is not out-of-date. No remote download required.
+2021-10-04 16:11:29,054 [main] INFO  c.g.t.t.d.PublishedGradleVersions - Gradle version information cache file is not out-of-date. No remote download required.
