@@ -46,7 +46,7 @@ public class SecureChannel {
   public static final byte PAIR_P1_FIRST_STEP = 0x00;
   public static final byte PAIR_P1_LAST_STEP = 0x01;
 
-  // This is the maximum length acceptable for plaintext commands/responses for APDUs in short format
+  // /his is the maximum length acceptable for plaintext commands/responses for APDUs in short format
   public static final short SC_MAX_PLAIN_LENGTH = (short) 223;
 
   // Card identity key & certificate
@@ -549,7 +549,6 @@ public class SecureChannel {
 	    Signature eccSig2 = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
 	    eccSig2.init( idKeypair.getPublic(), Signature.MODE_VERIFY);
 	    boolean VerifyStatus = eccSig2.verify(temphash, (short)0, (short) ((SC_SECRET_LENGTH*2)+ (short)16), CardSig, (short)0, (short)(sigLen));
-
 	    return sigLen;
   }
   
@@ -558,7 +557,6 @@ public class SecureChannel {
     byte [] temphash = new byte[100];
     Util.arrayCopyNonAtomic(CardsessionKey, (short)0, temphash, (short)0, (short)(SC_SECRET_LENGTH*2));
     Util.arrayCopyNonAtomic(CardAESIV, (short)0, temphash, (short)(SC_SECRET_LENGTH*2), (short)16);
-	  
 	  
     byte permLen = SenderidCertificate[3];
     byte pubKeyLen = SenderidCertificate[ 5 + permLen];
