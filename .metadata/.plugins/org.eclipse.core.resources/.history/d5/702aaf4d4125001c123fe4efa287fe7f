@@ -8,11 +8,14 @@ import javacardx.crypto.Cipher;
  * Implements all methods related to the secure channel as specified in the SECURE_CHANNEL.md document.
  */
 public class SecureChannel {
-
+<<<<<<< Updated upstream
+  static final byte ID_CERTIFICATE_EMPTY = (byte) 0x00;
+  static final byte ID_CERTIFICATE_LOCKED = (byte) 0xFF;
+=======
   public static final byte ID_CERTIFICATE_EMPTY = (byte) 0x00;
   public static final byte ID_CERTIFICATE_LOCKED = (byte) 0xFF;
   public static final boolean SECURE_CHANNEL_DEBUG = false;
-
+>>>>>>> Stashed changes
 
   // cert = [permissions (2), certified pubKey (65), ECDSA signature from CA (74)]
   static final short ECDSA_MAX_LEN = 74;
@@ -97,7 +100,7 @@ public class SecureChannel {
     secret = JCSystem.makeTransientByteArray((short)(SC_SECRET_LENGTH * 2), JCSystem.CLEAR_ON_DESELECT);
     pairingKeys = new byte[(short)(PAIRING_KEY_LENGTH * pairingLimit)];
     remainingSlots = pairingLimit;
-    return;
+
   }
 
   /**
@@ -390,6 +393,9 @@ public class SecureChannel {
 
     return (1 + SC_SECRET_LENGTH);
   }
+<<<<<<< Updated upstream
+=======
+  
   
   public void CardSenderpair(byte[] Sendersalt, short SendersaltLen, byte [] Receiversalt) {
 
@@ -479,7 +485,7 @@ public class SecureChannel {
   {
 	  return CardAESIV;
   }
-
+>>>>>>> Stashed changes
 
   /**
    * Processes the UNPAIR command. For security reasons the key is not only marked as free but also zero-ed out. This

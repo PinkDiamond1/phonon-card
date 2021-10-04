@@ -70,9 +70,6 @@ public class PhononApplet extends Applet {
 	  static final byte TLV_DATA = (byte) 0x85;
 	  static final byte TLV_PHONON_KEY = (byte) 0x40;
 	  static final byte TLV_PHONON_INDEX = (byte) 0x41;
-	  
-	  static final byte TLV_SALT = (byte)0x91;
-	  static final byte TLV_RECIEVER_SIG = (byte) 0x93;
 
 	  static final byte TLV_APPLICATION_STATUS_TEMPLATE = (byte) 0xA3;
 	  static final byte TLV_PAIRING_SLOT = (byte)0x03;
@@ -444,6 +441,8 @@ else
 		return secureChannel.isOpen() && (apdu.getCurrentState() != APDU.STATE_FULL_OUTGOING);
 	}
 
+<<<<<<< Updated upstream
+=======
 	private void InitCardPairing( APDU apdu )
 	{
 	    byte[] apduBuffer1 = apdu.getBuffer();
@@ -647,7 +646,8 @@ else
         	secureChannel.respond( apdu, (short)0, ISO7816.SW_NO_ERROR);
 		return;
 	}
-
+	
+>>>>>>> Stashed changes
 	private void createPhonon( APDU apdu)
 	{
         secp256k1.setCurveParameters((ECKey) PhononKey.getPrivate());
@@ -1582,7 +1582,10 @@ else
 	    secureChannel.updateSecureChannelCounter();
 
 	    byte[] apduBuffer = apdu.getBuffer();
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 	    short off = 0;
 
 	    apduBuffer[off++] = TLV_APPLICATION_INFO_TEMPLATE;

@@ -97,7 +97,7 @@ public class SecureChannel {
     secret = JCSystem.makeTransientByteArray((short)(SC_SECRET_LENGTH * 2), JCSystem.CLEAR_ON_DESELECT);
     pairingKeys = new byte[(short)(PAIRING_KEY_LENGTH * pairingLimit)];
     remainingSlots = pairingLimit;
-    return;
+
   }
 
   /**
@@ -390,6 +390,9 @@ public class SecureChannel {
 
     return (1 + SC_SECRET_LENGTH);
   }
+<<<<<<< Updated upstream
+=======
+  
   
   public void CardSenderpair(byte[] Sendersalt, short SendersaltLen, byte [] Receiversalt) {
 
@@ -479,7 +482,7 @@ public class SecureChannel {
   {
 	  return CardAESIV;
   }
-
+>>>>>>> Stashed changes
 
   /**
    * Processes the UNPAIR command. For security reasons the key is not only marked as free but also zero-ed out. This
