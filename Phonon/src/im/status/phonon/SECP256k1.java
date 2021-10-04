@@ -55,7 +55,7 @@ public class SECP256k1 {
 
   private KeyAgreement ecPointMultiplier;
   private Crypto crypto;
-  ECPrivateKey tmpECPrivateKey;
+  private ECPrivateKey tmpECPrivateKey;
 
   /**
    * Allocates objects needed by this class. Must be invoked during the applet installation exactly 1 time.

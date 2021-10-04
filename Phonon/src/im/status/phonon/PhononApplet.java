@@ -1,10 +1,9 @@
-/**
- * 
- */
+
 package im.status.phonon;
 
 import javacard.framework.*;
 import javacard.security.*;
+//import javacardx.apdu.ExtendedLength;
 //import javacardx.crypto.Cipher;
 
 
@@ -12,9 +11,10 @@ import javacard.security.*;
  * @author MikeZercher
  *
  */
-public class PhononApplet extends Applet {
+public class PhononApplet extends Applet {	//implements ExtendedLength {
 	
 	private static final boolean DEBUG_MODE	= false;
+	private static final short EXTENDED_BUFFER_LENGTH = 0x10;
 	
 	static final byte PHONON_STATUS_UNINITIALIZED	= (byte) 0x00;
 	static final byte PHONON_STATUS_INITIALIZED		= (byte) 0x01;
@@ -41,6 +41,10 @@ public class PhononApplet extends Applet {
 	 static final byte INS_RECV_PHONONS				= (byte) 0x36;
 	 static final byte INS_SET_RECV_LIST			= (byte) 0x37;
 	 static final byte INS_TRANSACTION_ACK			= (byte) 0x38;
+	 static final byte INS_INIT_CARD_PAIRING		= (byte) 0x50;
+	 static final byte INS_CARD_SENDER_PAIR			= (byte) 0x51;
+	 static final byte INS_CARD_RECEIVER_PAIR		= (byte) 0x52;
+	 static final byte INS_CARD_FINALIZE			= (byte) 0x53;
 	 	
 	  static final byte PUK_LENGTH = 12;
 	  static final byte PUK_MAX_RETRIES = 5;
@@ -91,6 +95,14 @@ public class PhononApplet extends Applet {
 	  private Crypto crypto;
 	  private SECP256k1 secp256k1;
 	  private SecureChannel secureChannel;
+	  private Crypto crypto2;
+	  private SECP256k1 secp256k12;
+	  private SecureChannel secureChannel2;
+	  
+	  private Crypto cardcrypto;
+//	  private SECP256k1 cardsecp256k1;
+//	  private CardSecureChannel cardsecureChannel;
+	  
 	  private byte[] uid;
 	  private byte[] savedData;
 	  private byte masterSeedStatus; // Invalid / valid, but non-exportable / valid and exportable
@@ -157,6 +169,11 @@ public class PhononApplet extends Applet {
 	  
 	  static final short TLV_NOT_FOUND				= (short)0xffff;
 	  
+	  static final byte TLV_CARD_CERTIFICATE		= (byte) 0x90;
+	  static final byte TLV_SALT					= (byte) 0x91;
+	  static final byte TLV_AESIV					= (byte) 0x92;
+	  static final byte TLV_RECEIVER_SIG			= (byte) 0x93;
+	  
 	  private short phononKeyIndex = 0;
 	  private short DeletedPhononIndex = 0;
 
@@ -173,6 +190,9 @@ public class PhononApplet extends Applet {
 	  private boolean	SetReceiveList;
 	  private byte[]	SetReceiveListPubKey;
 	  private Bertlv[]	BertlvArray;
+	  
+	  private byte[]	ExtendedBuffer;
+	  private boolean	DebugKeySet;
 	  
 //	  public PhononApplet(byte[] bArray, short bOffset, byte bLength) 
 	  public PhononApplet() 
@@ -226,16 +246,15 @@ public class PhononApplet extends Applet {
 		    duplicationEncKey = new byte[(short)(KeyBuilder.LENGTH_AES_256/8)];
 		    expectedEntropy = -1;
 
-//		    derivationOutput = JCSystem.makeTransientByteArray((short) (Crypto.KEY_SECRET_SIZE + CHAIN_CODE_SIZE), JCSystem.CLEAR_ON_RESET);
 		    OutputData = JCSystem.makeTransientByteArray((short) 255, JCSystem.CLEAR_ON_RESET);
 		    OutputData2 = JCSystem.makeTransientByteArray((short) 255, JCSystem.CLEAR_ON_RESET);
 		    
 		    PhononKey = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
-		    
-		    BertlvArray = new Bertlv[5];
+		    DebugKeySet = false;
+ 		    BertlvArray = new Bertlv[5];
 		    for( short i =0; i<5 ;i++ )
 		    	BertlvArray[i] = new Bertlv();
-		    
+//		    ExtendedBuffer = new byte[ EXTENDED_BUFFER_LENGTH];
 		  }
 	  
 	public static void install(byte[] bArray, short bOffset, byte bLength)
@@ -249,6 +268,12 @@ public class PhononApplet extends Applet {
 	{
 		// Good practice: Return 9000 on SELECT
 		byte[] buf = apdu.getBuffer();
+	    if(secureChannel.SECURE_CHANNEL_DEBUG == true && DebugKeySet == false)
+	    {
+	    	secureChannel.SetDebugKey();
+	    	DebugKeySet = true;
+	    }
+
 if(DEBUG_MODE)
 {
 	if((buf[ISO7816.OFFSET_INS] != INS_CREATE_PHONON  )
@@ -259,6 +284,10 @@ if(DEBUG_MODE)
 				&& (buf[ISO7816.OFFSET_INS] != INS_RECV_PHONONS )
 				&& (buf[ISO7816.OFFSET_INS] != INS_SET_RECV_LIST )
 				&& (buf[ISO7816.OFFSET_INS] != INS_TRANSACTION_ACK )
+				&& (buf[ISO7816.OFFSET_INS] != INS_INIT_CARD_PAIRING)
+				&& (buf[ISO7816.OFFSET_INS] != INS_CARD_SENDER_PAIR)
+				&& (buf[ISO7816.OFFSET_INS] != INS_CARD_RECEIVER_PAIR)	
+				&& (buf[ISO7816.OFFSET_INS] != INS_CARD_FINALIZE)			
 			&& 	(buf[ISO7816.OFFSET_INS] != INS_SET_PHONON_DESCRIPTOR)
 				)
 		{
@@ -396,6 +425,29 @@ else
 		        	break;
 		        }
 		        
+		        case INS_INIT_CARD_PAIRING:
+		        {
+		        	InitCardPairing( apdu );		        	
+		        	break;
+		        }
+		        
+		        case INS_CARD_SENDER_PAIR:
+		        {
+		        	SenderPairing( apdu );
+		        	break;
+		        }
+		        
+		        case INS_CARD_RECEIVER_PAIR:
+		        {
+		        	ReceiverPairing( apdu );
+		        	break;
+		        }
+		        
+		        case INS_CARD_FINALIZE:
+		        {
+		        	FinalizeCardPairing( apdu );
+		        }
+		        
 		        default:
 				// good practice: If you don't know the INStruction, say so:
 				ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
@@ -433,6 +485,338 @@ else
 		return secureChannel.isOpen() && (apdu.getCurrentState() != APDU.STATE_FULL_OUTGOING);
 	}
 
+	private void InitCardPairing( APDU apdu )
+	{
+	    byte[] apduBuffer1 = apdu.getBuffer();
+	    short len;
+
+//		if(DEBUG_MODE)
+		    len = apdu.getIncomingLength();
+/*	    else
+	    {
+	    	len = secureChannel.preprocessAPDU(apduBuffer1);
+	    	if (!pin.isValidated())
+	    	{
+				secureChannel.respond( apdu, (short)0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+				return;
+	    	}
+	    }
+*/
+	   byte [] IncomingData = apduBuffer1;
+	   
+       short ptr = ISO7816.OFFSET_CDATA;
+       
+       if( IncomingData[ptr] != TLV_CARD_CERTIFICATE )
+       {
+    	   secureChannel.respond( apdu, (short)0, ISO7816.SW_WRONG_DATA);
+   			return;
+       }
+       ptr++;
+       short CertLen = (short)((short)IncomingData[ptr] & (short)0x00FF);
+       ptr++;
+       Util.arrayCopyNonAtomic(IncomingData, ptr, OutputData,(short)0, CertLen);
+    	  
+       secureChannel.SetCardidCertStatus((byte)0x00);
+       secureChannel.SenderloadCert(OutputData, CertLen);
+		    
+		
+		byte CertStatus = secureChannel.GetCertStatus();
+	    if (CertStatus == 0x00 )
+	    {
+	        // Card cert was not initialized
+	        ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+	    }
+	    
+        short Offset = 0;
+		byte[] apduBuffer;
+//		if( DEBUG_MODE)
+			apduBuffer = apdu.getBuffer();
+/*		else
+			apduBuffer = OutputData;
+*/
+			
+        short CardCertLen =secureChannel.GetCardCertificate(OutputData);
+		Bertlv berCert = BertlvArray[0];
+		berCert.BuildTLVStructure( TLV_CARD_CERTIFICATE, CardCertLen, OutputData, OutputData2 );
+		Util.arrayCopyNonAtomic(OutputData2, (short)0, apduBuffer, Offset, berCert.BuildLength);
+		Offset += berCert.BuildLength;
+       
+		byte [] salt = new byte[32];
+		Util.arrayFillNonAtomic(salt, (short)0, (short)32, (byte)0x01);
+//        crypto.random.generateData(salt, (short)0, (short)32);
+		secureChannel.SetSenderSalt( salt );
+        
+		Bertlv berCardSalt = BertlvArray[0];
+		berCardSalt.BuildTLVStructure( TLV_SALT, (short)32, salt, OutputData2 );
+		Util.arrayCopyNonAtomic(OutputData2, (short)0, apduBuffer, Offset, berCardSalt.BuildLength);
+		Offset += berCardSalt.BuildLength;
+//	    if( DEBUG_MODE)
+	    	apdu.setOutgoingAndSend((short) 0, Offset);
+//	    else
+//	    	secureChannel.respond( apdu,  apduBuffer,  Offset, ISO7816.SW_NO_ERROR);  	
+		return;
+	}
+	
+	private void SenderPairing( APDU apdu )
+	{
+	    byte[] apduBuffer = apdu.getBuffer();
+	    short len;
+
+//		if(DEBUG_MODE)
+		    len = apdu.getIncomingLength();
+/*	    else
+	    {
+	    	len = secureChannel.preprocessAPDU(apduBuffer);
+	    	if (!pin.isValidated())
+	    	{
+				secureChannel.respond( apdu, (short)0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+				return;
+	    	}
+	    }
+*/		
+	   byte [] IncomingData = apduBuffer;
+ 
+       short ptr = ISO7816.OFFSET_CDATA;
+       
+       if( IncomingData[ptr] != TLV_CARD_CERTIFICATE )
+       {
+    	   secureChannel.respond( apdu, (short)0, ISO7816.SW_WRONG_DATA);
+   			return;
+       }
+       ptr++;
+       short CertLen = (short)((short)IncomingData[ptr] & (short)0x00FF);
+       ptr++;
+       Util.arrayCopyNonAtomic(IncomingData, ptr, OutputData,(short)0, CertLen);
+    	  
+       secureChannel.SetCardidCertStatus((byte)0x00);
+       secureChannel.SenderloadCert(OutputData, CertLen);
+       ptr += CertLen;
+       if( IncomingData[ptr] != TLV_SALT)
+       {
+			secureChannel.respond( apdu, (short)0, ISO7816.SW_WRONG_DATA);
+			return;			  	   
+       }
+       ptr++;
+       short SenderSaltLen = IncomingData[ptr];
+       ptr++;
+       byte [] SenderSalt = JCSystem.makeTransientByteArray(SenderSaltLen, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
+       Util.arrayCopyNonAtomic(IncomingData, ptr, SenderSalt, (short) 0, SenderSaltLen);
+       
+		byte [] Receiversalt = new byte[32];
+		Util.arrayFillNonAtomic(Receiversalt, (short)0, (short)32, (byte)0x02);
+//        crypto.random.generateData(Receiversalt, (short)0, (short)32);
+		
+		short Offset = 0;
+		Util.arrayFillNonAtomic(secureChannel.CardAESIV, (short)0, (short)16, (byte)0x03);
+//      crypto.random.generateData(CardAESIV, (short)0, (short)16);
+		
+		secureChannel.CardSenderpair( SenderSalt, SenderSaltLen, Receiversalt);
+		
+		Bertlv berCardSalt = BertlvArray[0];
+		berCardSalt.BuildTLVStructure( TLV_SALT, (short)32, Receiversalt, OutputData2 );
+		Util.arrayCopyNonAtomic(OutputData2, (short)0, apduBuffer, Offset, berCardSalt.BuildLength);
+		Offset += berCardSalt.BuildLength;
+
+		Bertlv berCardAES = BertlvArray[0];
+		berCardAES.BuildTLVStructure( TLV_AESIV, (short)16, secureChannel.CardGetAESIV(), OutputData2);
+		Util.arrayCopyNonAtomic(OutputData2, (short) 0, apduBuffer, Offset, berCardAES.BuildLength);
+		Offset += berCardAES.BuildLength;
+		
+		Util.arrayFillNonAtomic(OutputData, (short)0,(short)OutputData.length, (byte)0x00);
+		short sigLen = secureChannel.CardSignSession( OutputData);
+		Bertlv berCardSig = BertlvArray[0];
+		berCardSig.BuildTLVStructure( TLV_RECEIVER_SIG, sigLen, OutputData, OutputData2);
+		Util.arrayCopyNonAtomic(OutputData2, (short) 0, apduBuffer, Offset, berCardSig.BuildLength);
+		Offset += berCardSig.BuildLength;
+/*		apduBuffer[Offset] = (byte)0x60;
+		Offset++;
+		apduBuffer[Offset] = 64;
+		Offset++;
+		Util.arrayCopyNonAtomic(secureChannel.CardsessionKey, (short)0, apduBuffer, Offset, (short)64);
+		Offset += 64;
+		apduBuffer[Offset] = (byte)0x61;
+		Offset++;
+		apduBuffer[Offset] = 32;
+		Offset++;
+		Util.arrayCopyNonAtomic(Receiversalt, (short)0, apduBuffer, Offset, (short)32);
+		Offset += 32;
+		apduBuffer[Offset] = (byte)0x62;
+		Offset++;
+		apduBuffer[Offset] = 32;
+		Offset++;
+		Util.arrayCopyNonAtomic(secureChannel.CardHash, (short)0, apduBuffer, Offset, (short)32);
+		Offset += 32;
+*/
+//	    if( DEBUG_MODE)
+	    	apdu.setOutgoingAndSend((short) 0, Offset);
+//	    else
+//	    	secureChannel.respond( apdu,  apduBuffer,  Offset, ISO7816.SW_NO_ERROR);  
+		return;	
+	}
+	
+	private void ReceiverPairing(APDU apdu)
+	{
+	    byte[] apduBuffer = apdu.getBuffer();
+	    short len;
+	    
+//	    if( DEBUG_MODE )
+//	    {
+	    	len = apdu.getIncomingLength();
+//	    }
+/*	    else
+	    {
+	    	len = secureChannel.preprocessAPDU(apduBuffer);
+	    	if (!pin.isValidated())
+	    	{
+	    		secureChannel.respond( apdu, (short)0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+	    		return;
+	    	}
+	    }
+*/	    
+//        byte[] IncomingData = JCSystem.makeTransientByteArray(len, JCSystem.CLEAR_ON_DESELECT);
+//        Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, IncomingData, (short)0,len);
+        
+        Bertlv RecieveSaltTLV = BertlvArray[0];;
+        byte[] IncomingPhonon = OutputData;
+        Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, IncomingPhonon, (short)0,len);
+        RecieveSaltTLV.LoadTag(IncomingPhonon);
+        if( RecieveSaltTLV.GetTag() != TLV_SALT )
+        {
+        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+//			secureChannel.respond( apdu, (short)0, ISO7816.SW_WRONG_DATA);
+			return;
+        }
+		byte [] Receiversalt = new byte[RecieveSaltTLV.GetLength()];
+        Util.arrayCopyNonAtomic(RecieveSaltTLV.GetData(),(short)0,Receiversalt, (short)0, RecieveSaltTLV.GetLength());
+        Bertlv RecieveAESTLV = BertlvArray[0];
+        short Offset = (short)(RecieveSaltTLV.GetLength() + 2);
+        RecieveAESTLV.LoadTagBase(IncomingPhonon, Offset);
+        if( RecieveAESTLV.GetTag() != TLV_AESIV || RecieveAESTLV.GetLength() != 16)
+        {
+        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+//        	secureChannel.respond( apdu, (short)0, ISO7816.SW_WRONG_DATA);
+			return;
+        }
+//		byte [] AESIV = new byte[RecieveAESTLV.GetLength()];
+		Util.arrayCopyNonAtomic(RecieveAESTLV.GetData(), (short)0, secureChannel.CardAESIV, (short)0, RecieveAESTLV.GetLength());
+		Offset+=(short)(RecieveAESTLV.GetLength() + 2);
+        Bertlv RecieveSigTLV = BertlvArray[0];
+        RecieveSigTLV.LoadTagBase(IncomingPhonon, Offset);
+        if( RecieveSigTLV.GetTag() != TLV_RECEIVER_SIG)
+        {
+        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+//        	secureChannel.respond( apdu, (short)0, ISO7816.SW_WRONG_DATA);
+   			return;
+        }
+//        byte[] RecieverSig = OutputData2;
+//       Util.arrayCopyNonAtomic(RecieveSigTLV.GetData(), (short)0, RecieverSig, (short)0, RecieveSigTLV.GetLength());
+		secureChannel.CardSenderpair( secureChannel.GetSenderSalt(),RecieveSaltTLV.GetLength() , Receiversalt);
+//		secureChannel.CardSenderpair( Receiversalt,RecieveSaltTLV.GetLength() , secureChannel.GetSenderSalt());
+		boolean SigVerifyStatus = secureChannel.CardVerifySession(RecieveSigTLV.GetData(), RecieveSigTLV.GetLength());
+		if( SigVerifyStatus == false)
+		{
+			ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+//			secureChannel.respond(apdu, (short)0, ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+			return;
+		}
+		Util.arrayFillNonAtomic(OutputData, (short)0,(short)OutputData.length, (byte)0x00);
+		short sigLen = secureChannel.CardSignSession( OutputData);
+		Bertlv berCardSig = BertlvArray[0];
+		berCardSig.BuildTLVStructure( TLV_RECEIVER_SIG, sigLen, OutputData, OutputData2);
+		Util.arrayCopyNonAtomic(OutputData2, (short) 0, apduBuffer, Offset, berCardSig.BuildLength);
+		Offset += berCardSig.BuildLength;
+
+/*    
+		Offset = 0;
+		apduBuffer[Offset] = (byte)0x60;
+		Offset++;
+	    byte permLen = secureChannel.SenderidCertificate[3];
+	    byte pubKeyLen = secureChannel.SenderidCertificate[ 5 + permLen];
+	    
+	    KeyPair verifyidKeypair = new KeyPair(KeyPair.ALG_EC_FP, (short) 256);
+	    secp256k1.setCurveParameters((ECKey) verifyidKeypair.getPrivate());
+	    secp256k1.setCurveParameters((ECKey) verifyidKeypair.getPublic());
+	    verifyidKeypair.genKeyPair();
+	    ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
+	    secp256k1.setCurveParameters((ECKey)pub);
+	    pub.setW(secureChannel.SenderidCertificate, (short)( 6+ permLen), pubKeyLen);
+	    apduBuffer[Offset] = pubKeyLen;
+	    Offset++;
+	    pub.getW(apduBuffer, Offset);
+		Offset += pubKeyLen;
+
+		apduBuffer[Offset] = (byte)0x61;
+		Offset++;
+		apduBuffer[Offset] = 32;
+		Offset++;
+		Util.arrayCopyNonAtomic(secureChannel.GetSenderSalt(), (short)0, apduBuffer, Offset, (short)32);
+		Offset += 32;
+		apduBuffer[Offset] = (byte)0x62;
+		Offset++;
+		apduBuffer[Offset] = 32;
+		Offset++;
+		Util.arrayCopyNonAtomic(RecieveSigTLV.GetData(), (short)0, apduBuffer, Offset, (short)RecieveSigTLV.GetLength());
+		Offset += RecieveSigTLV.GetLength();
+		
+		apduBuffer[Offset] = (byte)0x63;
+		Offset++;
+		apduBuffer[Offset] = 32;
+		Offset++;
+		Util.arrayCopyNonAtomic(Receiversalt, (short)0, apduBuffer, Offset, (short)32);
+		Offset += 32;
+*/		
+		
+//	    if( DEBUG_MODE)
+	    	apdu.setOutgoingAndSend((short) 0, Offset);
+//	    else
+//	    	secureChannel.respond( apdu,  apduBuffer,  Offset, ISO7816.SW_NO_ERROR);      
+ 		return;
+	}
+	
+	private void FinalizeCardPairing( APDU apdu )
+	{
+	    byte[] apduBuffer = apdu.getBuffer();
+	    short len;
+	    
+//	    if( DEBUG_MODE )
+//	    {
+	    	len = apdu.getIncomingLength();
+//	    }
+/*	    else
+	    {
+	    	len = secureChannel.preprocessAPDU(apduBuffer);
+	    	if (!pin.isValidated())
+	    	{
+	    		secureChannel.respond( apdu, (short)0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+	    		return;
+	    	}
+	    }
+*/	    
+//        byte[] IncomingData = JCSystem.makeTransientByteArray(len, JCSystem.CLEAR_ON_DESELECT);
+//        Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, IncomingData, (short)0,len);
+        
+        Bertlv ReceiveSigTLV = BertlvArray[0];;
+//        byte[] IncomingPhonon = OutputData;
+//       Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, IncomingPhonon, (short)0,len);
+        ReceiveSigTLV.LoadTag(apduBuffer);
+        if( ReceiveSigTLV.GetTag() != TLV_RECEIVER_SIG )
+        {
+        	ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+//			secureChannel.respond( apdu, (short)0, ISO7816.SW_WRONG_DATA);
+			return;
+        }
+        boolean SigVerifyStatus = secureChannel.CardVerifySignature(ReceiveSigTLV.GetData(), ReceiveSigTLV.GetLength());
+		if( SigVerifyStatus == false)
+		{
+			ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+//			secureChannel.respond(apdu, (short)0, ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+			return;
+		}
+        if( DEBUG_MODE == false)
+        	secureChannel.respond( apdu, (short)0, ISO7816.SW_NO_ERROR);
+		return;
+	}
+	
 	private void createPhonon( APDU apdu)
 	{
         secp256k1.setCurveParameters((ECKey) PhononKey.getPrivate());
@@ -1368,7 +1752,11 @@ else
 
 	    byte[] apduBuffer = apdu.getBuffer();
 
-	    short off = 0;
+/*	    if(secureChannel.SECURE_CHANNEL_DEBUG == true)
+	    {
+	    	secureChannel.SetDebugKey();
+	    }
+*/	    short off = 0;
 
 	    apduBuffer[off++] = TLV_APPLICATION_INFO_TEMPLATE;
 
