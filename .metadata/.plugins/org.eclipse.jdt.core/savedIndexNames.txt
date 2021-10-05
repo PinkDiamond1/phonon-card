@@ -1,4 +1,0 @@
-INDEX VERSION 1.127+C:\workspaceGridplus\Phonon\.metadata\.plugins\org.eclipse.jdt.core
-3048624782.index
-1915362782.index
-4096354669.index

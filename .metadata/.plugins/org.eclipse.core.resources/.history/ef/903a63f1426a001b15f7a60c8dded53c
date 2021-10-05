@@ -1,8 +1,0 @@
-package com.iqdevices.nextgen;
-
-public class BerTag {
-	byte	tag;
-	short	length;
-	byte []  data;
-
-}
