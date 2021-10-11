@@ -265,6 +265,28 @@ public class Bertlv {
 		return OutputData;
 	}
 
+	public byte [] BuildTLVStructure( byte tag, short length, byte [] InData, byte [] OutputData, short OutOffset)
+	{
+		short totallength = (short) ((short)length + (short)2);
+		if( length > 255 ) totallength = (short)(totallength+2);
+		short Offset = OutOffset;
+//		Util.setShort(OutputData, Offset, tag);
+		OutputData[ Offset++] = tag;
+		if( length > 255)
+		{
+			OutputData[ Offset++ ] = (byte)0x82;
+			Util.setShort(OutputData, Offset, length);
+			Offset+=2;
+		}
+		else
+		{
+			OutputData[ Offset++] = (byte)length;
+		}
+		Util.arrayCopyNonAtomic(InData, (short)0, OutputData, Offset, length);
+		BuildLength = (short)(Offset + length - OutOffset);
+		return OutputData;
+	}
+
 	public byte [] BuildTLVStructure( byte tag, short length, short InData, byte [] OutData)
 	{
 		short totallength = (short) ((short)2 + (short)2);
@@ -279,6 +301,20 @@ public class Bertlv {
 		return OutData;
 	}
 
+	
+	public byte [] BuildTLVStructure( byte tag, short length, short InData, byte [] OutData, short OutOffset )
+	{
+		short totallength = (short) ((short)2 + (short)2);
+		if( length > 255 ) totallength = (short)(totallength+2);
+		short Offset = OutOffset;
+		OutData[ Offset++ ] = tag;
+		OutData[ Offset++] = (byte)length;
+
+		Util.setShort( OutData,  Offset,  InData);
+		
+		BuildLength = (short)(Offset + 2 - OutOffset);
+		return OutData;
+	}
 	
 	public short GetBuildTLVLength()
 	{

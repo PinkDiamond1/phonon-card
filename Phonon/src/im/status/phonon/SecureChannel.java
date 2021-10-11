@@ -21,7 +21,7 @@ public class SecureChannel {
 
   public static final byte ID_CERTIFICATE_EMPTY = (byte) 0x00;
   public static final byte ID_CERTIFICATE_LOCKED = (byte) 0xFF;
-  public static final boolean SECURE_CHANNEL_DEBUG = false;
+  public static final boolean SECURE_CHANNEL_DEBUG = true;
   // cert = [permissions (2), certified pubKey (65), ECDSA signature from CA (74)]
   static final short ECDSA_MAX_LEN = 74;
   static final short PUBKEY_LEN = 65;
@@ -64,7 +64,6 @@ public class SecureChannel {
   private byte[] pairingSecret;
 
   private short scCounter;
-  
   public byte[] SenderidCertificate;
   private byte	 CardidCertStatus;
   private AESKey CardscEncKey;
@@ -559,8 +558,19 @@ public class SecureChannel {
 	    byte [] temphash = new byte[100];
 	    Util.arrayCopyNonAtomic(CardsessionKey, (short)0, temphash, (short)0, (short)(SC_SECRET_LENGTH*2));
 	    Util.arrayCopyNonAtomic(CardAESIV, (short)0, temphash, (short)(SC_SECRET_LENGTH*2), (short)16);
+
+	    byte permLen = SenderidCertificate[3];
+	    byte pubKeyLen = SenderidCertificate[ 5 + permLen];
 	    
-	   eccSig.init((ECPublicKey)idKeypair.getPublic(), Signature.MODE_VERIFY);
+	    KeyPair verifyidKeypair = new KeyPair(KeyPair.ALG_EC_FP, SC_KEY_LENGTH);
+	    localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPrivate());
+	    localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPublic());
+	    verifyidKeypair.genKeyPair();
+	    ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
+	    localsecp256k1.setCurveParameters((ECKey)pub);
+	    pub.setW(SenderidCertificate, (short)( 6+ permLen), pubKeyLen);
+
+	   eccSig.init((ECPublicKey)pub, Signature.MODE_VERIFY);
 	   boolean VerifyStatus = eccSig.verify(temphash, (short)0, (short) ((SC_SECRET_LENGTH*2)+ (short)16), RecieverSig, (short)0, RecieverSigLen);
        return VerifyStatus;	  
   }
@@ -618,6 +628,29 @@ public class SecureChannel {
     return len;
   }
 
+  public short CardpreprocessAPDU(byte[] apduBuffer) {
+	    if (!isOpen()) {
+	      ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+	    }
+
+	    short apduLen = (short)((short) apduBuffer[ISO7816.OFFSET_LC] & 0xff);
+
+	    if (!CardverifyAESMAC(apduBuffer, apduLen)) {
+	      reset();
+	      ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+	    }
+
+	    crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_DECRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
+	    Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, CardAESIV, (short) 0, SC_BLOCK_SIZE);
+	    short len = crypto.aesCbcIso9797m2.doFinal(apduBuffer, (short)(ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE), (short) (apduLen - SC_BLOCK_SIZE), apduBuffer, ISO7816.OFFSET_CDATA);
+
+	    apduBuffer[ISO7816.OFFSET_LC] = (byte) len;
+
+	    return len;
+	  }
+
+  
+  
   /**
    * Verifies the AES CBC-MAC, either natively or with a software implementation. Can only be called from the
    * preprocessAPDU method since it expects the input buffer to be formatted in a particular way.
@@ -632,6 +665,15 @@ public class SecureChannel {
 
     return scMac.verify(apduBuffer, (short) (ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE), (short) (apduLen - SC_BLOCK_SIZE), apduBuffer, ISO7816.OFFSET_CDATA, SC_BLOCK_SIZE);
   }
+  
+  
+  private boolean CardverifyAESMAC(byte[] apduBuffer, short apduLen) {
+	    scMac.init(CardscMacKey, Signature.MODE_VERIFY);
+	    scMac.update(apduBuffer, (short) 0, ISO7816.OFFSET_CDATA);
+	    scMac.update(CardAESIV, SC_BLOCK_SIZE, (short) (SC_BLOCK_SIZE - ISO7816.OFFSET_CDATA));
+
+	    return scMac.verify(apduBuffer, (short) (ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE), (short) (apduLen - SC_BLOCK_SIZE), apduBuffer, ISO7816.OFFSET_CDATA, SC_BLOCK_SIZE);
+	  }
 
   /**
    * Sends the response to the command. This the given SW is appended to the data automatically. The response data must
@@ -667,6 +709,32 @@ public class SecureChannel {
 	  respond( apdu, len, sw);
   }
 
+  public void Cardrespond(APDU apdu, short len, short sw) {
+	    byte[] apduBuffer = apdu.getBuffer();
+
+	    Util.setShort(apduBuffer, (short) (SC_OUT_OFFSET + len), sw);
+	    len += 2;
+
+	    crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
+	    len = crypto.aesCbcIso9797m2.doFinal(apduBuffer, SC_OUT_OFFSET, len, apduBuffer, (short)(ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE));
+
+	    apduBuffer[0] = (byte) (len + SC_BLOCK_SIZE);
+
+	    CardcomputeAESMAC(len, apduBuffer);
+
+	    Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, CardAESIV, (short) 0, SC_BLOCK_SIZE);
+
+	    len += SC_BLOCK_SIZE;
+	    apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, len);
+	  }
+	  
+	  public void Cardrespond( APDU apdu, byte[]OutgoingData, short len, short sw )
+	  {
+		  byte[] apduBuffer = apdu.getBuffer();
+		  Util.arrayCopyNonAtomic( OutgoingData, (short)0, apduBuffer, (short)SC_OUT_OFFSET, len);
+		  Cardrespond( apdu, len, sw);
+	  }
+
   /**
    * Computes the AES CBC-MAC, either natively or with a software implementation. Can only be called from the respond
    * method since it expects the input buffer to be formatted in a particular way.
@@ -680,6 +748,13 @@ public class SecureChannel {
     scMac.update(secret, SC_BLOCK_SIZE, (short) (SC_BLOCK_SIZE - 1));
     scMac.sign(apduBuffer, (short) (ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE), len, apduBuffer, ISO7816.OFFSET_CDATA);
   }
+  
+  private void CardcomputeAESMAC(short len, byte[] apduBuffer) {
+	    scMac.init(CardscMacKey, Signature.MODE_SIGN);
+	    scMac.update(apduBuffer, (short) 0, (short) 1);
+	    scMac.update(CardAESIV, (short)0, (short) (SC_BLOCK_SIZE ));
+	    scMac.sign(apduBuffer, (short) (ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE), len, apduBuffer, ISO7816.OFFSET_CDATA);
+	  }
 
   /**
    * Copies the public key used for EC-DH in the given buffer.
