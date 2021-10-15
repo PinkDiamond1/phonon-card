@@ -655,12 +655,12 @@ public class SecureChannel {
 	  Util.arrayCopyNonAtomic(OutputData, SC_BLOCK_SIZE, CardAESCMAC, (short)0, SC_BLOCK_SIZE);
 	  byte [] IncomingData = JCSystem.makeTransientByteArray( (short)( len - (SC_BLOCK_SIZE*2)), JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
 	  Util.arrayCopyNonAtomic(OutputData, (short)(SC_BLOCK_SIZE*2), IncomingData, (short)0, (short)(len-(SC_BLOCK_SIZE*2)));
-	  if (!VerifyCardAESCMAC( IncomingData, (short)(len-(SC_BLOCK_SIZE*2)), CardAESCMAC ))
+/*	  if (!VerifyCardAESCMAC( IncomingData, (short)(len-(SC_BLOCK_SIZE*2)), CardAESCMAC ))
 	  {
 	      reset();
 	      ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
 	  }
-	   byte[] IncomingAESIV = JCSystem.makeTransientByteArray( SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
+*/	   byte[] IncomingAESIV = JCSystem.makeTransientByteArray( SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
 	   Util.arrayCopyNonAtomic(OutputData, (short)0, IncomingAESIV, (short)0, SC_BLOCK_SIZE);
 //	    crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_DECRYPT, IncomingAESIV, (short) 0, SC_BLOCK_SIZE);
 //	    Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, CardAESIV, (short) 0, SC_BLOCK_SIZE);

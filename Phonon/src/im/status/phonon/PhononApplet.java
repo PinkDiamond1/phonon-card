@@ -1657,7 +1657,8 @@ else
 	    {
 	    	short encryptlen = secureChannel.CardEncrypt( OutgoingBuffer,(short)(PhononCollectionOffset + 2));
 	    	byte [] CardAESCMAC = JCSystem.makeTransientByteArray((short)16, JCSystem.CLEAR_ON_DESELECT);
-	    	secureChannel.CalcCardAESMAC(OutgoingBuffer, encryptlen, CardAESCMAC);
+//	    	secureChannel.CalcCardAESMAC(OutgoingBuffer, encryptlen, CardAESCMAC);
+	    	apduBuffer = apdu.getBuffer();
 	    	Util.arrayCopyNonAtomic(secureChannel.CardGetAESIV(), (short)0, apduBuffer, (short)0, (short)16);
 	    	Util.arrayCopyNonAtomic( CardAESCMAC, (short)0, apduBuffer, (short)16, (short)16);
 	    	Util.arrayCopyNonAtomic(OutgoingBuffer,  (short)0, apduBuffer, (short)32, (short)encryptlen);
