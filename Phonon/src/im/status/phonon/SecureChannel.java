@@ -651,50 +651,53 @@ public class SecureChannel {
 
   public short CardDecrypt( byte [] OutputData, short len)
   {
+    //Copy out MAC from first 16 bytes
 	  byte [] CardAESCMAC = JCSystem.makeTransientByteArray(SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-	  Util.arrayCopyNonAtomic(OutputData, SC_BLOCK_SIZE, CardAESCMAC, (short)0, SC_BLOCK_SIZE);
-	  byte [] IncomingData = JCSystem.makeTransientByteArray( (short)( len - (SC_BLOCK_SIZE*2)), JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-	  Util.arrayCopyNonAtomic(OutputData, (short)(SC_BLOCK_SIZE*2), IncomingData, (short)0, (short)(len-(SC_BLOCK_SIZE*2)));
-/*	  if (!VerifyCardAESCMAC( IncomingData, (short)(len-(SC_BLOCK_SIZE*2)), CardAESCMAC ))
+	  Util.arrayCopyNonAtomic(OutputData, (short)0, CardAESCMAC, (short)0, SC_BLOCK_SIZE);
+
+
+	  byte [] Ciphertext = JCSystem.makeTransientByteArray( (short)( len - (SC_BLOCK_SIZE)), JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
+	  Util.arrayCopyNonAtomic(OutputData, (short)(SC_BLOCK_SIZE), Ciphertext, (short)0, (short)(len-(SC_BLOCK_SIZE)));
+    //Skip MAC verification for now
+    if (!VerifyCardAESCMAC( Ciphertext, (short)(len-(SC_BLOCK_SIZE)), CardAESCMAC ))
 	  {
-	      reset();
-	      ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+      reset();
+      ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
 	  }
-*/	   byte[] IncomingAESIV = JCSystem.makeTransientByteArray( SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-	   Util.arrayCopyNonAtomic(OutputData, (short)0, IncomingAESIV, (short)0, SC_BLOCK_SIZE);
-//	    crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_DECRYPT, IncomingAESIV, (short) 0, SC_BLOCK_SIZE);
+
+
+    // //Probably cycle like this
+    // Util.arrayCopyNonAtomic()
+//	   byte[] IncomingAESIV = JCSystem.makeTransientByteArray( SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
+// 	   Util.arrayCopyNonAtomic(OutputData, (short)0, IncomingAESIV, (short)0, SC_BLOCK_SIZE);
+
 //	    Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-	    short Decryptlen = crypto.aesCbcIso9797m2.doFinal(IncomingData, (short)0, (short) (short)( len - (SC_BLOCK_SIZE*2)), OutputData, (short)0);
-	    return Decryptlen;
+    crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_DECRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
+    short Decryptlen = crypto.aesCbcIso9797m2.doFinal(OutputData, (short)SC_BLOCK_SIZE,(short)( len - (SC_BLOCK_SIZE)), OutputData, (short)0);
+
+    //Update the Init Vector
+    Util.arrayCopyNonAtomic(CardAESCMAC, (short)0, CardAESIV, (short)0, SC_BLOCK_SIZE);
+
+    return Decryptlen;
   }
 
   public short CardEncrypt( byte[] OutputData, short len)
   {
-      //TODO: maybe needs to handle rotating AES key
 	    crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
 	    len = crypto.aesCbcIso9797m2.doFinal(OutputData, (short)0, (short)len, OutputData, (short)0);
 
-      byte [] CardAESCMAC = JCSystem.makeTransientByteArray(SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
+      //Use the CardAESIV so it will cycle to the next MAC
+      //TODO: Test this with multiple sequential APDU's over the same channel to ensure cycle is working correctly
 
-      CalcCardAESMAC(OutputData, len, CardAESCMAC);
+      CalcCardAESMAC(OutputData, len, CardAESIV);
 
       //Prepend MAC
       //Shift the OutputData right 16 bytes to make room for MAC and then copy it into first 16 bytes
       Util.arrayCopyNonAtomic(OutputData, (short)0, OutputData, SC_BLOCK_SIZE, len);
-      Util.arrayCopyNonAtomic(CardAESCMAC, (short)0, OutputData, (short)0, SC_BLOCK_SIZE);
+      Util.arrayCopyNonAtomic(CardAESIV, (short)0, OutputData, (short)0, SC_BLOCK_SIZE);
       len += SC_BLOCK_SIZE;
-      //Need to add the AESIV into the output
-      //Missing these parts of the respond method
-      // apduBuffer[0] = (byte) (len + SC_BLOCK_SIZE);
 
-      // computeAESMAC(len, apduBuffer);
-
-      // Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, secret, (short) 0, SC_BLOCK_SIZE);
-
-      // len += SC_BLOCK_SIZE;
-      // apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, len);
 	    return len;
-
   }
 
 
@@ -805,6 +808,12 @@ public class SecureChannel {
 	    scMac.sign(outputData, (short) (ISO7816.OFFSET_CDATA + (SC_BLOCK_SIZE * 2 )), len, outputData, ISO7816.OFFSET_CDATA);
 	  }
 
+  /**
+   * Calculates the MAC for card to card secure channel messages
+   * @param Data The ciphertext
+   * @param len The length of the ciphertext
+   * @param CardAESCMAC The output buffer for the returned MAC
+   */
   public void CalcCardAESMAC( byte[] Data, short len, byte[] CardAESCMAC)
   {
     //Prepend 16 bytes
@@ -814,12 +823,12 @@ public class SecureChannel {
     scMac.sign(Data, (short)0, len, CardAESCMAC, (short)0);
   }
 
-  public boolean VerifyCardAESCMAC( byte[] Data, short len, byte[] CardAESCMAC )
+  public boolean VerifyCardAESCMAC( byte[] Data, short len, byte[] CardAESMAC )
   {
 	    scMac.init(CardscMacKey, Signature.MODE_VERIFY);
 	    byte [] meta = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	    scMac.update(meta, (short)0, (short)16);
-	    return scMac.verify(Data, (short)0, len, CardAESCMAC,(short)0, (short)16);
+	    return scMac.verify(Data, (short)0, len, CardAESMAC,(short)0, (short)16);
   }
 
   /**
