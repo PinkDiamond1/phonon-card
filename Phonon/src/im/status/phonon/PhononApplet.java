@@ -26,7 +26,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
     //	  static final byte APPLICATION_CAPABILITIES = (byte)(CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT | CAPABILITY_CREDENTIALS_MANAGEMENT | CAPABILITY_NDEF);
     static final byte APPLICATION_CAPABILITIES = (byte) (CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT | CAPABILITY_CREDENTIALS_MANAGEMENT);
-
     static final byte INS_INIT = (byte) 0xFE;
     static final byte INS_CREATE_PHONON = (byte) 0x30;
     static final byte INS_SET_PHONON_DESCRIPTOR = (byte) 0x31;
@@ -116,7 +115,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     KeyPair PhononKey;
     private Crypto crypto;
     private SECP256k1 secp256k1;
-//	  private byte[] OutputData2;
+    //	  private byte[] OutputData2;
     private SecureChannel secureChannel;
     private byte[] uid;
     private byte[] savedData;
@@ -146,7 +145,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private byte[] OutputData;
     private short phononKeyIndex = 0;
     private short DeletedPhononIndex = 0;
-    private Phonon2[] PhononArray2;
+    private Phonon[] PhononArray;
     private short[] PhononList;
     private short[] SendPhononList;
     private short[] DeletedPhononList;
@@ -174,7 +173,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         masterSeed = new byte[BIP39_SEED_SIZE];
         masterSeedStatus = MASTERSEED_EMPTY;
-        PhononArray2 = new Phonon2[MAX_NUMBER_PHONONS];
+        PhononArray = new Phonon[MAX_NUMBER_PHONONS];
         PhononList = new short[MAX_NUMBER_PHONONS];
         SendPhononList = new short[MAX_NUMBER_PHONONS];
         DeletedPhononList = new short[MAX_NUMBER_PHONONS];
@@ -682,7 +681,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         short phononKeyPointer = phononKeyIndex;
         byte UsingDeletedSpot = 0;
         if (DeletedPhononIndex == 0) {
-            PhononArray2[phononKeyPointer] = new Phonon2();
+            PhononArray[phononKeyPointer] = new Phonon();
             phononKeyIndex++;
         } else {
             DeletedPhononIndex--;
@@ -867,7 +866,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             short phononKeyPointer = phononKeyIndex;
             byte UsingDeletedSpot = 0;
             if (DeletedPhononIndex == 0) {
-                PhononArray2[phononKeyPointer] = new Phonon2();
+                PhononArray[phononKeyPointer] = new Phonon();
                 phononKeyIndex++;
             } else {
                 DeletedPhononIndex--;
