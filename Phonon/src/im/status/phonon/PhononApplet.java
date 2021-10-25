@@ -40,6 +40,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte INS_CARD_SENDER_PAIR = (byte) 0x51;
     static final byte INS_CARD_RECEIVER_PAIR = (byte) 0x52;
     static final byte INS_CARD_FINALIZE = (byte) 0x53;
+    static final byte INS_VERIFY_PIN = (byte) 0x20;
+    static final byte INS_CHANGE_PIN = (byte) 0x21;
+    static final byte INS_CHG_FRIENDLY_NAME = (byte) 0x56;
+    static final byte INS_GET_FRIENDLY_NAME = (byte) 0x57;
 
     static final byte PUK_LENGTH = 12;
     static final byte PUK_MAX_RETRIES = 5;
@@ -79,10 +83,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte TLV_UID = (byte) 0x8F;
     static final byte TLV_KEY_UID = (byte) 0x8E;
     static final byte TLV_CAPABILITIES = (byte) 0x8D;
-
-    static final byte INS_VERIFY_PIN = (byte) 0x20;
-    static final byte INS_CHANGE_PIN = (byte) 0x21;
-
     static final byte CHANGE_PIN_P1_USER_PIN = 0x00;
     static final byte CHANGE_PIN_P1_PUK = 0x01;
     static final byte CHANGE_PIN_P1_PAIRING_SECRET = 0x02;
@@ -161,6 +161,9 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private byte[] ExtendedBuffer;
     private boolean DebugKeySet;
 
+    private short friendlyNameLen;
+    private final byte[] friendlyName;
+
     public PhononApplet() {
         crypto = new Crypto();
         secp256k1 = new SECP256k1(crypto);
@@ -220,6 +223,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         for (short i = 0; i < 5; i++)
             BertlvArray[i] = new Bertlv();
 //		    ExtendedBuffer = new byte[ EXTENDED_BUFFER_LENGTH];
+	friendlyName = new byte[256];
     }
 
     public static void install(byte[] bArray, short bOffset, byte bLength) {
@@ -377,6 +381,15 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                     FinalizeCardPairing(apdu);
                     break;
                 }
+
+		case INS_CHG_FRIENDLY_NAME: {
+		    ChangeFriendlyName(apdu);
+                break;
+		}
+		case INS_GET_FRIENDLY_NAME: {
+		    GetFriendlyName(apdu);
+		    break;
+		}
 
                 default:
                     // good practice: If you don't know the INStruction, say so:
@@ -693,21 +706,21 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         ECPublicKey PhononPublicKey = (ECPublicKey) PhononKey.getPublic();
         ;
-        PhononArray2[phononKeyPointer].PhononPublicKeyLen = PhononPublicKey.getW(OutputData, (short) 0);
+        PhononArray[phononKeyPointer].PhononPublicKeyLen = PhononPublicKey.getW(OutputData, (short) 0);
         if (UsingDeletedSpot == 0) {
-            PhononArray2[phononKeyPointer].sPhononPublicKey = new byte[PhononArray2[phononKeyPointer].PhononPublicKeyLen];
+            PhononArray[phononKeyPointer].sPhononPublicKey = new byte[PhononArray[phononKeyPointer].PhononPublicKeyLen];
         }
-        Util.arrayCopy(OutputData, (short) 0, PhononArray2[phononKeyPointer].sPhononPublicKey, (short) 0, PhononArray2[phononKeyPointer].PhononPublicKeyLen);
+        Util.arrayCopy(OutputData, (short) 0, PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0, PhononArray[phononKeyPointer].PhononPublicKeyLen);
 
         ECPrivateKey PhononPrivateKey = (ECPrivateKey) PhononKey.getPrivate();
         ;
-        PhononArray2[phononKeyPointer].PhononPrivateKeyLen = PhononPrivateKey.getS(OutputData, (short) 0);
+        PhononArray[phononKeyPointer].PhononPrivateKeyLen = PhononPrivateKey.getS(OutputData, (short) 0);
         if (UsingDeletedSpot == 0) {
-            PhononArray2[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray2[phononKeyPointer].PhononPrivateKeyLen];
+            PhononArray[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray[phononKeyPointer].PhononPrivateKeyLen];
         }
-        Util.arrayCopy(OutputData, (short) 0, PhononArray2[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray2[phononKeyPointer].PhononPrivateKeyLen);
+        Util.arrayCopy(OutputData, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
 
-        PhononArray2[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
+        PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
         JCSystem.commitTransaction();
 
         byte[] apduBuffer;
@@ -728,9 +741,9 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         apduBuffer[off++] = TLV_PUB_KEY;
         short lenoff = off++;
-        Util.arrayCopyNonAtomic(PhononArray2[phononKeyPointer].sPhononPublicKey, (short) 0, apduBuffer, off, PhononArray2[phononKeyPointer].PhononPublicKeyLen);
-        apduBuffer[lenoff] = (byte) PhononArray2[phononKeyPointer].PhononPublicKeyLen;
-        off += PhononArray2[phononKeyPointer].PhononPublicKeyLen;
+        Util.arrayCopyNonAtomic(PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0, apduBuffer, off, PhononArray[phononKeyPointer].PhononPublicKeyLen);
+        apduBuffer[lenoff] = (byte) PhononArray[phononKeyPointer].PhononPublicKeyLen;
+        off += PhononArray[phononKeyPointer].PhononPublicKeyLen;
         apduBuffer[1] = (byte) (off - 1);
 
         if (DEBUG_MODE)
@@ -875,28 +888,28 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             }
             ECPrivateKey PrivateKey = (ECPrivateKey) PhononKey.getPrivate();
 
-            PhononArray2[phononKeyPointer].PhononPrivateKeyLen = PhononECCTLV.GetLength();
+            PhononArray[phononKeyPointer].PhononPrivateKeyLen = PhononECCTLV.GetLength();
             if (UsingDeletedSpot == 0) {
-                PhononArray2[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray2[phononKeyPointer].PhononPrivateKeyLen];
+                PhononArray[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray[phononKeyPointer].PhononPrivateKeyLen];
             }
-            Util.arrayCopyNonAtomic(PhononECCTLV.GetData(), (short) 0, PhononArray2[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray2[phononKeyPointer].PhononPrivateKeyLen);
-            PrivateKey.setS(PhononArray2[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray2[phononKeyPointer].PhononPrivateKeyLen);
+            Util.arrayCopyNonAtomic(PhononECCTLV.GetData(), (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
+            PrivateKey.setS(PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
             byte[] PublicKeystr = OutputData;
 
             short PublicKeyLength = secp256k1.derivePublicKey(PrivateKey, PublicKeystr, (short) 0);
             ECPublicKey PublicKey = (ECPublicKey) PhononKey.getPublic();
             PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
 
-            PhononArray2[phononKeyPointer].PhononPublicKeyLen = PublicKeyLength;
+            PhononArray[phononKeyPointer].PhononPublicKeyLen = PublicKeyLength;
             if (UsingDeletedSpot == 0) {
-                PhononArray2[phononKeyPointer].sPhononPublicKey = new byte[PhononArray2[phononKeyPointer].PhononPublicKeyLen];
+                PhononArray[phononKeyPointer].sPhononPublicKey = new byte[PhononArray[phononKeyPointer].PhononPublicKeyLen];
             }
-            Util.arrayCopyNonAtomic(PublicKeystr, (short) 0, PhononArray2[phononKeyPointer].sPhononPublicKey, (short) 0, PhononArray2[phononKeyPointer].PhononPublicKeyLen);
-            PhononArray2[phononKeyPointer].CurrencyType = Util.getShort(PhononTypeTLV.GetData(), (short) 0);
+            Util.arrayCopyNonAtomic(PublicKeystr, (short) 0, PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0, PhononArray[phononKeyPointer].PhononPublicKeyLen);
+            PhononArray[phononKeyPointer].CurrencyType = Util.getShort(PhononTypeTLV.GetData(), (short) 0);
 
             short vLen = PhononValueTLV.GetLength();
-            PhononArray2[phononKeyPointer].Value = new byte[vLen];
-            Util.arrayCopyNonAtomic(PhononValueTLV.GetData(), (short) 0, PhononArray2[phononKeyPointer].Value, (short) 0, vLen);
+            PhononArray[phononKeyPointer].Value = new byte[vLen];
+            Util.arrayCopyNonAtomic(PhononValueTLV.GetData(), (short) 0, PhononArray[phononKeyPointer].Value, (short) 0, vLen);
 
             // Check to make sure generated public key matches what was sent by SET_RECV_LIST
 /* Removed for alpha
@@ -907,7 +920,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 	        	 return;
 	         }
 */
-            PhononArray2[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
+            PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
 
             JCSystem.commitTransaction();
             phononKeyIndex++;
@@ -955,16 +968,16 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_INVALID);
             return;
         }
-        if (PhononArray2[PhononIndex] == null || PhononArray2[PhononIndex].Status == PHONON_STATUS_DELETED) {
+        if (PhononArray[PhononIndex] == null || PhononArray[PhononIndex].Status == PHONON_STATUS_DELETED) {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_INVALID);
             return;
         }
         JCSystem.beginTransaction();
         Bertlv berPhononKey = BertlvArray[1];
         byte[] OutgoingData = OutputData;
-        berPhononKey.BuildTLVStructure(TLV_PRIV_KEY, PhononArray2[PhononIndex].PhononPrivateKeyLen, PhononArray2[PhononIndex].sPhononPrivateKey, OutgoingData);
-        PhononArray2[PhononIndex].Status = PHONON_STATUS_DELETED;
-        PhononArray2[PhononIndex].CurrencyType = 0;
+        berPhononKey.BuildTLVStructure(TLV_PRIV_KEY, PhononArray[PhononIndex].PhononPrivateKeyLen, PhononArray[PhononIndex].sPhononPrivateKey, OutgoingData);
+        PhononArray[PhononIndex].Status = PHONON_STATUS_DELETED;
+        PhononArray[PhononIndex].CurrencyType = 0;
 
         DeletedPhononList[DeletedPhononIndex] = PhononIndex;
         DeletedPhononIndex++;
@@ -1023,13 +1036,13 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             return;
         }
 
-        if (PhononArray2[PhononIndex] == null) {
+        if (PhononArray[PhononIndex] == null) {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_INVALID);
             return;
 
         }
 
-        if (PhononArray2[PhononIndex].CurrencyType != 0x00) {
+        if (PhononArray[PhononIndex].CurrencyType != 0x00) {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_FUNC_NOT_SUPPORTED);
             return;
         }
@@ -1051,7 +1064,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             return;
         }
         JCSystem.beginTransaction();
-        PhononArray2[PhononIndex].CurrencyType = CurrencyType;
+        PhononArray[PhononIndex].CurrencyType = CurrencyType;
 
         Bertlv berPhononValue = BertlvArray[3];
 
@@ -1063,10 +1076,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             return;
         }
         short vLen = berPhononValue.GetLength();
-        if (PhononArray2[PhononIndex].Value == null)
-            PhononArray2[PhononIndex].Value = new byte[vLen];
+        if (PhononArray[PhononIndex].Value == null)
+            PhononArray[PhononIndex].Value = new byte[vLen];
 
-        Util.arrayCopyNonAtomic(berPhononValue.GetData(), (short) 0, PhononArray2[PhononIndex].Value, (short) 0, vLen);
+        Util.arrayCopyNonAtomic(berPhononValue.GetData(), (short) 0, PhononArray[PhononIndex].Value, (short) 0, vLen);
         JCSystem.commitTransaction();
         if (DEBUG_MODE == false)
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_NO_ERROR);
@@ -1111,16 +1124,16 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_INVALID);
             return;
         }
-        if (PhononArray2[PhononIndex] == null) {
+        if (PhononArray[PhononIndex] == null) {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_INVALID);
             return;
         }
 
-        if (PhononArray2[PhononIndex].CurrencyType == (short) 0) {
+        if (PhononArray[PhononIndex].CurrencyType == (short) 0) {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_INVALID);
             return;
         }
-        if (PhononArray2[PhononIndex].Status != PHONON_STATUS_INITIALIZED) {
+        if (PhononArray[PhononIndex].Status != PHONON_STATUS_INITIALIZED) {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_NOT_FOUND);
             return;
         }
@@ -1131,7 +1144,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             OutgoingBuffer = apduBuffer;
         else
             OutgoingBuffer = OutputData;
-        berPhononKey.BuildTLVStructure(TLV_PUB_KEY, PhononArray2[PhononIndex].PhononPublicKeyLen, PhononArray2[PhononIndex].sPhononPublicKey, OutgoingBuffer);
+        berPhononKey.BuildTLVStructure(TLV_PUB_KEY, PhononArray[PhononIndex].PhononPublicKeyLen, PhononArray[PhononIndex].sPhononPublicKey, OutgoingBuffer);
         if (DEBUG_MODE)
             apdu.setOutgoingAndSend((short) 0, (short) berPhononKey.BuildLength);
         else
@@ -1224,8 +1237,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             switch (PhononFilter) {
                 case LIST_FILTER_ALL: {
                     for (short i = 0; i < phononKeyIndex; i++) {
-                        if (PhononArray2[i] != null && PhononArray2[i].Status == PHONON_STATUS_INITIALIZED) {
-                            if (PhononCoinType == 0 || PhononCoinType == PhononArray2[i].CurrencyType) {
+                        if (PhononArray[i] != null && PhononArray[i].Status == PHONON_STATUS_INITIALIZED) {
+                            if (PhononCoinType == 0 || PhononCoinType == PhononArray[i].CurrencyType) {
                                 PhononList[PhononListCount] = i;
                                 PhononListCount++;
                             }
@@ -1235,9 +1248,9 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                 }
                 case LIST_FILTER_LESS_THAN: {
                     for (short i = 0; i < phononKeyIndex; i++) {
-                        if (PhononArray2[i] != null && PhononArray2[i].Status == PHONON_STATUS_INITIALIZED) {
-                            if ((PhononCoinType == 0 && PhononArray2[i].CurrencyType != 0) || PhononCoinType == PhononArray2[i].CurrencyType) {
-                                if (Util.arrayCompare(PhononArray2[i].Value, (short) 0, PhononLessThanValue, (short) 0, (short) 4) != 1) {
+                        if (PhononArray[i] != null && PhononArray[i].Status == PHONON_STATUS_INITIALIZED) {
+                            if ((PhononCoinType == 0 && PhononArray[i].CurrencyType != 0) || PhononCoinType == PhononArray[i].CurrencyType) {
+                                if (Util.arrayCompare(PhononArray[i].Value, (short) 0, PhononLessThanValue, (short) 0, (short) 4) != 1) {
                                     PhononList[PhononListCount] = i;
                                     PhononListCount++;
                                 }
@@ -1248,9 +1261,9 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                 }
                 case LIST_FILTER_GREATER_THAN: {
                     for (short i = 0; i < phononKeyIndex; i++) {
-                        if (PhononArray2[i] != null && PhononArray2[i].Status == PHONON_STATUS_INITIALIZED) {
-                            if ((PhononCoinType == 0 && PhononArray2[i].CurrencyType != 0) || PhononCoinType == PhononArray2[i].CurrencyType) {
-                                if (Util.arrayCompare(PhononArray2[i].Value, (short) 0, PhononGreaterThanValue, (short) 0, (short) 4) != -1) {
+                        if (PhononArray[i] != null && PhononArray[i].Status == PHONON_STATUS_INITIALIZED) {
+                            if ((PhononCoinType == 0 && PhononArray[i].CurrencyType != 0) || PhononCoinType == PhononArray[i].CurrencyType) {
+                                if (Util.arrayCompare(PhononArray[i].Value, (short) 0, PhononGreaterThanValue, (short) 0, (short) 4) != -1) {
                                     PhononList[PhononListCount] = i;
                                     PhononListCount++;
                                 }
@@ -1261,10 +1274,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                 }
                 case LIST_FILTER_GT_AND_LT: {
                     for (short i = 0; i < phononKeyIndex; i++) {
-                        if (PhononArray2[i] != null && PhononArray2[i].Status == PHONON_STATUS_INITIALIZED) {
-                            if ((PhononCoinType == 0 && PhononArray2[i].CurrencyType != 0) || PhononCoinType == PhononArray2[i].CurrencyType) {
-                                if (Util.arrayCompare(PhononArray2[i].Value, (short) 0, PhononLessThanValue, (short) 0, (short) 4) != 1) {
-                                    if (Util.arrayCompare(PhononArray2[i].Value, (short) 0, PhononGreaterThanValue, (short) 0, (short) 4) != -1) {
+                        if (PhononArray[i] != null && PhononArray[i].Status == PHONON_STATUS_INITIALIZED) {
+                            if ((PhononCoinType == 0 && PhononArray[i].CurrencyType != 0) || PhononCoinType == PhononArray[i].CurrencyType) {
+                                if (Util.arrayCompare(PhononArray[i].Value, (short) 0, PhononLessThanValue, (short) 0, (short) 4) != 1) {
+                                    if (Util.arrayCompare(PhononArray[i].Value, (short) 0, PhononGreaterThanValue, (short) 0, (short) 4) != -1) {
                                         PhononList[PhononListCount] = i;
                                         PhononListCount++;
                                     }
@@ -1298,8 +1311,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             short Offset = 0;
 
             Bertlv berPhononValue = BertlvArray[0];
-            if (PhononArray2[i].CurrencyType != 0) {
-                berPhononValue.BuildTLVStructure(TLV_SET_PHONON_VALUE, (short) 4, PhononArray2[i].Value, tlvtemp);
+            if (PhononArray[i].CurrencyType != 0) {
+                berPhononValue.BuildTLVStructure(TLV_SET_PHONON_VALUE, (short) 4, PhononArray[i].Value, tlvtemp);
             } else {
                 Util.arrayFillNonAtomic(Blank, (short) 0, (short) 4, (byte) 0);
                 berPhononValue.BuildTLVStructure(TLV_SET_PHONON_VALUE, (short) 4, Blank, tlvtemp);
@@ -1309,7 +1322,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             Offset += berPhononValue.BuildLength;
 
             Bertlv berPhononType = BertlvArray[1];
-            berPhononType.BuildTLVStructure(TLV_SET_PHONON_CURRENCY, (short) 2, PhononArray2[i].CurrencyType, tlvtemp);
+            berPhononType.BuildTLVStructure(TLV_SET_PHONON_CURRENCY, (short) 2, PhononArray[i].CurrencyType, tlvtemp);
             Util.arrayCopyNonAtomic(tlvtemp, (short) 0, PhononTLVData, Offset, berPhononType.BuildLength);
             Offset += berPhononType.BuildLength;
 
@@ -1410,13 +1423,13 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
             Bertlv berPhononKey = BertlvArray[0];
 
-            tlvtemp = berPhononKey.BuildTLVStructure(TLV_PRIV_KEY, PhononArray2[i].PhononPrivateKeyLen, PhononArray2[i].sPhononPrivateKey);
+            tlvtemp = berPhononKey.BuildTLVStructure(TLV_PRIV_KEY, PhononArray[i].PhononPrivateKeyLen, PhononArray[i].sPhononPrivateKey);
             Util.arrayCopyNonAtomic(tlvtemp, (short) 0, PhononTLVData, Offset, berPhononKey.BuildLength);
             Offset += berPhononKey.BuildLength;
 
             Bertlv berPhononValue = BertlvArray[1];
-            if (PhononArray2[i].CurrencyType != 0) {
-                tlvtemp = berPhononValue.BuildTLVStructure(TLV_SET_PHONON_VALUE, (short) 4, PhononArray2[i].Value);
+            if (PhononArray[i].CurrencyType != 0) {
+                tlvtemp = berPhononValue.BuildTLVStructure(TLV_SET_PHONON_VALUE, (short) 4, PhononArray[i].Value);
             } else {
                 byte[] Blank = JCSystem.makeTransientByteArray((short) 4, JCSystem.CLEAR_ON_DESELECT);
                 Util.arrayFillNonAtomic(Blank, (short) 0, (short) 4, (byte) 0);
@@ -1427,10 +1440,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             Offset += berPhononValue.BuildLength;
 
             Bertlv berPhononType = BertlvArray[2];
-            tlvtemp = berPhononType.BuildTLVStructure(TLV_SET_PHONON_CURRENCY, (short) 2, PhononArray2[i].CurrencyType);
+            tlvtemp = berPhononType.BuildTLVStructure(TLV_SET_PHONON_CURRENCY, (short) 2, PhononArray[i].CurrencyType);
             Util.arrayCopyNonAtomic(tlvtemp, (short) 0, PhononTLVData, Offset, berPhononType.BuildLength);
             Offset += berPhononType.BuildLength;
-            PhononArray2[i].Status = PHONON_STATUS_SENT;
+            PhononArray[i].Status = PHONON_STATUS_SENT;
 
             Bertlv berPhonon = BertlvArray[3];
             tlvtemp = berPhonon.BuildTLVStructure(TLV_PHONON_PRIVATE_DESCRIPTOR, Offset, PhononTLVData);
@@ -1500,7 +1513,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         for (short i = 0; i < SendPhononListCount; i++) {
             Index = Util.getShort(PhononListTLV.GetData(), Offset);
             Index--;
-            PhononArray2[Index].Status = PHONON_STATUS_DELETED;
+            PhononArray[Index].Status = PHONON_STATUS_DELETED;
             Offset += 2;
         }
         JCSystem.commitTransaction();
@@ -1706,6 +1719,23 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         }
 
         secureChannel.updatePairingSecret(apduBuffer, ISO7816.OFFSET_CDATA);
+    }
+
+    private void ChangeFriendlyName(APDU apdu) {
+        byte[] apduBuffer = apdu.getBuffer();
+        secureChannel.preprocessAPDU(apduBuffer);
+        if (!pin.isValidated()) {
+            ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+        }
+        friendlyNameLen = apduBuffer[ISO7816.OFFSET_LC];
+        Util.arrayCopy(apduBuffer, ISO7816.OFFSET_CDATA, friendlyName, (short) 0, apduBuffer[ISO7816.OFFSET_LC]);
+        secureChannel.respond(apdu, (short) 0, ISO7816.SW_NO_ERROR);
+    }
+
+    private void GetFriendlyName(APDU apdu) {
+        byte[] apduBuffer = apdu.getBuffer();
+        Util.arrayCopyNonAtomic(friendlyName, (short) 0, apduBuffer, ISO7816.OFFSET_CDATA, friendlyNameLen);
+        apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, friendlyNameLen);
     }
 
 }
