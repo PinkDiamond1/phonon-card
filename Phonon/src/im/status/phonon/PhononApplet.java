@@ -9,6 +9,7 @@ import javacard.security.*;
  * @author MikeZercher
  *
  */
+<<<<<<< Updated upstream
 public class PhononApplet extends Applet {	//implements ExtendedLength {
 	
 	private static final boolean DEBUG_MODE	= false;
@@ -236,6 +237,212 @@ public class PhononApplet extends Applet {	//implements ExtendedLength {
 		    expectedEntropy = -1;
 
 		    OutputData = JCSystem.makeTransientByteArray((short) 255, JCSystem.CLEAR_ON_RESET);
+=======
+public class PhononApplet extends Applet {    //implements ExtendedLength {
+
+    public static final short PHONON_KEY_LENGTH = 256;
+    public static final short MAX_NUMBER_PHONONS = 256;
+    static final byte PHONON_STATUS_UNINITIALIZED = (byte) 0x00;
+    static final byte PHONON_STATUS_INITIALIZED = (byte) 0x01;
+    static final byte PHONON_STATUS_PERSONALIZED = (byte) 0x02;
+    static final byte PHONON_STATUS_SENT = (byte) 0x03;
+    static final byte PHONON_STATUS_DELETED = (byte) 0x04;
+
+    static final short APPLICATION_VERSION = (short) 0x0003;
+    static final byte CAPABILITY_SECURE_CHANNEL = (byte) 0x01;
+    static final byte CAPABILITY_KEY_MANAGEMENT = (byte) 0x02;
+    static final byte CAPABILITY_CREDENTIALS_MANAGEMENT = (byte) 0x04;
+    static final byte CAPABILITY_NDEF = (byte) 0x08;
+
+    //	  static final byte APPLICATION_CAPABILITIES = (byte)(CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT | CAPABILITY_CREDENTIALS_MANAGEMENT | CAPABILITY_NDEF);
+    static final byte APPLICATION_CAPABILITIES = (byte) (CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT | CAPABILITY_CREDENTIALS_MANAGEMENT);
+    static final byte INS_INIT = (byte) 0xFE;
+    static final byte INS_CREATE_PHONON = (byte) 0x30;
+    static final byte INS_SET_PHONON_DESCRIPTOR = (byte) 0x31;
+    static final byte INS_LIST_PHONONS = (byte) 0x32;
+    static final byte INS_GET_PHONON_PUB_KEY = (byte) 0x33;
+    static final byte INS_DESTROY_PHONON = (byte) 0x34;
+    static final byte INS_SEND_PHONONS = (byte) 0x35;
+    static final byte INS_RECV_PHONONS = (byte) 0x36;
+    static final byte INS_SET_RECV_LIST = (byte) 0x37;
+    static final byte INS_TRANSACTION_ACK = (byte) 0x38;
+    static final byte INS_INIT_CARD_PAIRING = (byte) 0x50;
+    static final byte INS_CARD_SENDER_PAIR = (byte) 0x51;
+    static final byte INS_CARD_RECEIVER_PAIR = (byte) 0x52;
+    static final byte INS_CARD_FINALIZE = (byte) 0x53;
+    static final byte INS_VERIFY_PIN = (byte) 0x20;
+    static final byte INS_CHANGE_PIN = (byte) 0x21;
+    static final byte INS_CHG_FRIENDLY_NAME = (byte) 0x56;
+    static final byte INS_GET_FRIENDLY_NAME = (byte) 0x57;
+
+    static final byte PUK_LENGTH = 12;
+    static final byte PUK_MAX_RETRIES = 5;
+    static final byte PIN_LENGTH = 6;
+    static final byte PIN_MAX_RETRIES = 3;
+    static final byte KEY_PATH_MAX_DEPTH = 10;
+    static final byte PAIRING_MAX_CLIENT_COUNT = 1;
+    static final byte UID_LENGTH = 16;
+    // Maximum payload size of an encrypted APDU: https://status.im/keycard_api/apdu/opensecurechannel.html
+    static final short SAVED_DATA_SIZE = 223;
+
+    static final short CHAIN_CODE_SIZE = 32;
+    static final short KEY_UID_LENGTH = 32;
+    static final short BIP39_SEED_SIZE = CHAIN_CODE_SIZE * 2;
+    static final byte MASTERSEED_EMPTY = (byte) 0x00;
+    static final byte MASTERSEED_NOT_EXPORTABLE = (byte) 0x01;
+    static final byte MASTERSEED_EXPORTABLE = (byte) 0x02;
+
+    static final byte TLV_SIGNATURE_TEMPLATE = (byte) 0xA0;
+
+    static final byte TLV_KEY_TEMPLATE = (byte) 0xA1;
+    static final byte TLV_PUB_KEY = (byte) 0x80;
+    static final byte TLV_PRIV_KEY = (byte) 0x81;
+    static final byte TLV_CHAIN_CODE = (byte) 0x82;
+    static final byte TLV_SEED = (byte) 0x83;
+    static final byte TLV_SEED_STATUS = (byte) 0x84;
+    static final byte TLV_DATA = (byte) 0x85;
+    static final byte TLV_PHONON_KEY = (byte) 0x40;
+    static final byte TLV_PHONON_INDEX = (byte) 0x41;
+
+    static final byte TLV_APPLICATION_STATUS_TEMPLATE = (byte) 0xA3;
+    static final byte TLV_PAIRING_SLOT = (byte) 0x03;
+    static final byte TLV_INT = (byte) 0x02;
+    static final byte TLV_BOOL = (byte) 0x01;
+
+    static final byte TLV_APPLICATION_INFO_TEMPLATE = (byte) 0xA4;
+    static final byte TLV_UID = (byte) 0x8F;
+    static final byte TLV_KEY_UID = (byte) 0x8E;
+    static final byte TLV_CAPABILITIES = (byte) 0x8D;
+    static final byte CHANGE_PIN_P1_USER_PIN = 0x00;
+    static final byte CHANGE_PIN_P1_PUK = 0x01;
+    static final byte CHANGE_PIN_P1_PAIRING_SECRET = 0x02;
+    static final byte TLV_SET_PHONON_DESCRIPTOR = (byte) 0x50;
+    static final byte TLV_PHONON_COLLECTION = (byte) 0x52;
+    static final byte TLV_PHONON_COLLECTION_COUNT = (byte) 0x53;
+    static final byte TLV_PHONON_PRIVATE_DESCRIPTOR = (byte) 0x44;
+    static final byte TLV_PHONON_INDEX_COUNT = (byte) 0x42;
+    static final byte TLV_PHONON_TRANSFER_PACKET = (byte) 0x43;
+    static final byte TLV_PHONON_FILTER = (byte) 0x60;
+    static final byte TLV_SET_PHONON_KEY_INDEX = (byte) 0x41;
+    static final byte TLV_PHONON_PUB_KEY_LIST = (byte) 0x7f;
+    static final byte TLV_PHONON_PUBLIC_KEY = (byte) 0x80;
+    static final byte TLV_SET_PHONON_CURRENCY = (byte) 0x82;
+    static final byte TLV_SET_PHONON_VALUE = (byte) 0x83;
+    static final byte TLV_PHONON_LESS_THAN = (byte) 0x84;
+    static final byte TLV_PHONON_GREATER_THAN = (byte) 0x85;
+    static final byte LIST_FILTER_ALL = (byte) 0x00;
+    static final byte LIST_FILTER_LESS_THAN = (byte) 0x01;
+    static final byte LIST_FILTER_GREATER_THAN = (byte) 0x02;
+    static final byte LIST_FILTER_GT_AND_LT = (byte) 0x03;
+    static final byte LIST_FILTER_LAST = (byte) 0x03;
+    static final short TLV_NOT_FOUND = (short) 0xffff;
+    static final byte TLV_CARD_CERTIFICATE = (byte) 0x90;
+    static final byte TLV_SALT = (byte) 0x91;
+    static final byte TLV_AESIV = (byte) 0x92;
+    static final byte TLV_RECEIVER_SIG = (byte) 0x93;
+    private static final boolean DEBUG_MODE = false;
+    private static final short EXTENDED_BUFFER_LENGTH = 0x10;
+    private final byte[] friendlyName;
+    KeyPair PhononKey;
+    private Crypto crypto;
+    private SECP256k1 secp256k1;
+    //	  private byte[] OutputData2;
+    private SecureChannel secureChannel;
+    private byte[] uid;
+    private byte[] savedData;
+    private byte masterSeedStatus; // Invalid / valid, but non-exportable / valid and exportable
+    private ECPublicKey masterPublic;
+    private ECPrivateKey masterPrivate;
+    private byte[] masterChainCode;
+    private boolean isExtended;
+    private ECPublicKey parentPublicKey;
+    private ECPrivateKey parentPrivateKey;
+    private byte[] parentChainCode;
+    private ECPublicKey publicKey;
+    private ECPrivateKey privateKey;
+    private byte[] chainCode;
+    private ECPublicKey pinlessPublicKey;
+    private ECPrivateKey pinlessPrivateKey;
+    private byte[] keyPath;
+    private short keyPathLen;
+    private byte[] pinlessPath;
+    private short pinlessPathLen;
+    private Signature signature;
+    private byte[] keyUID;
+    private byte[] masterSeed;
+    private byte[] duplicationEncKey;
+    private short expectedEntropy;
+    private OwnerPIN pin;
+    private byte[] OutputData;
+    private short phononKeyIndex = 0;
+    private short DeletedPhononIndex = 0;
+    private Phonon[] PhononArray;
+    private short[] PhononList;
+    private short[] SendPhononList;
+    private short[] DeletedPhononList;
+    private short PhononListCount;
+    private short PhononListLastSent;
+    private short SendPhononListCount;
+    private short SendPhononListLastSent;
+    private boolean SetReceiveList;
+    private byte[] SetReceiveListPubKey;
+    private Bertlv[] BertlvArray;
+    private byte[] ExtendedBuffer;
+    private boolean DebugKeySet;
+    private short friendlyNameLen;
+
+    public PhononApplet() {
+        crypto = new Crypto();
+        secp256k1 = new SECP256k1(crypto);
+        secureChannel = new SecureChannel(PAIRING_MAX_CLIENT_COUNT, crypto, secp256k1);
+
+        uid = new byte[UID_LENGTH];
+        crypto.random.generateData(uid, (short) 0, UID_LENGTH);
+
+        savedData = new byte[SAVED_DATA_SIZE];
+
+        masterSeed = new byte[BIP39_SEED_SIZE];
+        masterSeedStatus = MASTERSEED_EMPTY;
+        PhononArray = new Phonon[MAX_NUMBER_PHONONS];
+        PhononList = new short[MAX_NUMBER_PHONONS];
+        SendPhononList = new short[MAX_NUMBER_PHONONS];
+        DeletedPhononList = new short[MAX_NUMBER_PHONONS];
+        PhononListCount = 0;
+        PhononListLastSent = 0;
+        SendPhononListCount = 0;
+        SendPhononListLastSent = 0;
+        SetReceiveList = false;
+
+        masterPublic = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
+        masterPrivate = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
+
+        parentPublicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
+        parentPrivateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
+
+        publicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
+        privateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
+
+        pinlessPublicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
+        pinlessPrivateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
+
+
+        masterChainCode = new byte[CHAIN_CODE_SIZE];
+        parentChainCode = new byte[CHAIN_CODE_SIZE];
+        chainCode = new byte[CHAIN_CODE_SIZE];
+        keyPath = new byte[KEY_PATH_MAX_DEPTH * 4];
+        pinlessPath = new byte[KEY_PATH_MAX_DEPTH * 4];
+
+        keyUID = new byte[KEY_UID_LENGTH];
+
+        resetCurveParameters();
+
+        signature = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
+
+        duplicationEncKey = new byte[(short) (KeyBuilder.LENGTH_AES_256 / 8)];
+        expectedEntropy = -1;
+
+        OutputData = JCSystem.makeTransientByteArray((short) 255, JCSystem.CLEAR_ON_RESET);
+>>>>>>> Stashed changes
 //		    OutputData2 = JCSystem.makeTransientByteArray((short) 255, JCSystem.CLEAR_ON_RESET);
 		    
 		    PhononKey = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
