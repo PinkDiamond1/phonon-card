@@ -112,6 +112,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte TLV_RECEIVER_SIG = (byte) 0x93;
     private static final boolean DEBUG_MODE = false;
     private static final short EXTENDED_BUFFER_LENGTH = 0x10;
+    private final byte[] friendlyName;
     KeyPair PhononKey;
     private Crypto crypto;
     private SECP256k1 secp256k1;
@@ -149,7 +150,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private short[] PhononList;
     private short[] SendPhononList;
     private short[] DeletedPhononList;
-
     private short PhononListCount;
     private short PhononListLastSent;
     private short SendPhononListCount;
@@ -157,12 +157,9 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private boolean SetReceiveList;
     private byte[] SetReceiveListPubKey;
     private Bertlv[] BertlvArray;
-
     private byte[] ExtendedBuffer;
     private boolean DebugKeySet;
-
     private short friendlyNameLen;
-    private final byte[] friendlyName;
 
     public PhononApplet() {
         crypto = new Crypto();
@@ -223,7 +220,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         for (short i = 0; i < 5; i++)
             BertlvArray[i] = new Bertlv();
 //		    ExtendedBuffer = new byte[ EXTENDED_BUFFER_LENGTH];
-	friendlyName = new byte[256];
+        friendlyName = new byte[256];
     }
 
     public static void install(byte[] bArray, short bOffset, byte bLength) {
@@ -382,14 +379,14 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                     break;
                 }
 
-		case INS_CHG_FRIENDLY_NAME: {
-		    ChangeFriendlyName(apdu);
-                break;
-		}
-		case INS_GET_FRIENDLY_NAME: {
-		    GetFriendlyName(apdu);
-		    break;
-		}
+                case INS_CHG_FRIENDLY_NAME: {
+                    ChangeFriendlyName(apdu);
+                    break;
+                }
+                case INS_GET_FRIENDLY_NAME: {
+                    GetFriendlyName(apdu);
+                    break;
+                }
 
                 default:
                     // good practice: If you don't know the INStruction, say so:
