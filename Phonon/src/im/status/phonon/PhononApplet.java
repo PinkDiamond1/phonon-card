@@ -10,6 +10,7 @@ import javacardx.crypto.Cipher;
  */
 public class PhononApplet extends Applet {    //implements ExtendedLength {
 
+    private static final boolean DEBUG_MODE = false;
     public static final short PHONON_KEY_LENGTH = 256;
     public static final short MAX_NUMBER_PHONONS = 256;
     static final byte PHONON_STATUS_UNINITIALIZED = (byte) 0x00;
@@ -109,7 +110,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte TLV_SALT = (byte) 0x91;
     static final byte TLV_AESIV = (byte) 0x92;
     static final byte TLV_RECEIVER_SIG = (byte) 0x93;
-    private static final boolean DEBUG_MODE = false;
     private static final short EXTENDED_BUFFER_LENGTH = 0x10;
     private final byte[] friendlyName;
     KeyPair PhononKey;
@@ -160,6 +160,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private boolean DebugKeySet;
     private short friendlyNameLen;
 
+    
     public PhononApplet() {
         crypto = new Crypto();
         secp256k1 = new SECP256k1(crypto);
@@ -446,6 +447,12 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         secureChannel.SetCardidCertStatus((byte) 0x00);
         secureChannel.SenderloadCert(OutputData, CertLen);
+        boolean verifyStatus =  secureChannel.CardVerifyCertificate();
+        if(verifyStatus == false)
+        {
+        	ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+        	return;
+        }
 
 
         byte CertStatus = secureChannel.GetCertStatus();
@@ -611,11 +618,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         }
         secureChannel.CardSenderpair(secureChannel.GetSenderSalt(), RecieveSaltTLV.GetLength(), Receiversalt);
         boolean SigVerifyStatus = secureChannel.CardVerifySession(RecieveSigTLV.GetData(), RecieveSigTLV.GetLength());
-//		if( SigVerifyStatus == false)
-//		{
-//			ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
-//			return;
-//		}
+		if( SigVerifyStatus == false)
+		{
+			ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+			return;
+		}
         Offset = 0;
         Util.arrayFillNonAtomic(OutputData, (short) 0, (short) OutputData.length, (byte) 0x00);
         short sigLen = secureChannel.CardSignSession(OutputData);
