@@ -212,7 +212,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         expectedEntropy = -1;
 
         OutputData = JCSystem.makeTransientByteArray((short) 255, JCSystem.CLEAR_ON_RESET);
-//    OutputData2 = JCSystem.makeTransientByteArray((short) 255, JCSystem.CLEAR_ON_RESET);
 
         PhononKey = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
         DebugKeySet = false;
@@ -430,7 +429,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             }
         }
 
-//	    len = apdu.getIncomingLength();
         byte[] IncomingData = apduBuffer1;
 
         short ptr = ISO7816.OFFSET_CDATA;
@@ -480,14 +478,12 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         Bertlv berCardSalt = BertlvArray[0];
         berCardSalt.BuildTLVStructure(TLV_SALT, (short) 32, salt, apduBuffer, Offset);
-//		Util.arrayCopyNonAtomic(OutputData2, (short)0, apduBuffer, Offset, berCardSalt.BuildLength);
         Offset += berCardSalt.BuildLength;
 
         if (DEBUG_MODE)
             apdu.setOutgoingAndSend((short) 0, Offset);
         else
             secureChannel.respond(apdu, apduBuffer, Offset, ISO7816.SW_NO_ERROR);
-//	apdu.setOutgoingAndSend((short) 0, Offset);
         return;
     }
 
@@ -504,7 +500,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             }
         }
 
-//      len = apdu.getIncomingLength();
         byte[] IncomingData = apduBuffer;
 
         short ptr = ISO7816.OFFSET_CDATA;
@@ -550,25 +545,18 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         apduBuffer = apdu.getBuffer();
         Bertlv berCardSalt = BertlvArray[0];
         berCardSalt.BuildTLVStructure(TLV_SALT, (short) 32, Receiversalt, apduBuffer, (short) 0);
-//		berCardSalt.BuildTLVStructure( TLV_SALT, (short)32, Receiversalt, OutputData2 );
-//		Util.arrayCopyNonAtomic(OutputData2, (short)0, apduBuffer, Offset, berCardSalt.BuildLength);
         Offset += berCardSalt.BuildLength;
 
         Bertlv berCardAES = BertlvArray[0];
         berCardAES.BuildTLVStructure(TLV_AESIV, (short) 16, secureChannel.CardGetAESIV(), apduBuffer, Offset);
-//		berCardAES.BuildTLVStructure( TLV_AESIV, (short)16, secureChannel.CardGetAESIV(), OutputData2);
-//		Util.arrayCopyNonAtomic(OutputData2, (short) 0, apduBuffer, Offset, berCardAES.BuildLength);
         Offset += berCardAES.BuildLength;
 
         Util.arrayFillNonAtomic(OutputData, (short) 0, (short) OutputData.length, (byte) 0x00);
         short sigLen = secureChannel.CardSignSession(OutputData);
         Bertlv berCardSig = BertlvArray[0];
         berCardSig.BuildTLVStructure(TLV_RECEIVER_SIG, sigLen, OutputData, apduBuffer, Offset);
-//		berCardSig.BuildTLVStructure( TLV_RECEIVER_SIG, sigLen, OutputData, OutputData2);
-//		Util.arrayCopyNonAtomic(OutputData2, (short) 0, apduBuffer, Offset, berCardSig.BuildLength);
         Offset += berCardSig.BuildLength;
 
-//    	apdu.setOutgoingAndSend((short) 0, Offset);
         if (DEBUG_MODE)
             apdu.setOutgoingAndSend((short) 0, Offset);
         else
@@ -630,7 +618,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         berCardSig.BuildTLVStructure(TLV_RECEIVER_SIG, sigLen, OutputData, apduBuffer);
         Offset += berCardSig.BuildLength;
 
-//    	apdu.setOutgoingAndSend((short) 0, Offset);
         if (DEBUG_MODE)
             apdu.setOutgoingAndSend((short) 0, Offset);
         else
@@ -652,7 +639,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             }
         }
 
-        //   	len = apdu.getIncomingLength();
 
         short ptr = ISO7816.OFFSET_CDATA;
 
@@ -809,24 +795,17 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             len = apdu.getIncomingLength();
         } else {
             len = secureChannel.preprocessAPDU(apduBuffer);
-//	    	len = secureChannel.CardpreprocessAPDU(apduBuffer);
             len = (short) ((short) apduBuffer[ISO7816.OFFSET_LC] & 0xff);
             Util.arrayCopyNonAtomic(apduBuffer, (short) ISO7816.OFFSET_CDATA, OutputData, (short) 0, len);
             len = secureChannel.CardDecrypt(OutputData, len);
 
-            // Echo back decrypted data:
-            // Util.arrayCopyNonAtomic(OutputData, (short)0, apduBuffer, (short)0, len);
-            // apdu.setOutgoingAndSend((short)0, len);
-            // secureChannel.respond(apdu, apduBuffer, len, ISO7816.SW_NO_ERROR);
-            // return;
-
-/*	    	if (!pin.isValidated())
+	    	if (!pin.isValidated())
 	    	{
 		        ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
 //	    		secureChannel.Cardrespond( apdu, (short)0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
 	    		return;
 	    	}
-*/
+
         }
 
         if (phononKeyIndex >= MAX_NUMBER_PHONONS) {
@@ -841,13 +820,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 			return;
 	    }
 */
-//        byte[] IncomingData = JCSystem.makeTransientByteArray(len, JCSystem.CLEAR_ON_DESELECT);
-//        Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, IncomingData, (short)0,len);
-
-//      byte[] IncomingPhonon = JCSystem.makeTransientByteArray(len, JCSystem.CLEAR_ON_DESELECT);
         Bertlv RecievePhononTLV = BertlvArray[0];
         byte[] IncomingPhonon = OutputData;
-        // Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, IncomingPhonon, (short)0,len);
         RecievePhononTLV.LoadTag(IncomingPhonon);
         if (RecievePhononTLV.GetTag() != TLV_PHONON_TRANSFER_PACKET) {
 
@@ -926,11 +900,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
 
             JCSystem.commitTransaction();
-            phononKeyIndex++;
         }
-//        if( DEBUG_MODE == false)
         secureChannel.respond(apdu, (short) 0, ISO7816.SW_NO_ERROR);
-        // secureChannel.Cardrespond( apdu, (short)0, ISO7816.SW_NO_ERROR);
         return;
     }
 
@@ -1301,7 +1272,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private void SendSelectPhononList(APDU apdu, byte tlvTag) {
         byte[] apduBuffer = apdu.getBuffer();
 
-//	    byte [] PhononCollection = OutputData2;
         byte[] PhononCollection = OutputData;
         short PhononCollectionOffset = 0;
         short i, j;
@@ -1342,7 +1312,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                 break;
         }
         Bertlv berPhononCollection = BertlvArray[4];
-//		byte [] OutgoingBuffer = OutputData;
         byte[] OutgoingBuffer = apduBuffer;
         berPhononCollection.BuildTLVStructure(TLV_PHONON_COLLECTION, PhononCollectionOffset, PhononCollection, OutgoingBuffer);
         short remaining = (short) ISO7816.SW_NO_ERROR;
@@ -1366,14 +1335,12 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             len = apdu.getIncomingLength();
         else {
             len = secureChannel.preprocessAPDU(apduBuffer);
-//	    	len = secureChannel.CardpreprocessAPDU(apduBuffer);
             if (!pin.isValidated()) {
                 secureChannel.respond(apdu, (short) 0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
                 return;
             }
         }
 
-//	    byte[] IncomingData = apduBuffer;
         byte PhononListContinue = apduBuffer[ISO7816.OFFSET_P1];
         if (PhononListContinue > 1) {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_INCORRECT_P1P2);
@@ -1419,7 +1386,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             Util.arrayFillNonAtomic(PhononTLVData, (short) 0, (short) 100, (byte) 0x00);
             i = SendPhononList[j];
             i--;
-//			byte [] PhononTLVData = JCSystem.makeTransientByteArray((short)100, JCSystem.CLEAR_ON_DESELECT);
             short Offset = 0;
 
             byte[] tlvtemp;
@@ -1475,12 +1441,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             //Plaintext version of the return packet is correct
             //Problem is somewhere in this encryption function
             short encryptlen = secureChannel.CardEncrypt(OutgoingBuffer, (short) (PhononCollectionOffset + 2));
-            // byte [] CardAESCMAC = JCSystem.makeTransientByteArray((short)16, JCSystem.CLEAR_ON_DESELECT);
-            // secureChannel.CalcCardAESMAC(OutgoingBuffer, encryptlen, CardAESCMAC);
             apduBuffer = apdu.getBuffer();
-            // Util.arrayCopyNonAtomic(secureChannel.CardGetAESIV(), (short)0, apduBuffer, (short)0, (short)16);
-            // Util.arrayCopyNonAtomic( CardAESCMAC, (short)0, apduBuffer, (short)16, (short)16);
-            // Util.arrayCopyNonAtomic(OutgoingBuffer,  (short)0, apduBuffer, (short)32, (short)encryptlen);
             //Just copy card2card encrypted data into output data
             Util.arrayCopyNonAtomic(OutgoingBuffer, (short) 0, apduBuffer, (short) 0, encryptlen);
             secureChannel.respond(apdu, apduBuffer, encryptlen, (short) (ISO7816.SW_NO_ERROR + remaining));
