@@ -9,6 +9,8 @@ public class Bertlv {
 	
 	BerTag bertag = new BerTag();
 	byte [] NextTagData;
+	short [] TagTable;
+	short TagTableCount = 0;
 	short BuildLength = 0;
 //	BerTag bertag = JCSystem.makeTransientObjectArray(BerTag, JCSystem.CLEAR_ON_RESET);
 	
@@ -16,6 +18,36 @@ public class Bertlv {
 	{
 		bertag.data = JCSystem.makeTransientByteArray((short)255, JCSystem.CLEAR_ON_DESELECT); 
 		NextTagData = new byte[255];
+		TagTable = JCSystem.makeTransientShortArray((short)50, JCSystem.CLEAR_ON_DESELECT );
+		
+	}
+	
+	public short BuildTagTable( byte[] Indata, short StartOffset, short Length)
+	{
+		TagTableCount = 0;
+		short Offset = StartOffset;
+		short FinishOffset = (short)(StartOffset + Length);
+		while( Offset < FinishOffset)
+		{
+			TagTable[TagTableCount]=Offset;
+			Offset++;
+			short tempLen = (short)(Indata[Offset] & (short)0x00FF);
+			Offset =(short)(tempLen + 1 + Offset);
+			TagTableCount++;
+		};
+		return TagTableCount;
+	}
+	
+	public short GetIndexDataOffset( short index )
+	{
+		return TagTable[index];
+	}
+	
+	public short LoadTagFromTable( byte[]Indata, short index)
+	{
+		if( index > (short)(TagTableCount - 1) )
+			return 0;
+		return LoadNextTag( Indata, TagTable[index]);
 	}
 	
 	public boolean LoadNextTag( Bertlv NextTag)
