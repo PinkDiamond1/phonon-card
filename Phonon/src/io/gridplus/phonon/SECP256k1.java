@@ -94,21 +94,6 @@ public class SECP256k1 {
         return multiplyPoint(privateKey, SECP256K1_G, (short) 0, (short) SECP256K1_G.length, pubOut, pubOff);
     }
 
-
-    /**
-     * Derives the public key from the given private key and outputs it in the pubOut buffer. This is done by multiplying
-     * the private key by the G point of the curve.
-     *
-     * @param privateKey the private key
-     * @param pubOut     the output buffer for the public key
-     * @param pubOff     the offset in pubOut
-     * @return the length of the public key
-     */
-    short derivePublicKey(byte[] privateKey, short privOff, byte[] pubOut, short pubOff) {
-        tmpECPrivateKey.setS(privateKey, privOff, (short) (SECP256K1_KEY_SIZE / 8));
-        return derivePublicKey(tmpECPrivateKey, pubOut, pubOff);
-    }
-
     /**
      * Multiplies a scalar in the form of a private key by the given point. Internally uses a special version of EC-DH
      * supported since JavaCard 3.0.5 which outputs both X and Y in their uncompressed form.

@@ -20,7 +20,7 @@ import javacard.security.Signature;
  * Secure Element Solutions, LLC
  */
 public class PhononApplet extends Applet {    //implements ExtendedLength {
-
+    private static final boolean DEBUG_MODE = false;
     public static final short PHONON_KEY_LENGTH = 256;
     public static final short MAX_NUMBER_PHONONS = 256;
     public static final short MAX_EXTENDED_SCHEMA_BUFFER = 50;
@@ -63,6 +63,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final short KEY_UID_LENGTH = 32;
     static final short BIP39_SEED_SIZE = CHAIN_CODE_SIZE * 2;
     static final byte MASTERSEED_EMPTY = (byte) 0x00;
+
+    // tlv values
     static final byte TLV_PUB_KEY = (byte) 0x80;
     static final byte TLV_PRIV_KEY = (byte) 0x81;
     static final byte TLV_PHONON_KEY = (byte) 0x40;
@@ -101,11 +103,13 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte TLV_VALUE_BASE = (byte) 0x83;
     static final byte TLV_VALUE_EXPONENT = (byte) 0x86;
     static final byte TLV_KEY_CURVE_TYPE = (byte) 0x87;
+
+
     static final short KEY_CURRENCY_TYPE_UNDEFINED = 0x0000;
     static final short KEY_CURRENCY_TYPE_BITCOIN = 0x0001;
     static final short KEY_CURRENCY_TYPE_ETHEREUM = 0x0002;
     static final short KEY_CURRENCY_TYPE_MAX = KEY_CURRENCY_TYPE_ETHEREUM;
-    private static final boolean DEBUG_MODE = false;
+
     private final byte[] friendlyName;
     KeyPair PhononKey;
     private final Crypto crypto;
@@ -1200,14 +1204,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             return;
         }
 
-        if (PhononArray[PhononIndex].CurrencyType == (short) 0) {
-            secureChannel.respond(apdu, (short) 0, (short) (ISO7816.SW_FILE_INVALID + 3));
-            return;
-        }
-        if (PhononArray[PhononIndex].Status != PHONON_STATUS_INITIALIZED) {
-            secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_NOT_FOUND);
-            return;
-        }
         Bertlv berPhononKey = BertlvArray[0];
 
         byte[] OutgoingBuffer;

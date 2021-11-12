@@ -1,5 +1,4 @@
 package io.gridplus.phonon;
-//import javacard.security.*;
 
 public class Phonon {
     short		PhononPrivateKeyLen;
