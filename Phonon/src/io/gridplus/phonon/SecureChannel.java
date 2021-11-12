@@ -72,6 +72,7 @@ public class SecureChannel {
     private byte[] Cardsecret;
     private byte[] SenderSalt;
     private SECP256k1 localsecp256k1;
+
     /*
      * To avoid overhead, the pairing keys are stored in a plain byte array as sequences of 33-bytes elements. The first
      * byte is 0 if the slot is free and 1 if used. The following 32 bytes are the actual key data.
