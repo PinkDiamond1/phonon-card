@@ -171,96 +171,6 @@ public class Bertlv {
 		return bertag.data;
 	}
 	
-	public byte [] GetNextData( byte [] InData, short Offset)
-	{	
-/*		byte [] NextTagData = JCSystem.makeTransientByteArray((short)((bertag.length)- Offset), JCSystem.CLEAR_ON_DESELECT );
-		Util.arrayCopyNonAtomic( bertag.data, Offset, NextTagData, (short)0, (short)( bertag.length - Offset ));
-		bertag.nextData = (short)(Offset + bertag.length);
-		return NextTagData;
-*/
-//		byte [] NextTagData = JCSystem.makeTransientByteArray((short)((bertag.length)- bertag.nextData), JCSystem.CLEAR_ON_DESELECT );
-		Util.arrayCopyNonAtomic( InData, Offset, NextTagData, (short)0, (short)( bertag.length - bertag.nextData ));
-		bertag.nextData = (short)(bertag.nextData + bertag.length);
-		return NextTagData;
-	}
-
-	public byte [] BuildTLVStructure( byte tag, short length, byte [] Data)
-	{
-		short totallength = (short) ((short)length + (short)2);
-		if( length > 255 ) totallength = (short)(totallength+2);
-		byte [] TLVString = JCSystem.makeTransientByteArray(totallength, JCSystem.CLEAR_ON_DESELECT );
-		short Offset = 0;
-		TLVString[ Offset++ ] = tag;
-		if( length > 255)
-		{
-			TLVString[ Offset++ ] = (byte)0x82;
-			Util.setShort(TLVString, Offset, length);
-			Offset = (short)(Offset+2);
-		}
-		else
-		{
-//			TLVString[ Offset++] = (byte)0x81;
-			TLVString[ Offset++] = (byte)length;
-		}
-		Util.arrayCopyNonAtomic(Data, (short)0, TLVString, Offset, length);
-		BuildLength = (short)(Offset + length);
-		return TLVString;
-	}
-	public byte [] BuildTLVStructure( byte tag, short length, short InData )
-	{
-		short totallength = (short) ((short)2 + (short)2);
-		if( length > 255 ) totallength = (short)(totallength+2);
-		byte [] TLVString = JCSystem.makeTransientByteArray(totallength, JCSystem.CLEAR_ON_DESELECT );
-		short Offset = 0;
-		TLVString[ Offset++ ] = tag;
-		TLVString[ Offset++] = (byte)length;
-
-		Util.setShort( TLVString,  Offset,  InData);
-		
-		BuildLength = (short)(Offset + 2);
-		return TLVString;
-	}
-
-	public byte [] BuildTLVStructure( short tag, short length, byte [] Data)
-	{
-		short totallength = (short) ((short)length + (short)3);
-		if( length > 255 ) totallength = (short)(totallength+2);
-		byte [] TLVString = JCSystem.makeTransientByteArray(totallength, JCSystem.CLEAR_ON_DESELECT );
-		short Offset = 0;
-		Util.setShort(TLVString, Offset, tag);
-		Offset = (short)(Offset+2);
-		if( length > 255)
-		{
-			TLVString[ Offset++ ] = (byte)0x82;
-			Util.setShort(TLVString, Offset, length);
-			Offset+=2;
-		}
-		else
-		{
-//			TLVString[ Offset++] = (byte)0x81;
-			TLVString[ Offset++] = (byte)length;
-		}
-		Util.arrayCopyNonAtomic(Data, (short)0, TLVString, Offset, length);
-		BuildLength = (short)(Offset + length);
-		return TLVString;
-	}
-
-	public byte [] BuildTLVStructure( short tag, short length, short InData)
-	{
-		short totallength = (short) ((short)length + (short)3);
-		if( length > 255 ) totallength = (short)(totallength+2);
-		byte [] TLVString = JCSystem.makeTransientByteArray(totallength, JCSystem.CLEAR_ON_DESELECT );
-		short Offset = 0;
-		Util.setShort(TLVString, Offset, tag);
-		Offset = (short)(Offset+2);
-		Util.setShort( TLVString,  Offset,  length);
-		Offset = (short)(Offset+2);
-
-		Util.setShort( TLVString,  Offset,  InData);
-		
-		BuildLength = (short)(Offset + 2);
-		return TLVString;
-	}
 
 	public byte [] BuildTLVStructure( byte tag, short length, byte [] InData, byte [] OutData)
 	{
@@ -283,28 +193,6 @@ public class Bertlv {
 		return OutData;
 	}
 
-	
-	public byte [] BuildTLVStructure( short tag, short length, byte [] InData, byte [] OutputData)
-	{
-		short totallength = (short) ((short)length + (short)3);
-		if( length > 255 ) totallength = (short)(totallength+2);
-		short Offset = 0;
-		Util.setShort(OutputData, Offset, tag);
-		Offset = (short)(Offset+2);
-		if( length > 255)
-		{
-			OutputData[ Offset++ ] = (byte)0x82;
-			Util.setShort(OutputData, Offset, length);
-			Offset+=2;
-		}
-		else
-		{
-			OutputData[ Offset++] = (byte)length;
-		}
-		Util.arrayCopyNonAtomic(InData, (short)0, OutputData, Offset, length);
-		BuildLength = (short)(Offset + length);
-		return OutputData;
-	}
 
 	public byte [] BuildTLVStructure( byte tag, short length, byte [] InData, byte [] OutputData, short OutOffset)
 	{
@@ -326,20 +214,6 @@ public class Bertlv {
 		Util.arrayCopyNonAtomic(InData, (short)0, OutputData, Offset, length);
 		BuildLength = (short)(Offset + length - OutOffset);
 		return OutputData;
-	}
-
-	public byte [] BuildTLVStructure( byte tag, short length, short InData, byte [] OutData)
-	{
-		short totallength = (short) ((short)2 + (short)2);
-		if( length > 255 ) totallength = (short)(totallength+2);
-		short Offset = 0;
-		OutData[ Offset++ ] = tag;
-		OutData[ Offset++] = (byte)length;
-
-		Util.setShort( OutData,  Offset,  InData);
-		
-		BuildLength = (short)(Offset + 2);
-		return OutData;
 	}
 
 	
@@ -366,10 +240,5 @@ public class Bertlv {
 		BuildLength = (short)(Offset  - OutOffset);
 		return OutData;
 	}
-	
-	public short GetBuildTLVLength()
-	{
-		return BuildLength;
-	}
-	
+
 }

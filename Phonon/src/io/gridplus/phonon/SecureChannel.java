@@ -71,6 +71,7 @@ public class SecureChannel {
     private AESKey CardscMacKey;
     private byte[] Cardsecret;
     private byte[] SenderSalt;
+    byte[] CardAESCMAC;
     private SECP256k1 localsecp256k1;
 
     /*
@@ -148,6 +149,7 @@ public class SecureChannel {
         SenderSalt = new byte[32];
         CardHash = new byte[32];
         CardSecret = new byte[32];
+        CardAESCMAC = JCSystem.makeTransientByteArray(SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
     }
 
 
@@ -583,7 +585,7 @@ public class SecureChannel {
         verifyidKeypair.genKeyPair();
         ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
         localsecp256k1.setCurveParameters((ECKey) pub);
-        pub.setW(SenderidCertificate, (short) (6 + permLen), pubKeyLen);
+        pub.setW(SenderidCertificate, (short)(6 + permLen), pubKeyLen);
 
         eccSig.init((ECPublicKey) pub, Signature.MODE_VERIFY);
         boolean VerifyStatus = eccSig.verify(temphash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), RecieverSig, (short) 0, RecieverSigLen);
@@ -613,13 +615,15 @@ public class SecureChannel {
         Signature eccSig2 = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
         eccSig2.init((ECPublicKey) pub, Signature.MODE_VERIFY);
         short SignedDataLen = (short) (4 + permLen + pubKeyLen);
-        byte[] SenderPublicKey = JCSystem.makeTransientByteArray(SignedDataLen, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
+        /*byte[] SenderPublicKey = JCSystem.makeTransientByteArray(SignedDataLen, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
         Util.arrayCopyNonAtomic(SenderidCertificate, (short) 2, SenderPublicKey, (short) 0, SignedDataLen);
 
         byte[] SenderSignature = JCSystem.makeTransientByteArray(pubSigLen, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
         Util.arrayCopyNonAtomic(SenderidCertificate, (short) (6 + permLen + pubKeyLen), SenderSignature, (short) 0, pubSigLen);
 
         boolean VerifyStatus = eccSig2.verify(SenderPublicKey, (short) 0, SignedDataLen, SenderSignature, (short) 0, pubSigLen);
+        return VerifyStatus;*/
+        boolean VerifyStatus = eccSig2.verify(SenderidCertificate, (short) 2, SignedDataLen, SenderidCertificate, (short)(6 + permLen+pubKeyLen), pubSigLen);
         return VerifyStatus;
     }
 
@@ -691,7 +695,7 @@ public class SecureChannel {
 
     public short CardDecrypt(byte[] OutputData, short len) {
         //Copy out MAC from first 16 bytes
-        byte[] CardAESCMAC = JCSystem.makeTransientByteArray(SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
+        //byte[] CardAESCMAC = JCSystem.makeTransientByteArray(SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
         Util.arrayCopyNonAtomic(OutputData, (short) 0, CardAESCMAC, (short) 0, SC_BLOCK_SIZE);
 
 
