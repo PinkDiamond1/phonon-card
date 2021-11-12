@@ -57,12 +57,9 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte KEY_PATH_MAX_DEPTH = 10;
     static final byte PAIRING_MAX_CLIENT_COUNT = 1;
     static final byte UID_LENGTH = 16;
-    // Maximum payload size of an encrypted APDU: https://status.im/keycard_api/apdu/opensecurechannel.html
-    static final short SAVED_DATA_SIZE = 223;
     static final short CHAIN_CODE_SIZE = 32;
     static final short KEY_UID_LENGTH = 32;
     static final short BIP39_SEED_SIZE = CHAIN_CODE_SIZE * 2;
-    static final byte MASTERSEED_EMPTY = (byte) 0x00;
 
     // tlv values
     static final byte TLV_PUB_KEY = (byte) 0x80;
@@ -116,20 +113,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private final SECP256k1 secp256k1;
     private final SecureChannel secureChannel;
     private final byte[] uid;
-    private final byte[] savedData;
-    private final byte masterSeedStatus; // Invalid / valid, but non-exportable / valid and exportable
-    private final ECPublicKey masterPublic;
-    private final ECPrivateKey masterPrivate;
-    private final byte[] masterChainCode;
-    private boolean isExtended;
-    private final ECPublicKey parentPublicKey;
-    private final ECPrivateKey parentPrivateKey;
     private final byte[] parentChainCode;
     private final ECPublicKey publicKey;
     private final ECPrivateKey privateKey;
     private final byte[] chainCode;
-    private final ECPublicKey pinlessPublicKey;
-    private final ECPrivateKey pinlessPrivateKey;
     private final byte[] keyPath;
     private final byte[] pinlessPath;
     private final Signature signature;
@@ -163,10 +150,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         uid = new byte[UID_LENGTH];
         crypto.random.generateData(uid, (short) 0, UID_LENGTH);
 
-        savedData = new byte[SAVED_DATA_SIZE];
 
         masterSeed = new byte[BIP39_SEED_SIZE];
-        masterSeedStatus = MASTERSEED_EMPTY;
         PhononArray = new Phonon[MAX_NUMBER_PHONONS];
         PhononList = new short[MAX_NUMBER_PHONONS];
         SendPhononList = new short[MAX_NUMBER_PHONONS];
@@ -177,20 +162,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         SendPhononListLastSent = 0;
         SetReceiveList = false;
 
-        masterPublic = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
-        masterPrivate = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
-
-        parentPublicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
-        parentPrivateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
-
         publicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
         privateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
 
-        pinlessPublicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
-        pinlessPrivateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
 
-
-        masterChainCode = new byte[CHAIN_CODE_SIZE];
         parentChainCode = new byte[CHAIN_CODE_SIZE];
         chainCode = new byte[CHAIN_CODE_SIZE];
         keyPath = new byte[KEY_PATH_MAX_DEPTH * 4];
@@ -1634,17 +1609,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     }
 
     private void resetCurveParameters() {
-        secp256k1.setCurveParameters(masterPublic);
-        secp256k1.setCurveParameters(masterPrivate);
-
-        secp256k1.setCurveParameters(parentPublicKey);
-        secp256k1.setCurveParameters(parentPrivateKey);
 
         secp256k1.setCurveParameters(publicKey);
         secp256k1.setCurveParameters(privateKey);
 
-        secp256k1.setCurveParameters(pinlessPublicKey);
-        secp256k1.setCurveParameters(pinlessPrivateKey);
     }
 
     private void processInit(APDU apdu) {
