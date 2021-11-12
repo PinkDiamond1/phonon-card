@@ -1,8 +1,7 @@
-package im.status.phonon;
+package io.gridplus.phonon;
 
 import javacard.framework.*;
 import javacard.security.*;
-import javacardx.crypto.Cipher;
 
 /**
  * @author MikeZercher
@@ -241,7 +240,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
     public static void install(byte[] bArray, short bOffset, byte bLength) {
         // GP-compliant JavaCard applet registration
-        new im.status.phonon.PhononApplet().register(bArray, (short) (bOffset + 1), bArray[bOffset]);
+        new io.gridplus.phonon.PhononApplet().register(bArray, (short) (bOffset + 1), bArray[bOffset]);
     }
 
 

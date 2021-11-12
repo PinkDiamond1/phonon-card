@@ -1,4 +1,4 @@
-package im.status.phonon;
+package io.gridplus.phonon;
 
 /**
  * Keep references to data structures shared across applet instances of this package.

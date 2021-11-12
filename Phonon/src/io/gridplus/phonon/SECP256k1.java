@@ -1,4 +1,4 @@
-package im.status.phonon;
+package io.gridplus.phonon;
 
 import javacard.security.ECKey;
 import javacard.security.ECPrivateKey;

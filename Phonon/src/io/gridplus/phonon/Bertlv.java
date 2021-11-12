@@ -1,4 +1,4 @@
-package im.status.phonon;
+package io.gridplus.phonon;
 
 import javacard.framework.ISOException;
 import javacard.framework.JCSystem;
