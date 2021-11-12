@@ -1067,7 +1067,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         Bertlv berPhononKey = BertlvArray[0];
         byte[] OutgoingData = ScratchBuffer;
         berPhononKey.BuildTLVStructure(TLV_KEY_CURVE_TYPE, (short)1, PhononArray[PhononIndex].KeyCurveType, OutgoingData, (short)0);
-        berPhononKey.BuildTLVStructure(TLV_PRIV_KEY, PhononArray[PhononIndex].PhononPrivateKeyLen, PhononArray[PhononIndex].sPhononPrivateKey, OutgoingData, (short)1);
+        berPhononKey.BuildTLVStructure(TLV_PRIV_KEY, PhononArray[PhononIndex].PhononPrivateKeyLen, PhononArray[PhononIndex].sPhononPrivateKey, OutgoingData, (short)3);
         PhononArray[PhononIndex].Status = PHONON_STATUS_DELETED;
         PhononArray[PhononIndex].CurrencyType = 0;
 
