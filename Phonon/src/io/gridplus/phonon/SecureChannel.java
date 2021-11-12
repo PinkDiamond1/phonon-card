@@ -695,11 +695,13 @@ public class SecureChannel {
         Util.arrayCopyNonAtomic(OutputData, (short) 0, CardAESCMAC, (short) 0, SC_BLOCK_SIZE);
 
 
-        byte[] Ciphertext = JCSystem.makeTransientByteArray((short) (len - (SC_BLOCK_SIZE)), JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-        Util.arrayCopyNonAtomic(OutputData, (short) (SC_BLOCK_SIZE), Ciphertext, (short) 0, (short) (len - (SC_BLOCK_SIZE)));
+        // byte[] Ciphertext = JCSystem.makeTransientByteArray((short) (len - (SC_BLOCK_SIZE)), JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
+        //Util.arrayCopyNonAtomic(OutputData, (short) (SC_BLOCK_SIZE), Ciphertext, (short) 0, (short) (len - (SC_BLOCK_SIZE)));
         //Skip MAC verification for now
-        if (!VerifyCardAESCMAC(Ciphertext, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
-            reset();
+
+     //   if (!VerifyCardAESCMAC(Ciphertext, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
+        if (!VerifyCardAESCMAC(OutputData,(short) SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
+                reset();
             ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
         }
 
@@ -845,11 +847,11 @@ public class SecureChannel {
         scMac.sign(Data, (short) 0, len, CardAESCMAC, (short) 0);
     }
 
-    public boolean VerifyCardAESCMAC(byte[] Data, short len, byte[] CardAESMAC) {
+    public boolean VerifyCardAESCMAC(byte[] Data,short offset, short len, byte[] CardAESMAC) {
         scMac.init(CardscMacKey, Signature.MODE_VERIFY);
         byte[] meta = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         scMac.update(meta, (short) 0, (short) 16);
-        return scMac.verify(Data, (short) 0, len, CardAESMAC, (short) 0, (short) 16);
+        return scMac.verify(Data, offset, len, CardAESMAC, (short) 0, (short) 16);
     }
 
     /**

@@ -21,17 +21,26 @@ public class Bertlv {
 		TagTable = JCSystem.makeTransientShortArray((short)50, JCSystem.CLEAR_ON_DESELECT );
 		
 	}
-	
+	public void Clean()
+	{/*
+		Util.arrayFillNonAtomic(bertag.data, (short)0, (short)255, (byte)0x00);
+		BuildLength = 0;
+		TagTableCount=0;
+		return;
+		*/
+	}
+
 	public short BuildTagTable( byte[] Indata, short StartOffset, short Length)
 	{
 		TagTableCount = 0;
 		short Offset = StartOffset;
 		short FinishOffset = (short)(StartOffset + Length);
+		short tempLen;
 		while( Offset < FinishOffset)
 		{
 			TagTable[TagTableCount]=Offset;
 			Offset++;
-			short tempLen = (short)(Indata[Offset] & (short)0x00FF);
+			tempLen = (short)(Indata[Offset] & (short)0x00FF);
 			Offset =(short)(tempLen + 1 + Offset);
 			TagTableCount++;
 		};
