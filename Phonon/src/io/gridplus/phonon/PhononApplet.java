@@ -16,17 +16,13 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     
     static final byte 	UNITIALIZED_BYTE	= (byte)0xff;
     static final short	UNITIALIZED_SHORT	= (short)0xffff;
-    
-    static final byte PHONON_STATUS_UNINITIALIZED = (byte) 0x00;
+
     static final byte PHONON_STATUS_INITIALIZED = (byte) 0x01;
-    static final byte PHONON_STATUS_PERSONALIZED = (byte) 0x02;
-    static final byte PHONON_STATUS_SENT = (byte) 0x03;
     static final byte PHONON_STATUS_DELETED = (byte) 0x04;
     static final short APPLICATION_VERSION = (short) 0x0003;
     static final byte CAPABILITY_SECURE_CHANNEL = (byte) 0x01;
     static final byte CAPABILITY_KEY_MANAGEMENT = (byte) 0x02;
     static final byte CAPABILITY_CREDENTIALS_MANAGEMENT = (byte) 0x04;
-    static final byte CAPABILITY_NDEF = (byte) 0x08;
 
     //	  static final byte APPLICATION_CAPABILITIES = (byte)(CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT | CAPABILITY_CREDENTIALS_MANAGEMENT | CAPABILITY_NDEF);
     static final byte APPLICATION_CAPABILITIES = (byte) (CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT | CAPABILITY_CREDENTIALS_MANAGEMENT);
@@ -49,8 +45,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte INS_CHG_FRIENDLY_NAME = (byte) 0x56;
     static final byte INS_GET_FRIENDLY_NAME = (byte) 0x57;
 
-    static final byte PUK_LENGTH = 12;
-    static final byte PUK_MAX_RETRIES = 5;
     static final byte PIN_LENGTH = 6;
     static final byte PIN_MAX_RETRIES = 3;
     static final byte KEY_PATH_MAX_DEPTH = 10;
@@ -63,43 +57,27 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final short KEY_UID_LENGTH = 32;
     static final short BIP39_SEED_SIZE = CHAIN_CODE_SIZE * 2;
     static final byte MASTERSEED_EMPTY = (byte) 0x00;
-    static final byte MASTERSEED_NOT_EXPORTABLE = (byte) 0x01;
-    static final byte MASTERSEED_EXPORTABLE = (byte) 0x02;
-
-    static final byte TLV_SIGNATURE_TEMPLATE = (byte) 0xA0;
-
-    static final byte TLV_KEY_TEMPLATE = (byte) 0xA1;
     static final byte TLV_PUB_KEY = (byte) 0x80;
     static final byte TLV_PRIV_KEY = (byte) 0x81;
-    static final byte TLV_CHAIN_CODE = (byte) 0x82;
-    static final byte TLV_SEED = (byte) 0x83;
-    static final byte TLV_SEED_STATUS = (byte) 0x84;
-    static final byte TLV_DATA = (byte) 0x85;
     static final byte TLV_PHONON_KEY = (byte) 0x40;
     static final byte TLV_PHONON_INDEX = (byte) 0x41;
 
-    static final byte TLV_APPLICATION_STATUS_TEMPLATE = (byte) 0xA3;
     static final byte TLV_PAIRING_SLOT = (byte) 0x03;
     static final byte TLV_INT = (byte) 0x02;
-    static final byte TLV_BOOL = (byte) 0x01;
 
     static final byte TLV_APPLICATION_INFO_TEMPLATE = (byte) 0xA4;
     static final byte TLV_UID = (byte) 0x8F;
-    static final byte TLV_KEY_UID = (byte) 0x8E;
     static final byte TLV_CAPABILITIES = (byte) 0x8D;
     static final byte CHANGE_PIN_P1_USER_PIN = 0x00;
-    static final byte CHANGE_PIN_P1_PUK = 0x01;
     static final byte CHANGE_PIN_P1_PAIRING_SECRET = 0x02;
     static final byte TLV_SET_PHONON_DESCRIPTOR = (byte) 0x50;
     static final byte TLV_PHONON_COLLECTION = (byte) 0x52;
-    static final byte TLV_PHONON_COLLECTION_COUNT = (byte) 0x53;
     static final byte TLV_PHONON_PRIVATE_DESCRIPTOR = (byte) 0x44;
     static final byte TLV_PHONON_INDEX_COUNT = (byte) 0x42;
     static final byte TLV_PHONON_TRANSFER_PACKET = (byte) 0x43;
     static final byte TLV_PHONON_FILTER = (byte) 0x60;
     static final byte TLV_SET_PHONON_KEY_INDEX = (byte) 0x41;
     static final byte TLV_PHONON_PUB_KEY_LIST = (byte) 0x7f;
-    static final byte TLV_PHONON_PUBLIC_KEY = (byte) 0x80;
     static final byte TLV_SET_PHONON_CURRENCY = (byte) 0x82;
     static final byte TLV_SET_PHONON_VALUE = (byte) 0x83;
     static final byte TLV_PHONON_LESS_THAN = (byte) 0x84;
@@ -109,14 +87,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte LIST_FILTER_GREATER_THAN = (byte) 0x02;
     static final byte LIST_FILTER_GT_AND_LT = (byte) 0x03;
     static final byte LIST_FILTER_LAST = (byte) 0x03;
-    static final short TLV_NOT_FOUND = (short) 0xffff;
     static final byte TLV_CARD_CERTIFICATE = (byte) 0x90;
     static final byte TLV_SALT = (byte) 0x91;
     static final byte TLV_AESIV = (byte) 0x92;
     static final byte TLV_RECEIVER_SIG = (byte) 0x93;
-    private static final short EXTENDED_BUFFER_LENGTH = 0x10;
-    
-    static final byte KEY_CURVE_TYPE_BITCOIN	= 0x00;
+
     static final byte KEY_CURVE_TYPE_MAX		= 0x00;
     
     static final byte TLV_SCHEMA_VERSION			= (byte)0x88;
@@ -151,9 +126,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private ECPublicKey pinlessPublicKey;
     private ECPrivateKey pinlessPrivateKey;
     private byte[] keyPath;
-    private short keyPathLen;
     private byte[] pinlessPath;
-    private short pinlessPathLen;
     private Signature signature;
     private byte[] keyUID;
     private byte[] masterSeed;
@@ -172,9 +145,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private short SendPhononListCount;
     private short SendPhononListLastSent;
     private boolean SetReceiveList;
-    private byte[] SetReceiveListPubKey;
     private Bertlv[] BertlvArray;
-    private byte[] ExtendedBuffer;
     private boolean DebugKeySet;
     private short friendlyNameLen;
 
