@@ -337,7 +337,6 @@ public class Bertlv {
 	public byte [] BuildTLVStructure( byte tag, short length, short InData, byte [] OutData, short OutOffset )
 	{
 		short totallength = (short) ((short)2 + (short)2);
-		if( length > 255 ) totallength = (short)(totallength+2);
 		short Offset = OutOffset;
 		OutData[ Offset++ ] = tag;
 		OutData[ Offset++] = (byte)length;
@@ -345,6 +344,17 @@ public class Bertlv {
 		Util.setShort( OutData,  Offset,  InData);
 		
 		BuildLength = (short)(Offset + 2 - OutOffset);
+		return OutData;
+	}
+	public byte [] BuildTLVStructure( byte tag, short length, byte InData, byte [] OutData, short OutOffset )
+	{
+		short totallength = (short) ((short)2 + (short)1);
+		short Offset = OutOffset;
+		OutData[ Offset++ ] = tag;
+		OutData[ Offset++] = (byte)length;
+		OutData[Offset++] = InData;
+		
+		BuildLength = (short)(Offset  - OutOffset);
 		return OutData;
 	}
 	

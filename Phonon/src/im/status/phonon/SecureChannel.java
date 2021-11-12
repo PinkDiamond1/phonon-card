@@ -681,14 +681,7 @@ public class SecureChannel {
         }
 
         short apduLen = (short) ((short) apduBuffer[ISO7816.OFFSET_LC] & 0xff);
-
-/*	    if (!CardverifyAESMAC(apduBuffer, apduLen)) {
-	      reset();
-	      ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
-	    }
-*/
         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_DECRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-//	    Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, CardAESIV, (short) 0, SC_BLOCK_SIZE);
         short len = crypto.aesCbcIso9797m2.doFinal(apduBuffer, (short) (ISO7816.OFFSET_CDATA + (SC_BLOCK_SIZE * 2)), (short) (apduLen - (SC_BLOCK_SIZE * 2)), apduBuffer, ISO7816.OFFSET_CDATA);
 
         apduBuffer[ISO7816.OFFSET_LC] = (byte) len;
@@ -712,11 +705,6 @@ public class SecureChannel {
 
 
         // //Probably cycle like this
-        // Util.arrayCopyNonAtomic()
-//	   byte[] IncomingAESIV = JCSystem.makeTransientByteArray( SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-// 	   Util.arrayCopyNonAtomic(OutputData, (short)0, IncomingAESIV, (short)0, SC_BLOCK_SIZE);
-
-//	    Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, CardAESIV, (short) 0, SC_BLOCK_SIZE);
         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_DECRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
         short Decryptlen = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), OutputData, (short) 0);
 
@@ -763,9 +751,7 @@ public class SecureChannel {
 
     private boolean CardverifyAESMAC(byte[] apduBuffer, short apduLen) {
         scMac.init(CardscMacKey, Signature.MODE_VERIFY);
-//	    scMac.update(apduBuffer, (short) 0, ISO7816.OFFSET_CDATA);
-//	    scMac.update(CardAESIV, SC_BLOCK_SIZE, (short) (SC_BLOCK_SIZE - ISO7816.OFFSET_CDATA));
-        return scMac.verify(apduBuffer, (short) (SC_BLOCK_SIZE * 2), (short) (apduLen - (SC_BLOCK_SIZE * 2)), apduBuffer, (short) (SC_BLOCK_SIZE), SC_BLOCK_SIZE);
+       return scMac.verify(apduBuffer, (short) (SC_BLOCK_SIZE * 2), (short) (apduLen - (SC_BLOCK_SIZE * 2)), apduBuffer, (short) (SC_BLOCK_SIZE), SC_BLOCK_SIZE);
     }
 
     /**
@@ -807,21 +793,15 @@ public class SecureChannel {
     public void Cardrespond(APDU apdu, short len, short sw) {
         byte[] apduBuffer = apdu.getBuffer();
 
-//	    Util.setShort(apduBuffer, (short) (SC_OUT_OFFSET + len), sw);
-//	    len += 2;
 
         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-//	    len = crypto.aesCbcIso9797m2.doFinal(apduBuffer, ISO7816.OFFSET_CDATA, len, apduBuffer, (short)(ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE));
         len = crypto.aesCbcIso9797m2.doFinal(apduBuffer, (short) (ISO7816.OFFSET_CDATA + (SC_BLOCK_SIZE * 2)), len, apduBuffer, (short) (ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE));
-
-//	    apduBuffer[0] = (byte) (len + SC_BLOCK_SIZE);
 
         CardcomputeAESMAC(len, apduBuffer);
 
         Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, CardAESIV, (short) 0, SC_BLOCK_SIZE);
 
         len += SC_BLOCK_SIZE;
-//		apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, len);
         respond(apdu, len, ISO7816.SW_NO_ERROR);
     }
 

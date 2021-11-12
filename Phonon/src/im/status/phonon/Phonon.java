@@ -12,7 +12,6 @@ public class Phonon {
     short		CurrencyType;
     byte		ValueBase;
     byte		ValueExponent;
-    byte []		Value;
     byte []		ExtendedSchema;
     short		ExtendedSchemaLength;
     byte		Status;
