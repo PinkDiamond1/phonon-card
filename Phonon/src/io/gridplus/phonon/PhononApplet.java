@@ -1257,20 +1257,20 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         }
         PhononIndex--;
         if (PhononIndex >= phononKeyIndex) {
-            secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_INVALID);
+            secureChannel.respond(apdu, (short) 0, (short)(ISO7816.SW_FILE_INVALID +1) );
             return;
         }
         if (PhononArray[PhononIndex] == null) {
-            secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_INVALID);
+            secureChannel.respond(apdu, (short) 0, (short)(ISO7816.SW_FILE_INVALID +2) );
             return;
         }
 
         if (PhononArray[PhononIndex].CurrencyType == (short) 0) {
-            secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_INVALID);
+            secureChannel.respond(apdu, (short) 0, (short)(ISO7816.SW_FILE_INVALID + 3));
             return;
         }
         if (PhononArray[PhononIndex].Status != PHONON_STATUS_INITIALIZED) {
-            secureChannel.respond(apdu, (short) 0, ISO7816.SW_FILE_NOT_FOUND);
+            secureChannel.respond(apdu, (short) 0, (short)(ISO7816.SW_FILE_NOT_FOUND));
             return;
         }
         Bertlv berPhononKey = BertlvArray[0];
