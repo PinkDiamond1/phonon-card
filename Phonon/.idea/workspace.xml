@@ -4,6 +4,8 @@
     <list default="true" id="360f4c88-5924-4bf0-acce-dbcb3c223604" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/io/gridplus/phonon/PhononApplet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/io/gridplus/phonon/PhononApplet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/io/gridplus/phonon/SecureChannel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/io/gridplus/phonon/SecureChannel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/io/gridplus/phonon/SharedMemory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/io/gridplus/phonon/SharedMemory.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -12,6 +14,14 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
   </component>
   <component name="ProjectId" id="1y9QS0fvEtmG2f8B9STzENdi249" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
