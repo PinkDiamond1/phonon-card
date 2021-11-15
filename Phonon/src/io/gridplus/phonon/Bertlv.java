@@ -8,7 +8,7 @@ import javacard.framework.ISO7816;
 public class Bertlv {
 	
 	BerTag bertag = new BerTag();
-	byte [] NextTagData;
+	//byte [] NextTagData;
 	short [] TagTable;
 	short TagTableCount = 0;
 	short BuildLength = 0;
@@ -17,7 +17,7 @@ public class Bertlv {
 	public Bertlv()
 	{
 		bertag.data = JCSystem.makeTransientByteArray((short)255, JCSystem.CLEAR_ON_DESELECT); 
-		NextTagData = new byte[255];
+		//NextTagData = new byte[255];
 		TagTable = JCSystem.makeTransientShortArray((short)50, JCSystem.CLEAR_ON_DESELECT );
 		
 	}
@@ -58,7 +58,7 @@ public class Bertlv {
 			return 0;
 		return LoadNextTag( Indata, TagTable[index]);
 	}
-	
+	/*
 	public boolean LoadNextTag( Bertlv NextTag)
 	{
 		if( bertag.length >= bertag.nextData)
@@ -68,6 +68,7 @@ public class Bertlv {
 		bertag.nextData += NextTag.bertag.nextData;
 		return true;
 	}
+	*/
 	
 	public short LoadNextTag( byte[] Indata, short Offset)
 	{
