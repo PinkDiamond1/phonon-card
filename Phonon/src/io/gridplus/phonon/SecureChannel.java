@@ -140,7 +140,7 @@ public class SecureChannel {
         secp256k1.setCurveParameters((ECKey) scKeypair.getPublic());
         scKeypair.genKeyPair();
 
-        secret = JCSystem.makeTransientByteArray((short) (SC_SECRET_LENGTH * 2), JCSystem.CLEAR_ON_DESELECT);
+        secret = JCSystem.makeTransientByteArray((short) (SC_SECRET_LENGTH * 2), JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
         CardsessionKey = new byte[(short) (SC_SECRET_LENGTH * 2)];
         pairingKeys = new byte[(short) (PAIRING_KEY_LENGTH * pairingLimit)];
         remainingSlots = pairingLimit;
@@ -301,7 +301,7 @@ public class SecureChannel {
 
         // Save the certificate
         if (SenderidCertificate == null) {
-            SenderidCertificate = JCSystem.makeTransientByteArray(CERTIFICATE_MAX_LEN, JCSystem.CLEAR_ON_DESELECT);
+            SenderidCertificate = JCSystem.makeTransientByteArray(CERTIFICATE_MAX_LEN, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
         }
 
         if (IncomingCertLen > (short) CERTIFICATE_MAX_LEN) {
