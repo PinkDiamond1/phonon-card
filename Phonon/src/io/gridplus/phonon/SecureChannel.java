@@ -563,12 +563,11 @@ public class SecureChannel {
         localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPublic());
         verifyidKeypair.genKeyPair();
         ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
-        localsecp256k1.setCurveParameters((ECKey) pub);
+        localsecp256k1.setCurveParameters(pub);
         pub.setW(SenderidCertificate, (short)(6 + permLen), pubKeyLen);
 
-        eccSig.init((ECPublicKey) pub, Signature.MODE_VERIFY);
-        boolean VerifyStatus = eccSig.verify(temphash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), RecieverSig, (short) 0, RecieverSigLen);
-        return VerifyStatus;
+        eccSig.init(pub, Signature.MODE_VERIFY);
+        return eccSig.verify(temphash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), RecieverSig, (short) 0, RecieverSigLen);
     }
 
 
@@ -577,7 +576,7 @@ public class SecureChannel {
         byte pubKeyLen = SenderidCertificate[5 + permLen];
         short pubSigLen = (short) (CardidCertLen - (short) (6 + permLen + pubKeyLen));
         byte[] CAPublicKey;
-        if (USE_CA_DEMO_KEY == true) {
+        if (USE_CA_DEMO_KEY) {
             CAPublicKey = SafecardDevCAPubKey;
         } else {
             CAPublicKey = SafecardProdCAPubKey;
@@ -588,14 +587,13 @@ public class SecureChannel {
         localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPublic());
         verifyidKeypair.genKeyPair();
         ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
-        localsecp256k1.setCurveParameters((ECKey) pub);
+        localsecp256k1.setCurveParameters(pub);
         pub.setW(CAPublicKey, (short) 0, (short) CAPublicKey.length);
 
         Signature eccSig = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
-        eccSig.init((ECPublicKey) pub, Signature.MODE_VERIFY);
+        eccSig.init(pub, Signature.MODE_VERIFY);
         short SignedDataLen = (short) (4 + permLen + pubKeyLen);
-        boolean VerifyStatus = eccSig.verify(SenderidCertificate, (short) 2, SignedDataLen, SenderidCertificate, (short)(6 + permLen+pubKeyLen), pubSigLen);
-        return VerifyStatus;
+        return eccSig.verify(SenderidCertificate, (short) 2, SignedDataLen, SenderidCertificate, (short)(6 + permLen+pubKeyLen), pubSigLen);
     }
 
 
@@ -650,27 +648,26 @@ public class SecureChannel {
         return len;
     }
 
-    public short CardDecrypt(byte[] OutputData, short len) {
+    public void CardDecrypt(byte[] OutputData, short len) {
         //Copy out MAC from first 16 bytes
          Util.arrayCopyNonAtomic(OutputData, (short) 0, CardAESCMAC, (short) 0, SC_BLOCK_SIZE);
-       if (!VerifyCardAESCMAC(OutputData,(short) SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
+       if (!VerifyCardAESCMAC(OutputData, SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
                 reset();
             ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
         }
 
         // //Probably cycle like this
         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_DECRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-        short Decryptlen = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), OutputData, (short) 0);
+        crypto.aesCbcIso9797m2.doFinal(OutputData, SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), OutputData, (short) 0);
 
         //Update the Init Vector
         Util.arrayCopyNonAtomic(CardAESCMAC, (short) 0, CardAESIV, (short) 0, SC_BLOCK_SIZE);
 
-        return Decryptlen;
     }
 
     public short CardEncrypt(byte[] OutputData, short len) {
         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-        len = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) 0, (short) len, OutputData, (short) 0);
+        len = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) 0, len, OutputData, (short) 0);
         
         //Use the CardAESIV so it will cycle to the next MAC
         //TODO: Test this with multiple sequential APDU's over the same channel to ensure cycle is working correctly
@@ -734,7 +731,7 @@ public class SecureChannel {
 
     public void respond(APDU apdu, byte[] OutgoingData, short len, short sw) {
         byte[] apduBuffer = apdu.getBuffer();
-        Util.arrayCopyNonAtomic(OutgoingData, (short) 0, apduBuffer, (short) SC_OUT_OFFSET, len);
+        Util.arrayCopyNonAtomic(OutgoingData, (short) 0, apduBuffer, SC_OUT_OFFSET, len);
         respond(apdu, len, sw);
     }
 
@@ -852,7 +849,6 @@ public class SecureChannel {
 
     public void SetCardidCertStatus(byte value) {
         CardidCertStatus = value;
-        return;
     }
 }
 
