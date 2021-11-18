@@ -421,8 +421,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             return;
         }
 
-        byte CertStatus = secureChannel.GetCertStatus();
-        if (CertStatus == 0x00) {
+        if (secureChannel.CertEmpty()) {
             // Card cert was not initialized
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
