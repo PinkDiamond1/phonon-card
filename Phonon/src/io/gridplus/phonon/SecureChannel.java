@@ -514,18 +514,18 @@ public class SecureChannel {
         }
 
         // Compute ECDH secret
-        short secretlen;
+        short senderSaltLen;
         try {
             crypto.ecdh.init(idKeypair.getPrivate());
             byte permLen = SenderidCertificate[3];
             byte pubKeyLen = SenderidCertificate[5 + permLen];
-            secretlen = crypto.ecdh.generateSecret(SenderidCertificate, (short) (6 + permLen), pubKeyLen, CardSecret, (short) 0);
+            senderSaltLen = crypto.ecdh.generateSecret(SenderidCertificate, (short) (6 + permLen), pubKeyLen, CardSecret, (short) 0);
         } catch (Exception e) {
             ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
             return;
         }
 
-        crypto.sha512.update(Sendersalt, (short) 0, secretlen);
+        crypto.sha512.update(Sendersalt, (short) 0, senderSaltLen);
         crypto.sha512.update(Receiversalt, (short) 0, (short) 32);
         crypto.sha512.doFinal(CardSecret, (short) 0, (short) 32, CardsessionKey, (short) 0);
         CardscEncKey.setKey(CardsessionKey, (short) 0);
@@ -546,9 +546,9 @@ public class SecureChannel {
     }
 
     public boolean CardVerifySession(byte[] SenderSig, short SenderSigLen) {
-        byte[] temphash = new byte[100];
-        Util.arrayCopyNonAtomic(CardsessionKey, (short) 0, temphash, (short) 0, (short) (SC_SECRET_LENGTH * 2));
-        Util.arrayCopyNonAtomic(CardAESIV, (short) 0, temphash, (short) (SC_SECRET_LENGTH * 2), (short) 16);
+        byte[] tempHash = new byte[100];
+        Util.arrayCopyNonAtomic(CardsessionKey, (short) 0, tempHash, (short) 0, (short) (SC_SECRET_LENGTH * 2));
+        Util.arrayCopyNonAtomic(CardAESIV, (short) 0, tempHash, (short) (SC_SECRET_LENGTH * 2), (short) 16);
 
 
         byte permLen = SenderidCertificate[3];
@@ -565,9 +565,8 @@ public class SecureChannel {
         pub.setW(SenderPublicKey, (short) (0), pubKeyLen);
         Signature eccSig2 = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
 
-
-        eccSig2.init((ECPublicKey) pub, Signature.MODE_VERIFY);
-        boolean VerifyStatus = eccSig2.verify(temphash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), SenderSig, (short) 0, SenderSigLen);
+        eccSig2.init( pub, Signature.MODE_VERIFY);
+        boolean VerifyStatus = eccSig2.verify(tempHash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), SenderSig, (short) 0, SenderSigLen);
         return VerifyStatus;
     }
 
@@ -612,10 +611,10 @@ public class SecureChannel {
         localsecp256k1.setCurveParameters((ECKey) pub);
         pub.setW(CAPublicKey, (short) 0, (short) CAPublicKey.length);
 
-        Signature eccSig2 = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
-        eccSig2.init((ECPublicKey) pub, Signature.MODE_VERIFY);
+        Signature eccSig = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
+        eccSig.init((ECPublicKey) pub, Signature.MODE_VERIFY);
         short SignedDataLen = (short) (4 + permLen + pubKeyLen);
-        boolean VerifyStatus = eccSig2.verify(SenderidCertificate, (short) 2, SignedDataLen, SenderidCertificate, (short)(6 + permLen+pubKeyLen), pubSigLen);
+        boolean VerifyStatus = eccSig.verify(SenderidCertificate, (short) 2, SignedDataLen, SenderidCertificate, (short)(6 + permLen+pubKeyLen), pubSigLen);
         return VerifyStatus;
     }
 
