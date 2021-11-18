@@ -45,46 +45,27 @@ public class SecureChannel {
     static final short PUBKEY_LEN = 65;
     // certificate format: [certType, certLen, permType, permLen, permissions(2), pubkeyType, pubkeyLen, pubkey(65), ecdsa sig (DER)]
     static final short CERTIFICATE_MAX_LEN = (short) (8 + PUBKEY_LEN + ECDSA_MAX_LEN);
-    public byte[] SenderidCertificate;
-    public byte[] CardAESIV;
-    public byte[] CardHash;
-    public byte[] CardsessionKey;
-    public byte[] CardSecret;
     // Card identity key & certificate
     private final KeyPair idKeypair;
     //  public ECPublicKey verifyPublicKey;
     private final byte[] idCertificate;
-    private boolean certEmpty; // EMPTY or LOCKED
     private final AESKey scEncKey;
     private final AESKey scMacKey;
     private final Signature scMac;
     private final KeyPair scKeypair;
     private final Signature eccSig;
     private final byte[] secret;
-    private byte[] pairingSecret;
-    private short scCounter;
-    private byte CardidCertStatus;
-    private short CardidCertLen;
     private final AESKey CardscEncKey;
     private final AESKey CardscMacKey;
     private final byte[] SenderSalt;
-    byte[] CardAESCMAC;
     private final SECP256k1 localsecp256k1;
-
     /*
      * To avoid overhead, the pairing keys are stored in a plain byte array as sequences of 33-bytes elements. The first
      * byte is 0 if the slot is free and 1 if used. The following 32 bytes are the actual key data.
      */
     private final byte[] pairingKeys;
-
-    private short preassignedPairingOffset = -1;
-    private byte remainingSlots;
-    private boolean mutuallyAuthenticated = false;
-
     private final Crypto crypto;
-
     private final byte[] DebugMasterPrivateKey = {0x00, (byte) 0x90, (byte) 0xf4, 0x55, 0x61, (byte) 0xb5, (byte) 0xa4, 0x3d, (byte) 0xa2, 0x7f, 0x35, 0x70, 0x63, 0x48, (byte) 0xbf, (byte) 0x86, (byte) 0xa4, 0x75, (byte) 0x9b, 0x23, (byte) 0x8a, 0x58, (byte) 0xa0, (byte) 0xed, (byte) 0xdb, 0x24, 0x2a, (byte) 0xa2, 0x64, (byte) 0xd0, (byte) 0xf0, 0x2f, 0x55};
-
     private final byte[] SafecardDevCAPubKey = {
             0x04,
             0x5c, (byte) 0xfd, (byte) 0xf7, 0x7a, 0x00, (byte) 0xb4, (byte) 0xb6, (byte) 0xb4,
@@ -108,6 +89,20 @@ public class SecureChannel {
             (byte) 0xa7, (byte) 0x89, (byte) 0x9c, (byte) 0xb7, 0x54, 0x3d, (byte) 0xe4, 0x73,
             (byte) 0x8c, (byte) 0x96, (byte) 0xa8, 0x1c, (byte) 0xfd, (byte) 0xe4, (byte) 0xb1, 0x17,
     };
+    public byte[] SenderidCertificate;
+    public byte[] CardAESIV;
+    public byte[] CardHash;
+    public byte[] CardsessionKey;
+    public byte[] CardSecret;
+    byte[] CardAESCMAC;
+    private boolean certEmpty; // EMPTY or LOCKED
+    private byte[] pairingSecret;
+    private short scCounter;
+    private byte CardidCertStatus;
+    private short CardidCertLen;
+    private short preassignedPairingOffset = -1;
+    private byte remainingSlots;
+    private boolean mutuallyAuthenticated = false;
 
     /**
      * Instantiates a Secure Channel. All memory allocations (except pairing secret) needed for the secure channel are
@@ -546,7 +541,7 @@ public class SecureChannel {
         pub.setW(SenderPublicKey, (short) (0), pubKeyLen);
         Signature eccSig2 = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
 
-        eccSig2.init( pub, Signature.MODE_VERIFY);
+        eccSig2.init(pub, Signature.MODE_VERIFY);
         return eccSig2.verify(tempHash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), SenderSig, (short) 0, SenderSigLen);
     }
 
@@ -564,7 +559,7 @@ public class SecureChannel {
         verifyidKeypair.genKeyPair();
         ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
         localsecp256k1.setCurveParameters(pub);
-        pub.setW(SenderidCertificate, (short)(6 + permLen), pubKeyLen);
+        pub.setW(SenderidCertificate, (short) (6 + permLen), pubKeyLen);
 
         eccSig.init(pub, Signature.MODE_VERIFY);
         return eccSig.verify(temphash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), RecieverSig, (short) 0, RecieverSigLen);
@@ -593,7 +588,7 @@ public class SecureChannel {
         Signature eccSig = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
         eccSig.init(pub, Signature.MODE_VERIFY);
         short SignedDataLen = (short) (4 + permLen + pubKeyLen);
-        return eccSig.verify(SenderidCertificate, (short) 2, SignedDataLen, SenderidCertificate, (short)(6 + permLen+pubKeyLen), pubSigLen);
+        return eccSig.verify(SenderidCertificate, (short) 2, SignedDataLen, SenderidCertificate, (short) (6 + permLen + pubKeyLen), pubSigLen);
     }
 
 
@@ -650,9 +645,9 @@ public class SecureChannel {
 
     public void CardDecrypt(byte[] OutputData, short len) {
         //Copy out MAC from first 16 bytes
-         Util.arrayCopyNonAtomic(OutputData, (short) 0, CardAESCMAC, (short) 0, SC_BLOCK_SIZE);
-       if (!VerifyCardAESCMAC(OutputData, SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
-                reset();
+        Util.arrayCopyNonAtomic(OutputData, (short) 0, CardAESCMAC, (short) 0, SC_BLOCK_SIZE);
+        if (!VerifyCardAESCMAC(OutputData, SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
+            reset();
             ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
         }
 
@@ -668,7 +663,7 @@ public class SecureChannel {
     public short CardEncrypt(byte[] OutputData, short len) {
         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
         len = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) 0, len, OutputData, (short) 0);
-        
+
         //Use the CardAESIV so it will cycle to the next MAC
         //TODO: Test this with multiple sequential APDU's over the same channel to ensure cycle is working correctly
 
@@ -748,7 +743,7 @@ public class SecureChannel {
         scMac.update(secret, SC_BLOCK_SIZE, (short) (SC_BLOCK_SIZE - 1));
         scMac.sign(apduBuffer, (short) (ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE), len, apduBuffer, ISO7816.OFFSET_CDATA);
     }
-    
+
     /**
      * Calculates the MAC for card to card secure channel messages
      *
@@ -761,15 +756,15 @@ public class SecureChannel {
         scMac.init(CardscMacKey, Signature.MODE_SIGN);
         byte[] meta = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         scMac.update(meta, (short) 0, (short) 16);
-        scMac.sign(Data, (short) 0, len, CardAESCMAC, (short) 0);    
+        scMac.sign(Data, (short) 0, len, CardAESCMAC, (short) 0);
     }
 
-    public boolean VerifyCardAESCMAC(byte[] Data,short offset, short len, byte[] CardAESMAC) {
+    public boolean VerifyCardAESCMAC(byte[] Data, short offset, short len, byte[] CardAESMAC) {
         scMac.init(CardscMacKey, Signature.MODE_VERIFY);
         byte[] meta = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         scMac.update(meta, (short) 0, (short) 16);
         return scMac.verify(Data, offset, len, CardAESMAC, (short) 0, (short) 16);
-    	}
+    }
 
     /**
      * Copies the public key used for EC-DH in the given buffer.

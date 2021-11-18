@@ -753,10 +753,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             len = apdu.getIncomingLength();
             Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, ScratchBuffer, (short) 0, len);
         } else {
-secureChannel.preprocessAPDU(apduBuffer);
+            secureChannel.preprocessAPDU(apduBuffer);
             len = (short) ((short) apduBuffer[ISO7816.OFFSET_LC] & 0xff);
             Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, ScratchBuffer, (short) 0, len);
-  secureChannel.CardDecrypt(ScratchBuffer, len);
+            secureChannel.CardDecrypt(ScratchBuffer, len);
 
             if (!pin.isValidated()) {
                 ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
