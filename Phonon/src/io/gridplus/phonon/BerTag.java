@@ -1,4 +1,4 @@
-package im.status.phonon;
+package io.gridplus.phonon;
 
 public class BerTag {
 	byte	tag;

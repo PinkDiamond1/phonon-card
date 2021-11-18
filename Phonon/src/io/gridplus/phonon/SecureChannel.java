@@ -1,13 +1,16 @@
-package im.status.phonon;
+package io.gridplus.phonon;
 
-import javacard.framework.*;
 //
+
+import javacard.framework.APDU;
+import javacard.framework.ISO7816;
+import javacard.framework.ISOException;
+import javacard.framework.JCSystem;
+import javacard.framework.Util;
 import javacard.security.ECKey;
 import javacard.security.ECPrivateKey;
-//import javacard.security.KeyAgreement;
 import javacard.security.KeyBuilder;
 import javacard.security.MessageDigest;
-//import javacard.security.RandomData;
 import javacard.security.KeyPair;
 import javacard.security.AESKey;
 import javacard.security.ECPublicKey;
@@ -18,7 +21,7 @@ import javacardx.crypto.Cipher;
  * Implements all methods related to the secure channel as specified in the SECURE_CHANNEL.md document.
  */
 public class SecureChannel {
-    public static final boolean SECURE_CHANNEL_DEBUG = false;
+    public static final boolean SECURE_CHANNEL_DEBUG = true;
     public static final boolean USE_CA_DEMO_KEY = true;
 
     public static final byte ID_CERTIFICATE_EMPTY = (byte) 0x00;
@@ -37,76 +40,70 @@ public class SecureChannel {
     public static final byte INS_LOAD_CERT = 0x15;
     public static final byte PAIR_P1_FIRST_STEP = 0x00;
     public static final byte PAIR_P1_LAST_STEP = 0x01;
-    // This is the maximum length acceptable for plaintext commands/responses for APDUs in short format
-    public static final short SC_MAX_PLAIN_LENGTH = (short) 223;
     // cert = [permissions (2), certified pubKey (65), ECDSA signature from CA (74)]
     static final short ECDSA_MAX_LEN = 74;
     static final short PUBKEY_LEN = 65;
     // certificate format: [certType, certLen, permType, permLen, permissions(2), pubkeyType, pubkeyLen, pubkey(65), ecdsa sig (DER)]
     static final short CERTIFICATE_MAX_LEN = (short) (8 + PUBKEY_LEN + ECDSA_MAX_LEN);
+    // Card identity key & certificate
+    private final KeyPair idKeypair;
+    //  public ECPublicKey verifyPublicKey;
+    private final byte[] idCertificate;
+    private final AESKey scEncKey;
+    private final AESKey scMacKey;
+    private final Signature scMac;
+    private final KeyPair scKeypair;
+    private final Signature eccSig;
+    private final byte[] secret;
+    private final AESKey CardscEncKey;
+    private final AESKey CardscMacKey;
+    private final byte[] SenderSalt;
+    private final SECP256k1 localsecp256k1;
+    /*
+     * To avoid overhead, the pairing keys are stored in a plain byte array as sequences of 33-bytes elements. The first
+     * byte is 0 if the slot is free and 1 if used. The following 32 bytes are the actual key data.
+     */
+    private final byte[] pairingKeys;
+    private final Crypto crypto;
+    private final byte[] DebugMasterPrivateKey = {0x00, (byte) 0x90, (byte) 0xf4, 0x55, 0x61, (byte) 0xb5, (byte) 0xa4, 0x3d, (byte) 0xa2, 0x7f, 0x35, 0x70, 0x63, 0x48, (byte) 0xbf, (byte) 0x86, (byte) 0xa4, 0x75, (byte) 0x9b, 0x23, (byte) 0x8a, 0x58, (byte) 0xa0, (byte) 0xed, (byte) 0xdb, 0x24, 0x2a, (byte) 0xa2, 0x64, (byte) 0xd0, (byte) 0xf0, 0x2f, 0x55};
+    private final byte[] SafecardDevCAPubKey = {
+            0x04,
+            0x5c, (byte) 0xfd, (byte) 0xf7, 0x7a, 0x00, (byte) 0xb4, (byte) 0xb6, (byte) 0xb4,
+            (byte) 0xa5, (byte) 0xb8, (byte) 0xbb, 0x26, (byte) 0xb5, 0x49, 0x7d, (byte) 0xbc,
+            (byte) 0x7a, 0x4d, 0x01, (byte) 0xcb, (byte) 0xef, (byte) 0xd7, (byte) 0xaa, (byte) 0xea,
+            (byte) 0xf5, (byte) 0xf6, (byte) 0xf8, (byte) 0xf8, (byte) 0x86, (byte) 0x59, 0x76, (byte) 0xe7,
+            (byte) 0x94, 0x1a, (byte) 0xb0, (byte) 0xec, 0x16, 0x51, 0x20, (byte) 0x9c,
+            0x44, 0x40, 0x09, (byte) 0xfd, 0x48, (byte) 0xd9, 0x25, (byte) 0xa1,
+            0x7d, (byte) 0xe5, 0x04, 0x0b, (byte) 0xa4, 0x7e, (byte) 0xaf, 0x3f,
+            0x5b, 0x51, 0x72, 0x0d, (byte) 0xd4, 0x0b, 0x2f, (byte) 0x9d,
+    };
+    // Prod cert CA Key
+    private final byte[] SafecardProdCAPubKey = {
+            0x04,
+            0x77, (byte) 0x81, 0x6e, (byte) 0x8e, (byte) 0x83, (byte) 0xbb, 0x17, (byte) 0xc4,
+            0x30, (byte) 0x9c, (byte) 0xc2, (byte) 0xe5, (byte) 0xaa, 0x13, 0x4c, 0x57,
+            0x3a, 0x59, 0x43, 0x15, 0x49, 0x40, 0x09, 0x5a,
+            0x42, 0x31, 0x49, (byte) 0xf7, (byte) 0xcc, 0x03, (byte) 0x84, (byte) 0xad,
+            0x52, (byte) 0xd3, 0x3f, 0x1b, 0x4c, (byte) 0xd8, (byte) 0x9c, (byte) 0x96,
+            0x7b, (byte) 0xf2, 0x11, (byte) 0xc0, 0x39, 0x20, 0x2d, (byte) 0xf3,
+            (byte) 0xa7, (byte) 0x89, (byte) 0x9c, (byte) 0xb7, 0x54, 0x3d, (byte) 0xe4, 0x73,
+            (byte) 0x8c, (byte) 0x96, (byte) 0xa8, 0x1c, (byte) 0xfd, (byte) 0xe4, (byte) 0xb1, 0x17,
+    };
     public byte[] SenderidCertificate;
     public byte[] CardAESIV;
     public byte[] CardHash;
     public byte[] CardsessionKey;
     public byte[] CardSecret;
-    // Card identity key & certificate
-    private KeyPair idKeypair;
-    //  public ECPublicKey verifyPublicKey;
-    private byte[] idCertificate;
-    private byte idCertStatus; // EMPTY or LOCKED
-    private AESKey scEncKey;
-    private AESKey scMacKey;
-    private Signature scMac;
-    private KeyPair scKeypair;
-    private Signature eccSig;
-    private byte[] secret;
+    byte[] CardAESCMAC;
+    private boolean certEmpty; // EMPTY or LOCKED
     private byte[] pairingSecret;
     private short scCounter;
     private byte CardidCertStatus;
     private short CardidCertLen;
-    private AESKey CardscEncKey;
-    private AESKey CardscMacKey;
-    private byte[] Cardsecret;
-    private byte[] SenderSalt;
-    private SECP256k1 localsecp256k1;
-    /*
-     * To avoid overhead, the pairing keys are stored in a plain byte array as sequences of 33-bytes elements. The first
-     * byte is 0 if the slot is free and 1 if used. The following 32 bytes are the actual key data.
-     */
-    private byte[] pairingKeys;
-
     private short preassignedPairingOffset = -1;
     private byte remainingSlots;
     private boolean mutuallyAuthenticated = false;
 
-    private Crypto crypto;
-
-    private byte[] DebugMasterPrivateKey = {0x00, (byte) 0x90, (byte) 0xf4, 0x55, 0x61, (byte) 0xb5, (byte) 0xa4, 0x3d, (byte) 0xa2, 0x7f, 0x35, 0x70, 0x63, 0x48, (byte) 0xbf, (byte) 0x86, (byte) 0xa4, 0x75, (byte) 0x9b, 0x23, (byte) 0x8a, 0x58, (byte) 0xa0, (byte) 0xed, (byte) 0xdb, 0x24, 0x2a, (byte) 0xa2, 0x64, (byte) 0xd0, (byte) 0xf0, 0x2f, 0x55};
-
-    private byte [] SafecardDevCAPubKey = {
-    	0x04,
-    	0x5c, (byte)0xfd, (byte)0xf7, 0x7a, 0x00, (byte)0xb4, (byte)0xb6, (byte)0xb4,
-    	(byte)0xa5, (byte)0xb8, (byte)0xbb, 0x26, (byte)0xb5, 0x49, 0x7d, (byte)0xbc,
-    	(byte)0x7a, 0x4d, 0x01, (byte)0xcb, (byte)0xef, (byte)0xd7, (byte)0xaa, (byte)0xea,
-    	(byte)0xf5, (byte)0xf6, (byte)0xf8, (byte)0xf8, (byte)0x86, (byte)0x59, 0x76, (byte)0xe7,
-    	(byte)0x94, 0x1a, (byte)0xb0, (byte)0xec, 0x16, 0x51, 0x20, (byte)0x9c,
-    	0x44, 0x40, 0x09, (byte)0xfd, 0x48,(byte)0xd9, 0x25, (byte)0xa1,
-    	0x7d, (byte)0xe5, 0x04, 0x0b, (byte)0xa4, 0x7e, (byte)0xaf, 0x3f,
-    	0x5b, 0x51, 0x72, 0x0d, (byte)0xd4, 0x0b, 0x2f, (byte)0x9d,
-    };
-    // Prod cert CA Key
-    private byte [] SafecardProdCAPubKey = {
-    	0x04,
-    	0x77, (byte)0x81, 0x6e, (byte)0x8e, (byte)0x83, (byte)0xbb, 0x17, (byte)0xc4,
-    	0x30, (byte)0x9c, (byte)0xc2, (byte)0xe5, (byte)0xaa, 0x13, 0x4c, 0x57,
-    	0x3a, 0x59, 0x43, 0x15, 0x49, 0x40, 0x09, 0x5a,
-    	0x42, 0x31, 0x49, (byte)0xf7, (byte)0xcc, 0x03, (byte)0x84, (byte)0xad,
-    	0x52, (byte)0xd3, 0x3f, 0x1b, 0x4c, (byte)0xd8, (byte)0x9c, (byte)0x96,
-    	0x7b, (byte)0xf2, 0x11, (byte)0xc0, 0x39, 0x20, 0x2d, (byte)0xf3,
-    	(byte)0xa7, (byte)0x89, (byte)0x9c, (byte)0xb7, 0x54, 0x3d, (byte)0xe4, 0x73,
-    	(byte)0x8c, (byte)0x96, (byte)0xa8, 0x1c, (byte)0xfd, (byte)0xe4,(byte)0xb1, 0x17,
-    };
-    
     /**
      * Instantiates a Secure Channel. All memory allocations (except pairing secret) needed for the secure channel are
      * performed here. The keypair used for the EC-DH algorithm is also generated here.
@@ -120,7 +117,7 @@ public class SecureChannel {
         idKeypair.genKeyPair();
 
         idCertificate = new byte[CERTIFICATE_MAX_LEN];
-        idCertStatus = ID_CERTIFICATE_EMPTY;
+        certEmpty = true;
         CardidCertStatus = ID_CERTIFICATE_EMPTY;
         scMac = Signature.getInstance(Signature.ALG_AES_MAC_128_NOPAD, false);
         eccSig = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
@@ -135,7 +132,7 @@ public class SecureChannel {
         secp256k1.setCurveParameters((ECKey) scKeypair.getPublic());
         scKeypair.genKeyPair();
 
-        secret = JCSystem.makeTransientByteArray((short) (SC_SECRET_LENGTH * 2), JCSystem.CLEAR_ON_DESELECT);
+        secret = JCSystem.makeTransientByteArray((short) (SC_SECRET_LENGTH * 2), JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
         CardsessionKey = new byte[(short) (SC_SECRET_LENGTH * 2)];
         pairingKeys = new byte[(short) (PAIRING_KEY_LENGTH * pairingLimit)];
         remainingSlots = pairingLimit;
@@ -144,6 +141,7 @@ public class SecureChannel {
         SenderSalt = new byte[32];
         CardHash = new byte[32];
         CardSecret = new byte[32];
+        CardAESCMAC = JCSystem.makeTransientByteArray(SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
     }
 
 
@@ -154,7 +152,6 @@ public class SecureChannel {
         short PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
         ECPublicKey PublicKey = (ECPublicKey) idKeypair.getPublic();
         PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
-        return;
     }
 
     /**
@@ -273,7 +270,7 @@ public class SecureChannel {
     public void loadCert(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
 
-        if (idCertStatus != ID_CERTIFICATE_EMPTY) {
+        if (!certEmpty) {
             // Card cert may only be set once and never overwritten
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
@@ -281,7 +278,7 @@ public class SecureChannel {
         // Save the certificate
         if (apduBuffer[ISO7816.OFFSET_LC] <= (byte) CERTIFICATE_MAX_LEN) {
             Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, idCertificate, (short) 0, (short) (apduBuffer[ISO7816.OFFSET_LC] & 0xff));
-            idCertStatus = ID_CERTIFICATE_LOCKED;
+            certEmpty = false;
         } else {
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         }
@@ -295,22 +292,20 @@ public class SecureChannel {
 
         // Save the certificate
         if (SenderidCertificate == null) {
-            SenderidCertificate = JCSystem.makeTransientByteArray(CERTIFICATE_MAX_LEN, JCSystem.CLEAR_ON_DESELECT);
+            SenderidCertificate = JCSystem.makeTransientByteArray(CERTIFICATE_MAX_LEN, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
         }
 
-        if (IncomingCertLen > (short) CERTIFICATE_MAX_LEN) {
+        if (IncomingCertLen > CERTIFICATE_MAX_LEN) {
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         } else {
             Util.arrayCopyNonAtomic(IncomingCert, (short) 0, SenderidCertificate, (short) 0, IncomingCertLen);
             CardidCertStatus = ID_CERTIFICATE_LOCKED;
             CardidCertLen = IncomingCertLen;
         }
-        return;
     }
 
     void SetSenderSalt(byte[] salt) {
         Util.arrayCopyNonAtomic(salt, (short) 0, SenderSalt, (short) 0, (short) 32);
-        return;
     }
 
     public byte[] GetSenderSalt() {
@@ -327,7 +322,7 @@ public class SecureChannel {
         byte[] apduBuffer = apdu.getBuffer();
 
         // Ensure the received challenge is appropriate length
-        if (apduBuffer[ISO7816.OFFSET_LC] != (byte) MessageDigest.LENGTH_SHA_256) {
+        if (apduBuffer[ISO7816.OFFSET_LC] != MessageDigest.LENGTH_SHA_256) {
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         }
 
@@ -343,7 +338,7 @@ public class SecureChannel {
 
         // Sign the challenge and copy signature to response buffer
         eccSig.init(idKeypair.getPrivate(), Signature.MODE_SIGN);
-        short sigLen = eccSig.signPreComputedHash(apduBuffer, (short) ISO7816.OFFSET_CDATA, MessageDigest.LENGTH_SHA_256, apduBuffer, off);
+        short sigLen = eccSig.signPreComputedHash(apduBuffer, ISO7816.OFFSET_CDATA, MessageDigest.LENGTH_SHA_256, apduBuffer, off);
         off += sigLen;
 
         // Send the response
@@ -376,22 +371,11 @@ public class SecureChannel {
         apdu.setOutgoingAndSend((short) 0, len);
     }
 
-    public KeyPair GetKeyPair() {
-        return idKeypair;
-    }
-
     public short GetCardCertificate(byte[] ReturnBuffer) {
         // Copy card certificate to response buffer
         short certLen = (short) (2 + (idCertificate[1] & 0xff));
-        Util.arrayCopyNonAtomic(idCertificate, (short) 0, ReturnBuffer, (short) 0, (short) certLen);
+        Util.arrayCopyNonAtomic(idCertificate, (short) 0, ReturnBuffer, (short) 0, certLen);
         return (certLen);
-    }
-
-    public short GetCardPublicKey(byte[] ReturnBuffer) {
-        ECPublicKey pk = (ECPublicKey) idKeypair.getPublic();
-        short pubkeyLen = pk.getW(ReturnBuffer, (short) (0)); // Copy pubkey after TLV type and len
-        return pubkeyLen;
-
     }
 
     /**
@@ -412,7 +396,7 @@ public class SecureChannel {
         }
 
         // Make sure certificate exisits
-        if (idCertStatus != ID_CERTIFICATE_LOCKED) {
+        if (certEmpty) {
             ISOException.throwIt(ISO7816.SW_SECURE_MESSAGING_NOT_SUPPORTED);
             return 0;
         }
@@ -444,12 +428,12 @@ public class SecureChannel {
 
         // Copy card certificate to response buffer
         short certLen = (short) (2 + (idCertificate[1] & 0xff));
-        Util.arrayCopyNonAtomic(idCertificate, (short) 0, apduBuffer, off, (short) certLen);
+        Util.arrayCopyNonAtomic(idCertificate, (short) 0, apduBuffer, off, certLen);
         off += certLen;
 
         // Sign the secret hash, and copy the signature into the response buffer
         eccSig.init(idKeypair.getPrivate(), Signature.MODE_SIGN);
-        short sigLen = eccSig.signPreComputedHash(secret, (short) 0, (short) (SC_SECRET_LENGTH), apduBuffer, off);
+        short sigLen = eccSig.signPreComputedHash(secret, (short) 0, SC_SECRET_LENGTH, apduBuffer, off);
         off += sigLen;
 
         // Compute the expected client cryptogram, by hashing the card salt and secret hash. Save
@@ -497,34 +481,33 @@ public class SecureChannel {
 
         return (1 + SC_SECRET_LENGTH);
     }
-    
+
 
     public void CardSenderpair(byte[] Sendersalt, short SendersaltLen, byte[] Receiversalt) {
 
         // Make sure certificate exists
-        if (idCertStatus != ID_CERTIFICATE_LOCKED) {
+        if (certEmpty) {
             ISOException.throwIt(ISO7816.SW_SECURE_MESSAGING_NOT_SUPPORTED);
             return;
         }
 
         // Compute ECDH secret
-        short secretlen;
+        short senderSaltLen;
         try {
             crypto.ecdh.init(idKeypair.getPrivate());
             byte permLen = SenderidCertificate[3];
             byte pubKeyLen = SenderidCertificate[5 + permLen];
-            secretlen = crypto.ecdh.generateSecret(SenderidCertificate, (short) (6 + permLen), pubKeyLen, CardSecret, (short) 0);
+            senderSaltLen = crypto.ecdh.generateSecret(SenderidCertificate, (short) (6 + permLen), pubKeyLen, CardSecret, (short) 0);
         } catch (Exception e) {
             ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
             return;
         }
 
-        crypto.sha512.update(Sendersalt, (short) 0, secretlen);
+        crypto.sha512.update(Sendersalt, (short) 0, senderSaltLen);
         crypto.sha512.update(Receiversalt, (short) 0, (short) 32);
         crypto.sha512.doFinal(CardSecret, (short) 0, (short) 32, CardsessionKey, (short) 0);
         CardscEncKey.setKey(CardsessionKey, (short) 0);
         CardscMacKey.setKey(CardsessionKey, SC_SECRET_LENGTH);
-        return;
     }
 
     public short CardSignSession(byte[] CardSig) {
@@ -535,34 +518,31 @@ public class SecureChannel {
         crypto.sha256.doFinal(CardAESIV, (short) 0, (short) 16, CardHash, (short) 0);
         eccSig.init(idKeypair.getPrivate(), Signature.MODE_SIGN);
         // Sign the secret hash, and copy the signature into the response buffer
-        short sigLen = eccSig.signPreComputedHash(CardHash, (short) 0, (short) (SC_SECRET_LENGTH), CardSig, (short) 0);
-        return sigLen;
+        return eccSig.signPreComputedHash(CardHash, (short) 0, SC_SECRET_LENGTH, CardSig, (short) 0);
     }
 
     public boolean CardVerifySession(byte[] SenderSig, short SenderSigLen) {
-        byte[] temphash = new byte[100];
-       Util.arrayCopyNonAtomic(CardsessionKey, (short) 0, temphash, (short) 0, (short) (SC_SECRET_LENGTH * 2));
-        Util.arrayCopyNonAtomic(CardAESIV, (short) 0, temphash, (short) (SC_SECRET_LENGTH * 2), (short) 16);
+        byte[] tempHash = new byte[100];
+        Util.arrayCopyNonAtomic(CardsessionKey, (short) 0, tempHash, (short) 0, (short) (SC_SECRET_LENGTH * 2));
+        Util.arrayCopyNonAtomic(CardAESIV, (short) 0, tempHash, (short) (SC_SECRET_LENGTH * 2), (short) 16);
 
 
         byte permLen = SenderidCertificate[3];
         byte pubKeyLen = SenderidCertificate[5 + permLen];
-        byte [] SenderPublicKey = JCSystem.makeTransientByteArray(pubKeyLen, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-        Util.arrayCopyNonAtomic(SenderidCertificate, (short) (6 + permLen), SenderPublicKey, (short)0, pubKeyLen);
+        byte[] SenderPublicKey = JCSystem.makeTransientByteArray(pubKeyLen, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
+        Util.arrayCopyNonAtomic(SenderidCertificate, (short) (6 + permLen), SenderPublicKey, (short) 0, pubKeyLen);
 
         KeyPair verifyidKeypair = new KeyPair(KeyPair.ALG_EC_FP, SC_KEY_LENGTH);
         localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPrivate());
         localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPublic());
         verifyidKeypair.genKeyPair();
         ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
-        localsecp256k1.setCurveParameters((ECKey) pub);
+        localsecp256k1.setCurveParameters(pub);
         pub.setW(SenderPublicKey, (short) (0), pubKeyLen);
         Signature eccSig2 = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
 
-
-        eccSig2.init((ECPublicKey) pub, Signature.MODE_VERIFY);
-        boolean VerifyStatus = eccSig2.verify(temphash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), SenderSig, (short) 0, SenderSigLen);
-        return VerifyStatus;
+        eccSig2.init(pub, Signature.MODE_VERIFY);
+        return eccSig2.verify(tempHash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), SenderSig, (short) 0, SenderSigLen);
     }
 
     public boolean CardVerifySignature(byte[] RecieverSig, short RecieverSigLen) {
@@ -578,52 +558,40 @@ public class SecureChannel {
         localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPublic());
         verifyidKeypair.genKeyPair();
         ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
-        localsecp256k1.setCurveParameters((ECKey) pub);
+        localsecp256k1.setCurveParameters(pub);
         pub.setW(SenderidCertificate, (short) (6 + permLen), pubKeyLen);
 
-        eccSig.init((ECPublicKey) pub, Signature.MODE_VERIFY);
-        boolean VerifyStatus = eccSig.verify(temphash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), RecieverSig, (short) 0, RecieverSigLen);
-        return VerifyStatus;
+        eccSig.init(pub, Signature.MODE_VERIFY);
+        return eccSig.verify(temphash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), RecieverSig, (short) 0, RecieverSigLen);
     }
 
-    
-    public boolean CardVerifyCertificate( )
-    {
+
+    public boolean CardVerifyCertificate() {
         byte permLen = SenderidCertificate[3];
         byte pubKeyLen = SenderidCertificate[5 + permLen];
-        short pubSigLen = (short)(CardidCertLen - (short)(6 + permLen + pubKeyLen));
-        byte [] CAPublicKey;
-        if(USE_CA_DEMO_KEY == true)
-        {
-        	CAPublicKey = SafecardDevCAPubKey;
+        short pubSigLen = (short) (CardidCertLen - (short) (6 + permLen + pubKeyLen));
+        byte[] CAPublicKey;
+        if (USE_CA_DEMO_KEY) {
+            CAPublicKey = SafecardDevCAPubKey;
+        } else {
+            CAPublicKey = SafecardProdCAPubKey;
         }
-        else
-        {
-        	CAPublicKey = SafecardProdCAPubKey;
-        }
-        
+
         KeyPair verifyidKeypair = new KeyPair(KeyPair.ALG_EC_FP, SC_KEY_LENGTH);
         localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPrivate());
         localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPublic());
         verifyidKeypair.genKeyPair();
         ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
-        localsecp256k1.setCurveParameters((ECKey) pub);
-        pub.setW(CAPublicKey, (short)0, (short)CAPublicKey.length);
-        
-        Signature eccSig2 = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
-        eccSig2.init((ECPublicKey) pub, Signature.MODE_VERIFY);
-         short SignedDataLen = (short)(4 + permLen + pubKeyLen);
-        byte [] SenderPublicKey = JCSystem.makeTransientByteArray(SignedDataLen, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-        Util.arrayCopyNonAtomic(SenderidCertificate, (short)2, SenderPublicKey, (short)0, SignedDataLen);
-        
-        byte [] SenderSignature = JCSystem.makeTransientByteArray(pubSigLen, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-        Util.arrayCopyNonAtomic(SenderidCertificate, (short)(6 + permLen+pubKeyLen), SenderSignature, (short)0, pubSigLen);
-       
-        boolean VerifyStatus = eccSig2.verify(SenderPublicKey, (short) 0, SignedDataLen, SenderSignature, (short)0, pubSigLen);
-        return VerifyStatus;
-}
+        localsecp256k1.setCurveParameters(pub);
+        pub.setW(CAPublicKey, (short) 0, (short) CAPublicKey.length);
 
-    
+        Signature eccSig = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
+        eccSig.init(pub, Signature.MODE_VERIFY);
+        short SignedDataLen = (short) (4 + permLen + pubKeyLen);
+        return eccSig.verify(SenderidCertificate, (short) 2, SignedDataLen, SenderidCertificate, (short) (6 + permLen + pubKeyLen), pubSigLen);
+    }
+
+
     public byte[] CardGetAESIV() {
         return CardAESIV;
     }
@@ -642,8 +610,8 @@ public class SecureChannel {
         }
     }
 
-    public byte GetCertStatus() {
-        return idCertStatus;
+    public boolean CertEmpty() {
+        return certEmpty;
     }
 
     /**
@@ -675,60 +643,26 @@ public class SecureChannel {
         return len;
     }
 
-    public short CardpreprocessAPDU(byte[] apduBuffer) {
-        if (!isOpen()) {
-            ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
-        }
-
-        short apduLen = (short) ((short) apduBuffer[ISO7816.OFFSET_LC] & 0xff);
-
-/*	    if (!CardverifyAESMAC(apduBuffer, apduLen)) {
-	      reset();
-	      ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
-	    }
-*/
-        crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_DECRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-//	    Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-        short len = crypto.aesCbcIso9797m2.doFinal(apduBuffer, (short) (ISO7816.OFFSET_CDATA + (SC_BLOCK_SIZE * 2)), (short) (apduLen - (SC_BLOCK_SIZE * 2)), apduBuffer, ISO7816.OFFSET_CDATA);
-
-        apduBuffer[ISO7816.OFFSET_LC] = (byte) len;
-
-        return len;
-    }
-
-    public short CardDecrypt(byte[] OutputData, short len) {
+    public void CardDecrypt(byte[] OutputData, short len) {
         //Copy out MAC from first 16 bytes
-        byte[] CardAESCMAC = JCSystem.makeTransientByteArray(SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
         Util.arrayCopyNonAtomic(OutputData, (short) 0, CardAESCMAC, (short) 0, SC_BLOCK_SIZE);
-
-
-        byte[] Ciphertext = JCSystem.makeTransientByteArray((short) (len - (SC_BLOCK_SIZE)), JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-        Util.arrayCopyNonAtomic(OutputData, (short) (SC_BLOCK_SIZE), Ciphertext, (short) 0, (short) (len - (SC_BLOCK_SIZE)));
-        //Skip MAC verification for now
-        if (!VerifyCardAESCMAC(Ciphertext, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
+        if (!VerifyCardAESCMAC(OutputData, SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
             reset();
             ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
         }
 
-
         // //Probably cycle like this
-        // Util.arrayCopyNonAtomic()
-//	   byte[] IncomingAESIV = JCSystem.makeTransientByteArray( SC_BLOCK_SIZE, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-// 	   Util.arrayCopyNonAtomic(OutputData, (short)0, IncomingAESIV, (short)0, SC_BLOCK_SIZE);
-
-//	    Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, CardAESIV, (short) 0, SC_BLOCK_SIZE);
         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_DECRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-        short Decryptlen = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), OutputData, (short) 0);
+        crypto.aesCbcIso9797m2.doFinal(OutputData, SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), OutputData, (short) 0);
 
         //Update the Init Vector
         Util.arrayCopyNonAtomic(CardAESCMAC, (short) 0, CardAESIV, (short) 0, SC_BLOCK_SIZE);
 
-        return Decryptlen;
     }
 
     public short CardEncrypt(byte[] OutputData, short len) {
         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-        len = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) 0, (short) len, OutputData, (short) 0);
+        len = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) 0, len, OutputData, (short) 0);
 
         //Use the CardAESIV so it will cycle to the next MAC
         //TODO: Test this with multiple sequential APDU's over the same channel to ensure cycle is working correctly
@@ -758,14 +692,6 @@ public class SecureChannel {
         scMac.update(secret, SC_BLOCK_SIZE, (short) (SC_BLOCK_SIZE - ISO7816.OFFSET_CDATA));
 
         return scMac.verify(apduBuffer, (short) (ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE), (short) (apduLen - SC_BLOCK_SIZE), apduBuffer, ISO7816.OFFSET_CDATA, SC_BLOCK_SIZE);
-    }
-
-
-    private boolean CardverifyAESMAC(byte[] apduBuffer, short apduLen) {
-        scMac.init(CardscMacKey, Signature.MODE_VERIFY);
-//	    scMac.update(apduBuffer, (short) 0, ISO7816.OFFSET_CDATA);
-//	    scMac.update(CardAESIV, SC_BLOCK_SIZE, (short) (SC_BLOCK_SIZE - ISO7816.OFFSET_CDATA));
-        return scMac.verify(apduBuffer, (short) (SC_BLOCK_SIZE * 2), (short) (apduLen - (SC_BLOCK_SIZE * 2)), apduBuffer, (short) (SC_BLOCK_SIZE), SC_BLOCK_SIZE);
     }
 
     /**
@@ -800,35 +726,8 @@ public class SecureChannel {
 
     public void respond(APDU apdu, byte[] OutgoingData, short len, short sw) {
         byte[] apduBuffer = apdu.getBuffer();
-        Util.arrayCopyNonAtomic(OutgoingData, (short) 0, apduBuffer, (short) SC_OUT_OFFSET, len);
+        Util.arrayCopyNonAtomic(OutgoingData, (short) 0, apduBuffer, SC_OUT_OFFSET, len);
         respond(apdu, len, sw);
-    }
-
-    public void Cardrespond(APDU apdu, short len, short sw) {
-        byte[] apduBuffer = apdu.getBuffer();
-
-//	    Util.setShort(apduBuffer, (short) (SC_OUT_OFFSET + len), sw);
-//	    len += 2;
-
-        crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-//	    len = crypto.aesCbcIso9797m2.doFinal(apduBuffer, ISO7816.OFFSET_CDATA, len, apduBuffer, (short)(ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE));
-        len = crypto.aesCbcIso9797m2.doFinal(apduBuffer, (short) (ISO7816.OFFSET_CDATA + (SC_BLOCK_SIZE * 2)), len, apduBuffer, (short) (ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE));
-
-//	    apduBuffer[0] = (byte) (len + SC_BLOCK_SIZE);
-
-        CardcomputeAESMAC(len, apduBuffer);
-
-        Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, CardAESIV, (short) 0, SC_BLOCK_SIZE);
-
-        len += SC_BLOCK_SIZE;
-//		apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, len);
-        respond(apdu, len, ISO7816.SW_NO_ERROR);
-    }
-
-    public void Cardrespond(APDU apdu, byte[] OutgoingData, short len, short sw) {
-        byte[] apduBuffer = apdu.getBuffer();
-        Util.arrayCopyNonAtomic(OutgoingData, (short) 0, apduBuffer, (short) 32, len);
-        Cardrespond(apdu, len, sw);
     }
 
     /**
@@ -843,11 +742,6 @@ public class SecureChannel {
         scMac.update(apduBuffer, (short) 0, (short) 1);
         scMac.update(secret, SC_BLOCK_SIZE, (short) (SC_BLOCK_SIZE - 1));
         scMac.sign(apduBuffer, (short) (ISO7816.OFFSET_CDATA + SC_BLOCK_SIZE), len, apduBuffer, ISO7816.OFFSET_CDATA);
-    }
-
-    private void CardcomputeAESMAC(short len, byte[] outputData) {
-        scMac.init(CardscMacKey, Signature.MODE_SIGN);
-        scMac.sign(outputData, (short) (ISO7816.OFFSET_CDATA + (SC_BLOCK_SIZE * 2)), len, outputData, ISO7816.OFFSET_CDATA);
     }
 
     /**
@@ -865,11 +759,11 @@ public class SecureChannel {
         scMac.sign(Data, (short) 0, len, CardAESCMAC, (short) 0);
     }
 
-    public boolean VerifyCardAESCMAC(byte[] Data, short len, byte[] CardAESMAC) {
+    public boolean VerifyCardAESCMAC(byte[] Data, short offset, short len, byte[] CardAESMAC) {
         scMac.init(CardscMacKey, Signature.MODE_VERIFY);
         byte[] meta = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         scMac.update(meta, (short) 0, (short) 16);
-        return scMac.verify(Data, (short) 0, len, CardAESMAC, (short) 0, (short) 16);
+        return scMac.verify(Data, offset, len, CardAESMAC, (short) 0, (short) 16);
     }
 
     /**
@@ -950,7 +844,6 @@ public class SecureChannel {
 
     public void SetCardidCertStatus(byte value) {
         CardidCertStatus = value;
-        return;
     }
 }
 
