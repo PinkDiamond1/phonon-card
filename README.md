@@ -41,6 +41,6 @@ the gp.jar file can be downloaded from [here](https://javacard.pro/globalplatfor
 
 and then
 
-`java -jar GLOBAL_PLATFORM_JAR --install "./outputs/io/gridplus/phonon/javacard/phonon.cap" --applet A000000820000301 --package A0000008200003
+`java -jar GLOBAL_PLATFORM_JAR --install "./outputs/io/gridplus/phonon/javacard/phonon.cap" --applet A000000820000301 --package A0000008200003`
 
 
