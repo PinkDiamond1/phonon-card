@@ -104,9 +104,14 @@ public class SecureChannel {
     private byte remainingSlots;
     private boolean mutuallyAuthenticated = false;
 
+
     /**
      * Instantiates a Secure Channel. All memory allocations (except pairing secret) needed for the secure channel are
      * performed here. The keypair used for the EC-DH algorithm is also generated here.
+     *
+     * @param pairingLimit
+     * @param crypto
+     * @param secp256k1
      */
     public SecureChannel(byte pairingLimit, Crypto crypto, SECP256k1 secp256k1) {
         this.crypto = crypto;
@@ -145,6 +150,9 @@ public class SecureChannel {
     }
 
 
+    /**
+     *  Set the key to be a deterministic one for debugging purposes
+     */
     public void SetDebugKey() {
         ECPrivateKey idPrivateKey = (ECPrivateKey) idKeypair.getPrivate();
         idPrivateKey.setS(DebugMasterPrivateKey, (short) 0, (short) 32);
@@ -284,6 +292,12 @@ public class SecureChannel {
         }
     }
 
+    /**
+     * Load certificate for sender
+     *
+     * @param IncomingCert
+     * @param IncomingCertLen
+     */
     public void SenderloadCert(byte[] IncomingCert, short IncomingCertLen) {
         if (CardidCertStatus != ID_CERTIFICATE_EMPTY) {
             // Card cert may only be set once and never overwritten
@@ -304,10 +318,20 @@ public class SecureChannel {
         }
     }
 
+    /**
+     * Set salt for sender card
+     *
+     * @param salt
+     */
     void SetSenderSalt(byte[] salt) {
         Util.arrayCopyNonAtomic(salt, (short) 0, SenderSalt, (short) 0, (short) 32);
     }
 
+    /**
+     * Retrieve salt for sender card
+     *
+     * @return
+     */
     public byte[] GetSenderSalt() {
         return SenderSalt;
     }
@@ -371,6 +395,12 @@ public class SecureChannel {
         apdu.setOutgoingAndSend((short) 0, len);
     }
 
+    /**
+     * Retrieve certificate for card
+     *
+     * @param ReturnBuffer buffer to place certificate into
+     * @return length of certificate
+     */
     public short GetCardCertificate(byte[] ReturnBuffer) {
         // Copy card certificate to response buffer
         short certLen = (short) (2 + (idCertificate[1] & 0xff));
@@ -483,6 +513,13 @@ public class SecureChannel {
     }
 
 
+    /**
+     * Verify salt and compute ECDH secret for pairing process
+     *
+     * @param Sendersalt
+     * @param SendersaltLen
+     * @param Receiversalt
+     */
     public void CardSenderpair(byte[] Sendersalt, short SendersaltLen, byte[] Receiversalt) {
 
         // Make sure certificate exists
@@ -510,6 +547,12 @@ public class SecureChannel {
         CardscMacKey.setKey(CardsessionKey, SC_SECRET_LENGTH);
     }
 
+    /**
+     * Sign a secret hash
+     *
+     * @param CardSig
+     * @return signature
+     */
     public short CardSignSession(byte[] CardSig) {
         // Compute the expected client cryptogram, by hashing the card session key and AESIV.
         // expectedCryptogram = sha256(CardsessionKey, CardAESIV)
@@ -521,6 +564,13 @@ public class SecureChannel {
         return eccSig.signPreComputedHash(CardHash, (short) 0, SC_SECRET_LENGTH, CardSig, (short) 0);
     }
 
+    /**
+     * Check to see if the session has been properly set up.
+     *
+     * @param SenderSig sender card signature
+     * @param SenderSigLen sender card signature length
+     * @return if session can be verified
+     */
     public boolean CardVerifySession(byte[] SenderSig, short SenderSigLen) {
         byte[] tempHash = new byte[100];
         Util.arrayCopyNonAtomic(CardsessionKey, (short) 0, tempHash, (short) 0, (short) (SC_SECRET_LENGTH * 2));
@@ -545,6 +595,13 @@ public class SecureChannel {
         return eccSig2.verify(tempHash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), SenderSig, (short) 0, SenderSigLen);
     }
 
+    /**
+     * Verify signature of counterparty card
+     *
+     * @param RecieverSig receiver signature
+     * @param RecieverSigLen length of receiver signature
+     * @return if signature passed is legitimate
+     */
     public boolean CardVerifySignature(byte[] RecieverSig, short RecieverSigLen) {
         byte[] temphash = new byte[100];
         Util.arrayCopyNonAtomic(CardsessionKey, (short) 0, temphash, (short) 0, (short) (SC_SECRET_LENGTH * 2));
@@ -566,6 +623,11 @@ public class SecureChannel {
     }
 
 
+    /**
+     * Verify Sender certificate against signature from cert authority for card to card pairing
+     *
+     * @return if the certificate can be verified
+     */
     public boolean CardVerifyCertificate() {
         byte permLen = SenderidCertificate[3];
         byte pubKeyLen = SenderidCertificate[5 + permLen];
@@ -592,6 +654,11 @@ public class SecureChannel {
     }
 
 
+    /**
+     * Getter for card-to-card pairing aesiv
+     *
+     * @return aesiv
+     */
     public byte[] CardGetAESIV() {
         return CardAESIV;
     }
@@ -610,6 +677,10 @@ public class SecureChannel {
         }
     }
 
+    /** Check to see if the certificate is empty or if it's been set
+     *
+     * @return if the certificate on this card is empty
+     */
     public boolean CertEmpty() {
         return certEmpty;
     }
@@ -643,6 +714,12 @@ public class SecureChannel {
         return len;
     }
 
+    /**
+     * Unencrypt message from paired card
+     *
+     * @param OutputData unencrypted data
+     * @param len unencrypted data length
+     */
     public void CardDecrypt(byte[] OutputData, short len) {
         //Copy out MAC from first 16 bytes
         Util.arrayCopyNonAtomic(OutputData, (short) 0, CardAESCMAC, (short) 0, SC_BLOCK_SIZE);
@@ -660,6 +737,13 @@ public class SecureChannel {
 
     }
 
+    /**
+     * Encrypt in place the data to be sent to the counterparty card
+     *
+     * @param OutputData unencrypted data to be encrypted to counterparty card
+     * @param len length of unencrypted data
+     * @return encrypted data length
+     */
     public short CardEncrypt(byte[] OutputData, short len) {
         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
         len = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) 0, len, OutputData, (short) 0);
@@ -724,6 +808,14 @@ public class SecureChannel {
         apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, len);
     }
 
+    /**
+     * Respond over encrypted channel
+     *
+     * @param apdu Javacard APDU buffer
+     * @param OutgoingData Data to be sent
+     * @param len Length of data to be sent
+     * @param sw SW value of sent data
+     */
     public void respond(APDU apdu, byte[] OutgoingData, short len, short sw) {
         byte[] apduBuffer = apdu.getBuffer();
         Util.arrayCopyNonAtomic(OutgoingData, (short) 0, apduBuffer, SC_OUT_OFFSET, len);
@@ -759,6 +851,15 @@ public class SecureChannel {
         scMac.sign(Data, (short) 0, len, CardAESCMAC, (short) 0);
     }
 
+    /**
+     * Verify AES MAC was properly set
+     *
+     * @param Data Data to be verified against
+     * @param offset offset into buffer of data
+     * @param len length of data
+     * @param CardAESMAC AES MAC
+     * @return if mac was properly verified
+     */
     public boolean VerifyCardAESCMAC(byte[] Data, short offset, short len, byte[] CardAESMAC) {
         scMac.init(CardscMacKey, Signature.MODE_VERIFY);
         byte[] meta = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -842,6 +943,11 @@ public class SecureChannel {
         return off;
     }
 
+    /**
+     * set Card ID Certificate status
+     *
+     * @param value Cert status
+     */
     public void SetCardidCertStatus(byte value) {
         CardidCertStatus = value;
     }
