@@ -27,17 +27,18 @@ public class Bertlv {
         TagTableCount = 0;
 
     }
-
-    public short BuildTagTable(byte[] Indata, short StartOffset, short Length) {
+    public short BuildTagTable( byte[] Indata, short StartOffset, short Length)
+    {
         TagTableCount = 0;
         short Offset = StartOffset;
-        short FinishOffset = (short) (StartOffset + Length);
+        short FinishOffset = (short)(StartOffset + Length);
         short tempLen;
-        while (Offset < FinishOffset) {
-            TagTable[TagTableCount] = Offset;
+        while( Offset < FinishOffset)
+        {
+            TagTable[TagTableCount]=Offset;
             Offset++;
-            tempLen = (short) (Indata[Offset] & (short) 0x00FF);
-            Offset = (short) (tempLen + 1 + Offset);
+            tempLen = (short)(Indata[Offset] & (short)0x00FF);
+            Offset =(short)(tempLen + 1 + Offset);
             TagTableCount++;
         }
         return TagTableCount;
@@ -104,20 +105,9 @@ public class Bertlv {
 
 
     public void BuildTLVStructure(byte tag, short length, byte[] InData, byte[] OutData) {
-        //		if( length > 255 ) totallength = (short)(totallength+2);
         short Offset = 0;
         OutData[Offset++] = tag;
-/*		if( length > 255)
-		{
-			OutData[ Offset++ ] = (byte)0x82;
-			Util.setShort(OutData, Offset, length);
-			Offset = (short)(Offset+2);
-		}
-		else
-		{
-*/
         OutData[Offset++] = (byte) length;
-//		}
         Util.arrayCopyNonAtomic(InData, (short) 0, OutData, Offset, length);
         BuildLength = (short) (Offset + length);
     }
@@ -125,26 +115,14 @@ public class Bertlv {
 
     public void BuildTLVStructure(byte tag, short length, byte[] InData, byte[] OutputData, short OutOffset) {
         short Offset = OutOffset;
-//		Util.setShort(OutputData, Offset, tag);
         OutputData[Offset++] = tag;
-/*		if( length > 255)
-		{
-			OutputData[ Offset++ ] = (byte)0x82;
-			Util.setShort(OutputData, Offset, length);
-			Offset+=2;
-		}
-		else
-		{
-*/
         OutputData[Offset++] = (byte) length;
-//		}
         Util.arrayCopyNonAtomic(InData, (short) 0, OutputData, Offset, length);
         BuildLength = (short) (Offset + length - OutOffset);
     }
 
 
     public void BuildTLVStructure(byte tag, short length, short InData, byte[] OutData, short OutOffset) {
-//		short totallength = (short) ((short)2 + (short)2);
         short Offset = OutOffset;
         OutData[Offset++] = tag;
         OutData[Offset++] = (byte) length;
@@ -155,7 +133,6 @@ public class Bertlv {
     }
 
     public void BuildTLVStructure(byte tag, short length, byte InData, byte[] OutData, short OutOffset) {
-//		short totallength = (short) ((short)2 + (short)1);
         short Offset = OutOffset;
         OutData[Offset++] = tag;
         OutData[Offset++] = (byte) length;
