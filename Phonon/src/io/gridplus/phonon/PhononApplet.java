@@ -16,8 +16,11 @@ import javacard.security.KeyPair;
 
 /**
  * @author MikeZercher
- * Secure Element Solutions, LLC
+ * @author Dan Veenstra
+ * @author Nate Maile
+ * GridPlus https://gridplus.io
  */
+
 public class PhononApplet extends Applet {    //implements ExtendedLength {
     public static final short PHONON_KEY_LENGTH = 256;
     public static final short MAX_NUMBER_PHONONS = 256;
@@ -143,7 +146,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         uid = new byte[UID_LENGTH];
         crypto.random.generateData(uid, (short) 0, UID_LENGTH);
 
-
         PhononArray = new Phonon[MAX_NUMBER_PHONONS];
         PhononList = new short[MAX_NUMBER_PHONONS];
         SendPhononList = new short[MAX_NUMBER_PHONONS];
@@ -159,12 +161,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         resetCurveParameters();
 
         ScratchBuffer = JCSystem.makeTransientByteArray((short) 255, JCSystem.CLEAR_ON_DESELECT);
-
         TransBuffer = JCSystem.makeTransientByteArray((short) 100, JCSystem.CLEAR_ON_DESELECT);
         TempExtendedSchema = JCSystem.makeTransientByteArray(MAX_EXTENDED_SCHEMA_BUFFER, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
 
         PhononKey = new KeyPair(KeyPair.ALG_EC_FP, PHONON_KEY_LENGTH);
-        // DebugKeySet = false;
+
         globalBertlv = new Bertlv();
 
         friendlyName = new byte[255];
@@ -173,12 +174,25 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         Util.arrayFillNonAtomic(arrayOfZeros, (short) 0, (short) 255, (byte) 0);
     }
 
+    /**
+     * Install the phonon applet to the card
+     *
+     * @param bArray
+     * @param bOffset
+     * @param bLength
+     */
     public static void install(byte[] bArray, short bOffset, byte bLength) {
         // GP-compliant JavaCard applet registration
         new io.gridplus.phonon.PhononApplet().register(bArray, (short) (bOffset + 1), bArray[bOffset]);
     }
 
 
+    /**
+     * Process incoming apdu and dispatch to proper function
+     *
+     * @param apdu the JCRE-owned APDU object.
+     * @throws ISOException
+     */
     public void process(APDU apdu) throws ISOException {
         // Good practice: Return 9000 on SELECT
         byte[] buf = apdu.getBuffer();
@@ -304,11 +318,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                     break;
                 }
 
-                case INS_TRANSACTION_ACK: {
-                    SetTransactionsAsComplete(apdu);
-                    break;
-                }
-
                 case INS_INIT_CARD_PAIRING: {
                     InitCardPairing(apdu);
                     break;
@@ -379,6 +388,12 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         JCSystem.requestObjectDeletion();
     }
 
+    /**
+     * Helper function for returning error codes when an exception is thrown.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     * @param sw   javacard response error code value
+     */
     private void handleException(APDU apdu, short sw) {
         if (shouldRespond(apdu) && (sw != ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED)) {
             secureChannel.respond(apdu, (short) 0, sw);
@@ -387,10 +402,21 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         }
     }
 
+    /**
+     * Check to see if a response on the secure channel is warranted
+     *
+     * @param apdu the JCRE-owned APDU object.
+     * @return
+     */
     private boolean shouldRespond(APDU apdu) {
         return secureChannel.isOpen() && (apdu.getCurrentState() != APDU.STATE_FULL_OUTGOING);
     }
 
+    /**
+     * Initiate a card to card secure pairing.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void InitCardPairing(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
 
@@ -451,6 +477,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             secureChannel.respond(apdu, apduBuffer, Offset, ISO7816.SW_NO_ERROR);
     }
 
+    /**
+     * Exchange the pairing initation data from INIT_CARD_PAIRING with the card to be paired.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void SenderPairing(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         secureChannel.preprocessAPDU(apduBuffer);
@@ -521,6 +552,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
     }
 
+    /**
+     * Exchange the returned pairing data from CARD_PAIR with the initiating card.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void ReceiverPairing(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         short len;
@@ -591,6 +627,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
     }
 
+    /**
+     * Return the pairing info and initial card's signature on the session key to finalize the pairing.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void FinalizeCardPairing(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
 
@@ -617,6 +658,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         }
     }
 
+    /**
+     * Create an empty phonon and return its public key. This phonon will be unspendable until a descriptor has been set.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void createPhonon(APDU apdu) {
         secp256k1.setCurveParameters((ECKey) PhononKey.getPrivate());
         secp256k1.setCurveParameters((ECKey) PhononKey.getPublic());
@@ -705,6 +751,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             secureChannel.respond(apdu, apduBuffer, off, ISO7816.SW_NO_ERROR);
     }
 
+    /**
+     * Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void SetReceivePhononList(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         secureChannel.preprocessAPDU(apduBuffer);
@@ -745,6 +796,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_NO_ERROR);
     }
 
+    /**
+     * Process and receive an encrypted transaction, containing a transfer of some phonons.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void ReceivePhonons(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         short len;
@@ -769,11 +825,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             ISOException.throwIt(ISO7816.SW_FILE_FULL);
             return;
         }
-//        Bertlv PhononTLV = globalBertlv;
+
         Bertlv PhononTLV = new Bertlv();
         byte[] IncomingPhonons = ScratchBuffer;
         if (IncomingPhonons[0] != TLV_PHONON_TRANSFER_PACKET) {
-
             ISOException.throwIt(ISO7816.SW_WRONG_DATA);
             return;
         }
@@ -924,6 +979,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         }
     }
 
+    /**
+     * Destroy a phonon to export its private key.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void DestroyPhonon(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         short len;
@@ -985,6 +1045,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             secureChannel.respond(apdu, OutgoingData, (short) (berPhononKey.BuildLength + 3), ISO7816.SW_NO_ERROR);
     }
 
+    /**
+     * Finalize a newly created phonon, by setting a descriptor with details about the asset it encumbers.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void SetPhononDescriptor(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         short len;
@@ -1112,6 +1177,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     }
 
 
+    /**
+     * Fetch a phonon's public key by key index
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void GetPhononPublicKey(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         short len;
@@ -1182,6 +1252,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     }
 
 
+    /**
+     * Iterate the full list of phonons, returning 'N' phonons at a time. Optional list filters may be applied.
+     *
+     * @param apdu apdu the JCRE-owned APDU object.
+     */
     private void ListPhonons(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         byte PhononListContinue = apduBuffer[ISO7816.OFFSET_P1];
@@ -1314,6 +1389,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         SendSelectPhononList(apdu);
     }
 
+    /**
+     * Send off phonons that have been marked for sending by listPhonons
+     *
+     * @param apdu apdu the JCRE-owned APDU object.
+     */
     private void SendSelectPhononList(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
 
@@ -1357,22 +1437,30 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             if (PhononCollectionOffset > (short) (190))
                 break;
         }
+
         Bertlv berPhononCollection = globalBertlv;
         byte[] OutgoingBuffer = apduBuffer;
         berPhononCollection.BuildTLVStructure(TLV_PHONON_COLLECTION, PhononCollectionOffset, PhononCollection, OutgoingBuffer);
+
         short remaining = ISO7816.SW_NO_ERROR;
         if (j < PhononListCount) {
             PhononListLastSent = (short) (j + 1);
             remaining = (short) ((short) (PhononListCount - PhononListLastSent) + ISO7816.SW_NO_ERROR);
         }
+
         if (DEBUG_MODE) {
             Util.arrayCopyNonAtomic(OutgoingBuffer, (short) 0, apduBuffer, (short) 0, (short) (PhononCollectionOffset + 2));
             apdu.setOutgoingAndSend((short) 0, (short) (PhononCollectionOffset + 2));
-
-        } else
+        } else {
             secureChannel.respond(apdu, OutgoingBuffer, (short) (PhononCollectionOffset + 2), remaining);
+        }
     }
 
+    /**
+     * Build an encrypted transaction to transfer phonons to another card.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void SendPhonons(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         short len;
@@ -1419,6 +1507,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         SendPhononList(apdu);
     }
 
+    /**
+     * Send off phonons with private keys of phonons that have been marked for sending by SendPhonons
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void SendPhononList(APDU apdu) {
 
         byte[] PhononCollection = ScratchBuffer;
@@ -1460,10 +1553,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             PhononCollection[PhononDescriptorOffset] = (byte) PhononDescriptorLength;
             PhononArray[i].Status = PHONON_STATUS_DELETED;
             PhononArray[i].CurrencyType = 0;
+            Util.arrayCopy(arrayOfZeros, (short) 0, PhononArray[i].sPhononPrivateKey, (short) 0, PhononArray[i].PhononPrivateKeyLen);
 
             DeletedPhononList[DeletedPhononIndex] = i;
             DeletedPhononIndex++;
-
 
         }
         Bertlv berPhononCollection = globalBertlv;
@@ -1476,56 +1569,21 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             //TODO: possibly SW_NO_ERROR is being double added here and will break things when the length exceeds one APDU
             remaining = (short) ((short) (SendPhononListCount - SendPhononListLastSent) + ISO7816.SW_NO_ERROR);
         }
+        JCSystem.commitTransaction();
         if (DEBUG_MODE) {
             apdu.setOutgoingAndSend((short) 0, (short) (PhononCollectionOffset + 2));
         } else {
-            //This stuff, what's going on
-            //Try sending back a plaintext phononTransferPacket without encrypting
-            //Plaintext version of the return packet is correct
-            //Problem is somewhere in this encryption function
             short encryptLen = secureChannel.CardEncrypt(apduBuffer, (short) (PhononCollectionOffset + 2));
             apduBuffer = apdu.getBuffer();
-            //Just copy card2card encrypted data into output data
             secureChannel.respond(apdu, apduBuffer, encryptLen, (short) (ISO7816.SW_NO_ERROR + remaining));
         }
-        JCSystem.commitTransaction();
     }
 
-    private void SetTransactionsAsComplete(APDU apdu) {
-        byte[] apduBuffer = apdu.getBuffer();
-        if (DEBUG_MODE)
-            apdu.getIncomingLength();
-        else {
-            secureChannel.preprocessAPDU(apduBuffer);
-            if (!pin.isValidated()) {
-                secureChannel.respond(apdu, (short) 0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
-                return;
-            }
-        }
-
-        Bertlv PhononListTLV = globalBertlv;
-        byte[] IncomingList = apduBuffer;
-        PhononListTLV.LoadTag(IncomingList);
-        if (PhononListTLV.GetTag() != TLV_PHONON_INDEX_COUNT) {
-            secureChannel.respond(apdu, (short) 0, ISO7816.SW_WRONG_DATA);
-            return;
-        }
-        SendPhononListCount = (short) (PhononListTLV.GetLength() / 2);
-        short Offset = 0;
-        short Index;
-        JCSystem.beginTransaction();
-        for (short i = 0; i < SendPhononListCount; i++) {
-            Index = Util.getShort(PhononListTLV.GetData(), Offset);
-            Index--;
-            PhononArray[Index].Status = PHONON_STATUS_DELETED;
-            Offset += 2;
-        }
-        JCSystem.commitTransaction();
-        if (!DEBUG_MODE)
-            secureChannel.respond(apdu, (short) 0, ISO7816.SW_NO_ERROR);
-    }
-
-
+    /**
+     * Select the phonon applet.
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void selectApplet(APDU apdu) {
         pin.reset();
         secureChannel.reset();
@@ -1570,6 +1628,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         apdu.setOutgoingAndSend((short) 0, off);
     }
 
+    /**
+     * Reset parameters on secp256k1 curves.
+     * more curves coming.
+     */
     private void resetCurveParameters() {
 
         secp256k1.setCurveParameters(publicKey);
@@ -1577,6 +1639,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
     }
 
+    /**
+     * Initialize a new card by setting the pin
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void processInit(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         apdu.setIncomingAndReceive();
@@ -1629,6 +1696,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         return true;
     }
 
+    /**
+     * Undo the card-to-card pairing process
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void unpair(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         secureChannel.preprocessAPDU(apduBuffer);
@@ -1695,6 +1767,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         pin.check(apduBuffer, ISO7816.OFFSET_CDATA, len);
     }
 
+    /**
+     * Change the friendly name of the card
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void ChangeFriendlyName(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         secureChannel.preprocessAPDU(apduBuffer);
@@ -1706,10 +1783,15 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         secureChannel.respond(apdu, (short) 0, ISO7816.SW_NO_ERROR);
     }
 
+
+    /**
+     * Retrieve the friendly name of the card
+     *
+     * @param apdu the JCRE-owned APDU object.
+     */
     private void GetFriendlyName(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         Util.arrayCopyNonAtomic(friendlyName, (short) 0, apduBuffer, ISO7816.OFFSET_CDATA, friendlyNameLen);
         apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, friendlyNameLen);
     }
-
 }
