@@ -535,10 +535,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         }
 
         Bertlv ReceiveSaltTLV = globalBertlv;
-        byte[] IncomingPhonon = ScratchBuffer;
+        byte[] IncomingData = ScratchBuffer;
 
-        Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, IncomingPhonon, (short) 0, len);
-        ReceiveSaltTLV.LoadTag(IncomingPhonon);
+        Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, IncomingData, (short) 0, len);
+        ReceiveSaltTLV.LoadTag(IncomingData);
 
         if (ReceiveSaltTLV.GetTag() != TLV_SALT) {
             ISOException.throwIt(ISO7816.SW_WRONG_DATA);
@@ -551,7 +551,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         Bertlv ReceiveAESTLV = globalBertlv;
         short Offset = (short) (ReceiveSaltTLV.GetLength() + 2);
-        ReceiveAESTLV.LoadTagBase(IncomingPhonon, Offset);
+        ReceiveAESTLV.LoadTagBase(IncomingData, Offset);
 
         if (ReceiveAESTLV.GetTag() != TLV_AESIV || ReceiveAESTLV.GetLength() != 16) {
             ISOException.throwIt((short) (ISO7816.SW_WRONG_DATA + 1));
@@ -562,7 +562,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         Offset += (short) (ReceiveAESTLV.GetLength() + 2);
         Bertlv ReceiveSigTLV = globalBertlv;
-        ReceiveSigTLV.LoadTagBase(IncomingPhonon, Offset);
+        ReceiveSigTLV.LoadTagBase(IncomingData, Offset);
 
         if (ReceiveSigTLV.GetTag() != TLV_RECEIVER_SIG) {
             ISOException.throwIt((short) (ISO7816.SW_WRONG_DATA + 2));
@@ -1674,9 +1674,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             case CHANGE_PIN_P1_USER_PIN:
                 changeUserPIN(apduBuffer, len);
                 break;
-            case CHANGE_PIN_P1_PAIRING_SECRET:
-                changePairingSecret(apduBuffer, len);
-                break;
             default:
                 ISOException.throwIt(ISO7816.SW_INCORRECT_P1P2);
                 break;
@@ -1696,20 +1693,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         pin.update(apduBuffer, ISO7816.OFFSET_CDATA, len);
         pin.check(apduBuffer, ISO7816.OFFSET_CDATA, len);
-    }
-
-    /**
-     * Changes the pairing secret. Called internally by CHANGE PIN
-     *
-     * @param apduBuffer the APDU buffer
-     * @param len        the data length
-     */
-    private void changePairingSecret(byte[] apduBuffer, byte len) {
-        if (len != SecureChannel.SC_SECRET_LENGTH) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-
-        secureChannel.updatePairingSecret(apduBuffer, ISO7816.OFFSET_CDATA);
     }
 
     private void ChangeFriendlyName(APDU apdu) {
