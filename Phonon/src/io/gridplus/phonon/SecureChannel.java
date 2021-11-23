@@ -453,7 +453,11 @@ public class SecureChannel {
         short off = 0;
 
         // Generate random card salt, and copy to response buffer
-        crypto.random.generateData(apduBuffer, off, SC_SECRET_LENGTH);
+        if (SecureChannel.SECURE_CHANNEL_DEBUG) {
+            Util.arrayFillNonAtomic(apduBuffer, (short) off, SC_SECRET_LENGTH, (byte) 0x03);
+        } else {
+            crypto.random.generateData(apduBuffer, off, SC_SECRET_LENGTH);
+        }
         off += SC_SECRET_LENGTH;
 
         // Copy card certificate to response buffer
@@ -500,7 +504,11 @@ public class SecureChannel {
 
         // Generate random pairing salt & save pairing key. Copy pairing index and pairing salt into response buffer
         // pairingKey = sha256(pairingSalt, secretHash)
-        crypto.random.generateData(apduBuffer, (short) 1, SC_SECRET_LENGTH);
+        if (SecureChannel.SECURE_CHANNEL_DEBUG) {
+            Util.arrayFillNonAtomic(apduBuffer, (short) 1, SC_SECRET_LENGTH, (byte) 0x03);
+        } else {
+            crypto.random.generateData(apduBuffer, (short) 1, SC_SECRET_LENGTH);
+        }
         crypto.sha256.update(apduBuffer, (short) 1, SC_SECRET_LENGTH);
         crypto.sha256.doFinal(secret, (short) 0, SC_SECRET_LENGTH, pairingKeys, (short) (preassignedPairingOffset + 1));
         pairingKeys[preassignedPairingOffset] = 1;
