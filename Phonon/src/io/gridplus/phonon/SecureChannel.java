@@ -135,7 +135,17 @@ public class SecureChannel {
         scKeypair = new KeyPair(KeyPair.ALG_EC_FP, SC_KEY_LENGTH);
         secp256k1.setCurveParameters((ECKey) scKeypair.getPrivate());
         secp256k1.setCurveParameters((ECKey) scKeypair.getPublic());
-        scKeypair.genKeyPair();
+        
+     	scKeypair.genKeyPair();
+        if( SECURE_CHANNEL_DEBUG == true)
+        {
+            ECPrivateKey idPrivateKey = (ECPrivateKey) scKeypair.getPrivate();
+            idPrivateKey.setS(DebugMasterPrivateKey, (short) 0, (short) 32);
+            byte[] PublicKeystr = new byte[70];
+            short PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
+            ECPublicKey PublicKey = (ECPublicKey) scKeypair.getPublic();
+            PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+        }
 
         secret = JCSystem.makeTransientByteArray((short) (SC_SECRET_LENGTH * 2), JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
         CardsessionKey = new byte[(short) (SC_SECRET_LENGTH * 2)];
@@ -160,6 +170,12 @@ public class SecureChannel {
         short PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
         ECPublicKey PublicKey = (ECPublicKey) idKeypair.getPublic();
         PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+        idPrivateKey = (ECPrivateKey) scKeypair.getPrivate();
+        idPrivateKey.setS(DebugMasterPrivateKey, (short) 0, (short) 32);
+        PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
+        PublicKey = (ECPublicKey) scKeypair.getPublic();
+        PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+
     }
 
     /**
@@ -173,7 +189,17 @@ public class SecureChannel {
 
         pairingSecret = new byte[SC_SECRET_LENGTH];
         Util.arrayCopy(aPairingSecret, off, pairingSecret, (short) 0, SC_SECRET_LENGTH);
-        scKeypair.genKeyPair();
+        if( SECURE_CHANNEL_DEBUG == true)
+        {
+            ECPrivateKey idPrivateKey = (ECPrivateKey) scKeypair.getPrivate();
+            idPrivateKey.setS(DebugMasterPrivateKey, (short) 0, (short) 32);
+            byte[] PublicKeystr = new byte[70];
+            short PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
+            ECPublicKey PublicKey = (ECPublicKey) scKeypair.getPublic();
+            PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+        }
+        else
+        	scKeypair.genKeyPair();
     }
 
     /**
@@ -910,7 +936,18 @@ public class SecureChannel {
         if (scCounter < SC_COUNTER_MAX) {
             scCounter++;
         } else {
-            scKeypair.genKeyPair();
+            if( SECURE_CHANNEL_DEBUG == true)
+            {
+                ECPrivateKey idPrivateKey = (ECPrivateKey) scKeypair.getPrivate();
+                idPrivateKey.setS(DebugMasterPrivateKey, (short) 0, (short) 32);
+                byte[] PublicKeystr = new byte[70];
+                short PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
+                ECPublicKey PublicKey = (ECPublicKey) scKeypair.getPublic();
+                PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+            }
+            else
+            	scKeypair.genKeyPair();
+            //            scKeypair.genKeyPair();
             scCounter = 0;
         }
     }
