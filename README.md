@@ -43,4 +43,5 @@ and then
 
 `java -jar GLOBAL_PLATFORM_JAR --install "./outputs/io/gridplus/phonon/javacard/phonon.cap" --applet A000000820000301 --package A0000008200003`
 
-
+## License
+The software in this repository is made available under the terms of the Business Source License 1.1 as listed in the LICENSE file. 
