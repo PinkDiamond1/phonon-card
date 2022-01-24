@@ -371,7 +371,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                     Util.setShort(apduBuffer, (short) 6, AvailableMemory[3]);
                     Util.setShort(apduBuffer, (short) 8, AvailableMemory[4]);
                     Util.setShort(apduBuffer, (short) 10, AvailableMemory[5]);
-                    if (secureChannel.isOpen()) {
+
+ if (secureChannel.isOpen()) {
                         secureChannel.respond(apdu, apduBuffer, (short) 12, ISO7816.SW_NO_ERROR);
                     } else {
                         apdu.setOutgoingAndSend((short) 0, (short) 12);
@@ -567,6 +568,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         Bertlv berCardSig = globalBertlv;
         berCardSig.BuildTLVStructure(TLV_RECEIVER_SIG, sigLen, ScratchBuffer, apduBuffer, Offset);
         Offset += berCardSig.BuildLength;
+        secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_PAIR_1;
 
         if (DEBUG_MODE) {
             apdu.setOutgoingAndSend((short) 0, Offset);
