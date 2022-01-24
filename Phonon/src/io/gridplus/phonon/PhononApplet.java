@@ -105,27 +105,29 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final short KEY_CURRENCY_TYPE_BITCOIN = 0x0001;
     static final short KEY_CURRENCY_TYPE_ETHEREUM = 0x0002;
     static final short KEY_CURRENCY_TYPE_MAX = KEY_CURRENCY_TYPE_ETHEREUM;
+    
+   
     private static final boolean DEBUG_MODE = false;
     // runtime variables
-    private final byte[] friendlyName;
-    private final Crypto crypto;
-    private final SECP256k1 secp256k1;
-    private final SecureChannel secureChannel;
-    private final byte[] uid;
-    private final ECPublicKey publicKey;
-    private final ECPrivateKey privateKey;
+    private byte[] friendlyName;
+    private Crypto crypto;
+    private SECP256k1 secp256k1;
+    private SecureChannel secureChannel;
+    private byte[] uid;
+    private ECPublicKey publicKey;
+    private ECPrivateKey privateKey;
 
     // re-usable buffers/runtime objects
-    private final byte[] ScratchBuffer;
-    private final byte[] TransBuffer;
-    private final Bertlv globalBertlv;
-    private final short[] AvailableMemory;
-    private final short[] PhononList;
-    private final short[] SendPhononList;
-    private final short[] DeletedPhononList;
-    private final Phonon[] PhononArray;
+    private byte[] ScratchBuffer;
+    private byte[] TransBuffer;
+    private Bertlv globalBertlv;
+    private short[] AvailableMemory;
+    private short[] PhononList;
+    private short[] SendPhononList;
+    private short[] DeletedPhononList;
+    private Phonon[] PhononArray;
     // necessary for overwriting private keys with zeros because a transaction array copy doesn't exist
-    private final byte[] arrayOfZeros;
+//    private final byte[] arrayOfZeros;
     byte[] TempExtendedSchema;
     KeyPair PhononKey;
     private OwnerPIN pin;
@@ -139,12 +141,17 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private short friendlyNameLen;
 
     public PhononApplet() {
-        crypto = new Crypto();
-        secp256k1 = new SECP256k1(crypto);
+      crypto = new Crypto();
+     secp256k1 = new SECP256k1(crypto);
         secureChannel = new SecureChannel(PAIRING_MAX_CLIENT_COUNT, crypto, secp256k1);
 
         uid = new byte[UID_LENGTH];
-        crypto.random.generateData(uid, (short) 0, UID_LENGTH);
+        try {
+        	crypto.random.generateData(uid, (short) 0, UID_LENGTH);
+        } catch (Exception e) {
+        	ISOException.throwIt((short)0x6f01);
+        }
+//        crypto.random.nextBytes(uid, (short) 0, UID_LENGTH);
 
         PhononArray = new Phonon[MAX_NUMBER_PHONONS];
         PhononList = new short[MAX_NUMBER_PHONONS];
@@ -154,6 +161,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         PhononListLastSent = 0;
         SendPhononListCount = 0;
         SendPhononListLastSent = 0;
+        secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_NOT_INITIALIZED;
 
         publicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, SECP256k1.SECP256K1_KEY_SIZE, false);
         privateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, SECP256k1.SECP256K1_KEY_SIZE, false);
@@ -169,9 +177,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         globalBertlv = new Bertlv();
 
         friendlyName = new byte[255];
-        AvailableMemory = JCSystem.makeTransientShortArray((short) 6, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
-        arrayOfZeros = new byte[255];
-        Util.arrayFillNonAtomic(arrayOfZeros, (short) 0, (short) 255, (byte) 0);
+       	AvailableMemory = JCSystem.makeTransientShortArray((short) 6, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
     }
 
     /**
@@ -258,6 +264,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                 }
                 case SecureChannel.INS_OPEN_SECURE_CHANNEL: {
                     secureChannel.openSecureChannel(apdu);
+                    secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_NOT_INITIALIZED;
                     break;
                 }
                 case SecureChannel.INS_MUTUALLY_AUTHENTICATE: {
@@ -270,6 +277,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                 }
                 case SecureChannel.INS_UNPAIR: {
                     unpair(apdu);
+                    secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_NOT_INITIALIZED;
                     break;
                 }
                 case INS_VERIFY_PIN: {
@@ -421,6 +429,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
      */
     private void InitCardPairing(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
+        secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_NOT_INITIALIZED;
         secureChannel.preprocessAPDU(apduBuffer);
 
         if (!pin.isValidated()) {
@@ -476,6 +485,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         Bertlv berCardSalt = globalBertlv;
         berCardSalt.BuildTLVStructure(TLV_SALT, (short) 32, salt, apduBuffer, Offset);
         Offset += berCardSalt.BuildLength;
+        secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_INIT_CARD_PAIR;
 
         if (DEBUG_MODE) {
             apdu.setOutgoingAndSend((short) 0, Offset);
@@ -574,7 +584,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private void ReceiverPairing(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
         short len;
-
+        	
         if (DEBUG_MODE) {
             len = apdu.getIncomingLength();
         } else {
@@ -583,6 +593,11 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                 secureChannel.respond(apdu, (short) 0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
                 return;
             }
+        }
+        if( secureChannel.Card2CardStatus != secureChannel.CARD_TO_CARD_INIT_CARD_PAIR )
+        {
+        	secureChannel.respond( apdu,  (short)0, ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+        	return;
         }
 
         Bertlv ReceiveSaltTLV = globalBertlv;
@@ -635,6 +650,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         Bertlv berCardSig = globalBertlv;
         berCardSig.BuildTLVStructure(TLV_RECEIVER_SIG, sigLen, ScratchBuffer, apduBuffer);
         Offset += berCardSig.BuildLength;
+        secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_PAIRED;
+
 
         if (DEBUG_MODE) {
             apdu.setOutgoingAndSend((short) 0, Offset);
@@ -651,13 +668,18 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
      */
     private void FinalizeCardPairing(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
+        
         secureChannel.preprocessAPDU(apduBuffer);
-
         if (!pin.isValidated()) {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
             return;
         }
 
+        if( secureChannel.Card2CardStatus != secureChannel.CARD_TO_CARD_PAIR_1)
+        {
+        	secureChannel.respond(apdu, (short)0, ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+        	return;
+        }
 
         short ptr = ISO7816.OFFSET_CDATA;
 
@@ -674,6 +696,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         if (!SigVerifyStatus) {
             ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
         }
+        secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_PAIRED;
     }
 
     /**
@@ -743,7 +766,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         Util.arrayCopy(ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
         //overwrite private key for security reasons
-        Util.arrayCopy(arrayOfZeros, (short) 0, ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
+//        Util.arrayCopy(arrayOfZeros, (short) 0, ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
+        Util.arrayFillNonAtomic(ScratchBuffer, (short)0, PhononArray[phononKeyPointer].PhononPrivateKeyLen, (byte)0x00);
         PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
 
         JCSystem.commitTransaction();
@@ -841,6 +865,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             secureChannel.preprocessAPDU(apduBuffer);
             len = (short) ((short) apduBuffer[ISO7816.OFFSET_LC] & 0xff);
             Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, ScratchBuffer, (short) 0, len);
+
             secureChannel.CardDecrypt(ScratchBuffer, len);
 
             if (!pin.isValidated()) {
@@ -855,7 +880,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             return;
         }
 
+        // Patch
         Bertlv PhononTLV = new Bertlv();
+//        Bertlv PhononTLV = globalBertlv;
+        
         byte[] IncomingPhonons = ScratchBuffer;
 
         if (IncomingPhonons[0] != TLV_PHONON_TRANSFER_PACKET) {
@@ -1080,7 +1108,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         PhononArray[PhononIndex].Status = PHONON_STATUS_DELETED;
         PhononArray[PhononIndex].CurrencyType = 0;
         // overwrite private key with zeros -- non-atomic, so power loss between this and send phonon will break it.
-        Util.arrayCopy(arrayOfZeros, (short) 0, PhononArray[PhononIndex].sPhononPrivateKey, (short) 0, PhononArray[PhononIndex].PhononPrivateKeyLen);
+//        Util.arrayCopy(arrayOfZeros, (short) 0, PhononArray[PhononIndex].sPhononPrivateKey, (short) 0, PhononArray[PhononIndex].PhononPrivateKeyLen);
+        Util.arrayFillNonAtomic(PhononArray[PhononIndex].sPhononPrivateKey, (short)0, PhononArray[PhononIndex].PhononPrivateKeyLen, (byte)0);
 
         DeletedPhononList[DeletedPhononIndex] = PhononIndex;
         DeletedPhononIndex++;
@@ -1638,7 +1667,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
             PhononArray[i].Status = PHONON_STATUS_DELETED;
             PhononArray[i].CurrencyType = 0;
-            Util.arrayCopy(arrayOfZeros, (short) 0, PhononArray[i].sPhononPrivateKey, (short) 0, PhononArray[i].PhononPrivateKeyLen);
+        //    Util.arrayCopy(arrayOfZeros, (short) 0, PhononArray[i].sPhononPrivateKey, (short) 0, PhononArray[i].PhononPrivateKeyLen);
+            Util.arrayFillNonAtomic(PhononArray[i].sPhononPrivateKey, (short)0, PhononArray[i].PhononPrivateKeyLen, (byte)0);
 
             DeletedPhononList[DeletedPhononIndex] = i;
             DeletedPhononIndex++;

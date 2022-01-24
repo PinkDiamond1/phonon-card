@@ -21,7 +21,7 @@ import javacardx.crypto.Cipher;
  * Implements all methods related to the secure channel as specified in the SECURE_CHANNEL.md document.
  */
 public class SecureChannel {
-    public static final boolean SECURE_CHANNEL_DEBUG = true;
+    public static final boolean SECURE_CHANNEL_DEBUG = false;
     public static final boolean USE_CA_DEMO_KEY = true;
 
     public static final byte ID_CERTIFICATE_EMPTY = (byte) 0x00;
@@ -59,6 +59,15 @@ public class SecureChannel {
     private final AESKey CardscMacKey;
     private final byte[] SenderSalt;
     private final SECP256k1 localsecp256k1;
+    
+    public static final byte CARD_TO_CARD_NOT_INITIALIZED = 0x00;
+    public static final byte CARD_TO_CARD_INIT_CARD_PAIR = 0x01;
+    public static final byte CARD_TO_CARD_PAIR_1 = 0x02;
+    public static final byte CARD_TO_CARD_PAIR_2 = 0x03;
+    public static final byte CARD_TO_CARD_PAIRED = 0x04;
+    
+    public byte Card2CardStatus;
+
     /*
      * To avoid overhead, the pairing keys are stored in a plain byte array as sequences of 33-bytes elements. The first
      * byte is 0 if the slot is free and 1 if used. The following 32 bytes are the actual key data.
@@ -255,7 +264,11 @@ public class SecureChannel {
             return;
         }
 
-        crypto.random.generateData(apduBuffer, (short) 0, (short) (SC_SECRET_LENGTH + SC_BLOCK_SIZE));
+        if( SECURE_CHANNEL_DEBUG == true)
+        	Util.arrayFillNonAtomic(apduBuffer, (short)0, (short) (SC_SECRET_LENGTH + SC_BLOCK_SIZE), (byte)0x08);
+        else
+        	crypto.random.generateData(apduBuffer, (short) 0, (short) (SC_SECRET_LENGTH + SC_BLOCK_SIZE));
+        
         crypto.sha512.update(secret, (short) 0, len);
         crypto.sha512.update(pairingKeys, pairingKeyOff, SC_SECRET_LENGTH);
         crypto.sha512.doFinal(apduBuffer, (short) 0, SC_SECRET_LENGTH, secret, (short) 0);
@@ -756,10 +769,16 @@ public class SecureChannel {
      */
     public void CardDecrypt(byte[] OutputData, short len) {
         //Copy out MAC from first 16 bytes
+    	if( Card2CardStatus != CARD_TO_CARD_PAIRED)
+    	{
+    		ISOException.throwIt( ISO7816.SW_SECURE_MESSAGING_NOT_SUPPORTED);
+    		return;
+    	}
         Util.arrayCopyNonAtomic(OutputData, (short) 0, CardAESCMAC, (short) 0, SC_BLOCK_SIZE);
         if (!VerifyCardAESCMAC(OutputData, SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
             reset();
             ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+            return;
         }
 
         // //Probably cycle like this
@@ -779,7 +798,12 @@ public class SecureChannel {
      * @return encrypted data length
      */
     public short CardEncrypt(byte[] OutputData, short len) {
-        crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
+    	if( Card2CardStatus != CARD_TO_CARD_PAIRED)
+    	{
+    		ISOException.throwIt( ISO7816.SW_SECURE_MESSAGING_NOT_SUPPORTED);
+    		return( 0 );
+    	}
+         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
         len = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) 0, len, OutputData, (short) 0);
 
         //Use the CardAESIV so it will cycle to the next MAC
