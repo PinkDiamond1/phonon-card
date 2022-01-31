@@ -39,6 +39,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte APPLICATION_CAPABILITIES = (byte) (CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT | CAPABILITY_CREDENTIALS_MANAGEMENT);
     // apdu instructions
     static final byte INS_INIT = (byte) 0xFE;
+    static final byte INS_MINE_PHONON	= (byte) 0x40;
     static final byte INS_CREATE_PHONON = (byte) 0x30;
     static final byte INS_SET_PHONON_DESCRIPTOR = (byte) 0x31;
     static final byte INS_LIST_PHONONS = (byte) 0x32;
@@ -104,7 +105,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final short KEY_CURRENCY_TYPE_UNDEFINED = 0x0000;
     static final short KEY_CURRENCY_TYPE_BITCOIN = 0x0001;
     static final short KEY_CURRENCY_TYPE_ETHEREUM = 0x0002;
-    static final short KEY_CURRENCY_TYPE_MAX = KEY_CURRENCY_TYPE_ETHEREUM;
+    static final short KEY_CURRENCY_TYPE_NATIVE = 0x0003;
+    static final short KEY_CURRENCY_TYPE_MAX = KEY_CURRENCY_TYPE_NATIVE;
     
    
     private static final boolean DEBUG_MODE = false;
@@ -139,6 +141,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private short SendPhononListLastSent;
     private boolean DebugKeySet;
     private short friendlyNameLen;
+    private short MiningRarity = 4;
 
     public PhononApplet() {
       crypto = new Crypto();
@@ -353,6 +356,12 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                 case INS_GET_FRIENDLY_NAME: {
                     GetFriendlyName(apdu);
                     break;
+                }
+                
+                case INS_MINE_PHONON:
+                {
+                	MinePhonon( apdu);
+                	break;
                 }
 
                 case INS_GET_AVAILABLE_MEMORY: {
@@ -598,7 +607,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         }
         if( secureChannel.Card2CardStatus != secureChannel.CARD_TO_CARD_INIT_CARD_PAIR )
         {
-        	secureChannel.respond( apdu,  (short)0, ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+        	secureChannel.respond( apdu,  (short)0, (short)0x6987);
         	return;
         }
 
@@ -679,7 +688,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         if( secureChannel.Card2CardStatus != secureChannel.CARD_TO_CARD_PAIR_1)
         {
-        	secureChannel.respond(apdu, (short)0, ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+        	secureChannel.respond(apdu, (short)0, (short)0x6987);
         	return;
         }
 
@@ -803,6 +812,86 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         } else {
             secureChannel.respond(apdu, apduBuffer, off, ISO7816.SW_NO_ERROR);
         }
+    }
+    
+    private void MinePhonon( APDU apdu )
+    {
+        secp256k1.setCurveParameters((ECKey) PhononKey.getPrivate());
+        secp256k1.setCurveParameters((ECKey) PhononKey.getPublic());
+        PhononKey.genKeyPair();
+        ECPublicKey PhononPublicKey = (ECPublicKey) PhononKey.getPublic();
+        short PhononPublicKeyLen = PhononPublicKey.getW(ScratchBuffer, (short) 0);
+        for(short i=0; i < MiningRarity; i++)
+        {
+        	if(ScratchBuffer[(short)(i+ (short)1)] != 0 )
+                ISOException.throwIt((short)(ISO7816.SW_NO_ERROR + 1));
+        		return;
+        }
+        // Found Rarity
+        JCSystem.beginTransaction();
+
+        short phononKeyPointer = phononKeyIndex;
+        byte UsingDeletedSpot = 0;
+
+        if (DeletedPhononIndex == 0) {
+            PhononArray[phononKeyPointer] = new Phonon();
+            PhononArray[phononKeyPointer].ExtendedSchema = new byte[MAX_EXTENDED_SCHEMA_BUFFER];
+            PhononArray[phononKeyPointer].ExtendedSchemaLength = 0;
+            phononKeyIndex++;
+        } else {
+            DeletedPhononIndex--;
+            phononKeyPointer = DeletedPhononList[DeletedPhononIndex];
+            UsingDeletedSpot = 1;
+        }
+
+        PhononArray[phononKeyPointer].KeyCurveType = KEY_CURRENCY_TYPE_BITCOIN;
+        PhononArray[phononKeyPointer].PhononPublicKeyLen = PhononPublicKeyLen;
+
+        //at this time only supporting secp256k1;
+
+//        PhononArray[phononKeyPointer].PhononPublicKeyLen = PhononPublicKey.getW(ScratchBuffer, (short) 0);
+
+        if (UsingDeletedSpot == 0) {
+            PhononArray[phononKeyPointer].sPhononPublicKey = new byte[PhononArray[phononKeyPointer].PhononPublicKeyLen];
+        }
+        Util.arrayCopy(ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0, PhononPublicKeyLen);
+
+        ECPrivateKey PhononPrivateKey = (ECPrivateKey) PhononKey.getPrivate();
+        PhononArray[phononKeyPointer].PhononPrivateKeyLen = PhononPrivateKey.getS(ScratchBuffer, (short) 0);
+
+        if (UsingDeletedSpot == 0) {
+            PhononArray[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray[phononKeyPointer].PhononPrivateKeyLen];
+        }
+
+        Util.arrayCopy(ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
+        //overwrite private key for security reasons
+//        Util.arrayCopy(arrayOfZeros, (short) 0, ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
+        Util.arrayFillNonAtomic(ScratchBuffer, (short)0, PhononArray[phononKeyPointer].PhononPrivateKeyLen, (byte)0x00);
+        PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
+
+        JCSystem.commitTransaction();
+        byte[] apduBuffer;
+        apduBuffer = apdu.getBuffer();
+ 
+        short off = 0;
+
+        apduBuffer[off++] = TLV_PHONON_KEY;
+
+        off++;
+        apduBuffer[off++] = TLV_PHONON_INDEX;
+        apduBuffer[off++] = 0x02;
+        Util.setShort(apduBuffer, off, (short) (phononKeyPointer + 1));
+        off += 2;
+
+        apduBuffer[off++] = TLV_PUB_KEY;
+        short lenoff = off++;
+        Util.arrayCopyNonAtomic(PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0, apduBuffer, off, PhononPublicKeyLen);
+        apduBuffer[lenoff] = (byte)PhononPublicKeyLen;
+        off += PhononArray[phononKeyPointer].PhononPublicKeyLen;
+        apduBuffer[1] = (byte) (off - 1);
+
+        apdu.setOutgoingAndSend((short) 0, off);
+   	return;
     }
 
     /**

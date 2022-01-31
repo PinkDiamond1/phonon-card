@@ -771,7 +771,7 @@ public class SecureChannel {
         //Copy out MAC from first 16 bytes
     	if( Card2CardStatus != CARD_TO_CARD_PAIRED)
     	{
-    		ISOException.throwIt( ISO7816.SW_SECURE_MESSAGING_NOT_SUPPORTED);
+    		ISOException.throwIt( (short)0x6987);
     		return;
     	}
         Util.arrayCopyNonAtomic(OutputData, (short) 0, CardAESCMAC, (short) 0, SC_BLOCK_SIZE);
@@ -800,7 +800,7 @@ public class SecureChannel {
     public short CardEncrypt(byte[] OutputData, short len) {
     	if( Card2CardStatus != CARD_TO_CARD_PAIRED)
     	{
-    		ISOException.throwIt( ISO7816.SW_SECURE_MESSAGING_NOT_SUPPORTED);
+    		ISOException.throwIt( (short)0x6987);
     		return( 0 );
     	}
          crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);

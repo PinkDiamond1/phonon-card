@@ -1,0 +1,5 @@
+while()
+	/send 80400000
+	if( result == 0x9000 )
+		break
+End
