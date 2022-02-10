@@ -407,6 +407,11 @@ public class SecureChannel {
         // Send the response
         apdu.setOutgoingAndSend(responseStart, (short) (off - responseStart));
     }
+    
+    public ECPublicKey GetCardPublicKey()
+    {
+    	return (ECPublicKey)idKeypair.getPublic();
+    }
 
     /**
      * Processes the PAIR command.
@@ -611,6 +616,13 @@ public class SecureChannel {
         return eccSig.signPreComputedHash(CardHash, (short) 0, SC_SECRET_LENGTH, CardSig, (short) 0);
     }
 
+    public short CardSignData( byte[] SigningData, short SigningDataLen, byte[] SignatureData, short SigOffset)
+    {
+        eccSig.init(idKeypair.getPrivate(), Signature.MODE_SIGN);
+        // Sign the secret hash, and copy the signature into the response buffer
+     	return eccSig.sign(SigningData, (short)0, SigningDataLen, SignatureData, (short)SigOffset );	
+    }
+    
     /**
      * Check to see if the session has been properly set up.
      *

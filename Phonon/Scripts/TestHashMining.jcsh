@@ -4,7 +4,7 @@
 /set-var i 0
 while ()
 /send 80990000
-/send 80400700
+/send 80411300
 
 /set-var i $(/expr ${i} + 1)
 /echo ${i}
