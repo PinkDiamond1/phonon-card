@@ -143,7 +143,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private short SendPhononListLastSent;
     private boolean DebugKeySet;
     private short friendlyNameLen;
-    private short MiningRarity = 4;
+    private short MiningRarity;
 
     public PhononApplet() {
     	crypto = new Crypto();
