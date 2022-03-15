@@ -52,7 +52,6 @@ public class Crypto {
             hmacSHA512 = null;
             hmacBlock = JCSystem.makeTransientByteArray(HMAC_BLOCK_SIZE, JCSystem.CLEAR_ON_RESET);
         }
-
     }
 
 

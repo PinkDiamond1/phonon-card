@@ -21,8 +21,8 @@ import javacardx.crypto.Cipher;
  * Implements all methods related to the secure channel as specified in the SECURE_CHANNEL.md document.
  */
 public class SecureChannel {
-    public static final boolean SECURE_CHANNEL_DEBUG = true;
-    public static final boolean USE_CA_DEMO_KEY = true;
+    public static final boolean SECURE_CHANNEL_DEBUG = false;
+    public static final boolean USE_CA_DEMO_KEY = false;
 
     public static final byte ID_CERTIFICATE_EMPTY = (byte) 0x00;
     public static final byte ID_CERTIFICATE_LOCKED = (byte) 0xFF;
@@ -59,6 +59,15 @@ public class SecureChannel {
     private final AESKey CardscMacKey;
     private final byte[] SenderSalt;
     private final SECP256k1 localsecp256k1;
+    
+    public static final byte CARD_TO_CARD_NOT_INITIALIZED = 0x00;
+    public static final byte CARD_TO_CARD_INIT_CARD_PAIR = 0x01;
+    public static final byte CARD_TO_CARD_PAIR_1 = 0x02;
+    public static final byte CARD_TO_CARD_PAIR_2 = 0x03;
+    public static final byte CARD_TO_CARD_PAIRED = 0x04;
+    
+    public byte Card2CardStatus;
+
     /*
      * To avoid overhead, the pairing keys are stored in a plain byte array as sequences of 33-bytes elements. The first
      * byte is 0 if the slot is free and 1 if used. The following 32 bytes are the actual key data.
@@ -135,7 +144,17 @@ public class SecureChannel {
         scKeypair = new KeyPair(KeyPair.ALG_EC_FP, SC_KEY_LENGTH);
         secp256k1.setCurveParameters((ECKey) scKeypair.getPrivate());
         secp256k1.setCurveParameters((ECKey) scKeypair.getPublic());
-        scKeypair.genKeyPair();
+        
+     	scKeypair.genKeyPair();
+        if( SECURE_CHANNEL_DEBUG == true)
+        {
+            ECPrivateKey idPrivateKey = (ECPrivateKey) scKeypair.getPrivate();
+            idPrivateKey.setS(DebugMasterPrivateKey, (short) 0, (short) 32);
+            byte[] PublicKeystr = new byte[70];
+            short PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
+            ECPublicKey PublicKey = (ECPublicKey) scKeypair.getPublic();
+            PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+        }
 
         secret = JCSystem.makeTransientByteArray((short) (SC_SECRET_LENGTH * 2), JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
         CardsessionKey = new byte[(short) (SC_SECRET_LENGTH * 2)];
@@ -160,6 +179,12 @@ public class SecureChannel {
         short PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
         ECPublicKey PublicKey = (ECPublicKey) idKeypair.getPublic();
         PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+        idPrivateKey = (ECPrivateKey) scKeypair.getPrivate();
+        idPrivateKey.setS(DebugMasterPrivateKey, (short) 0, (short) 32);
+        PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
+        PublicKey = (ECPublicKey) scKeypair.getPublic();
+        PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+
     }
 
     /**
@@ -173,7 +198,17 @@ public class SecureChannel {
 
         pairingSecret = new byte[SC_SECRET_LENGTH];
         Util.arrayCopy(aPairingSecret, off, pairingSecret, (short) 0, SC_SECRET_LENGTH);
-        scKeypair.genKeyPair();
+        if( SECURE_CHANNEL_DEBUG == true)
+        {
+            ECPrivateKey idPrivateKey = (ECPrivateKey) scKeypair.getPrivate();
+            idPrivateKey.setS(DebugMasterPrivateKey, (short) 0, (short) 32);
+            byte[] PublicKeystr = new byte[70];
+            short PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
+            ECPublicKey PublicKey = (ECPublicKey) scKeypair.getPublic();
+            PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+        }
+        else
+        	scKeypair.genKeyPair();
     }
 
     /**
@@ -229,7 +264,11 @@ public class SecureChannel {
             return;
         }
 
-        crypto.random.generateData(apduBuffer, (short) 0, (short) (SC_SECRET_LENGTH + SC_BLOCK_SIZE));
+        if( SECURE_CHANNEL_DEBUG == true)
+        	Util.arrayFillNonAtomic(apduBuffer, (short)0, (short) (SC_SECRET_LENGTH + SC_BLOCK_SIZE), (byte)0x08);
+        else
+        	crypto.random.generateData(apduBuffer, (short) 0, (short) (SC_SECRET_LENGTH + SC_BLOCK_SIZE));
+        
         crypto.sha512.update(secret, (short) 0, len);
         crypto.sha512.update(pairingKeys, pairingKeyOff, SC_SECRET_LENGTH);
         crypto.sha512.doFinal(apduBuffer, (short) 0, SC_SECRET_LENGTH, secret, (short) 0);
@@ -367,6 +406,11 @@ public class SecureChannel {
 
         // Send the response
         apdu.setOutgoingAndSend(responseStart, (short) (off - responseStart));
+    }
+    
+    public ECPublicKey GetCardPublicKey()
+    {
+    	return (ECPublicKey)idKeypair.getPublic();
     }
 
     /**
@@ -572,6 +616,13 @@ public class SecureChannel {
         return eccSig.signPreComputedHash(CardHash, (short) 0, SC_SECRET_LENGTH, CardSig, (short) 0);
     }
 
+    public short CardSignData( byte[] SigningData, short SigningDataLen, byte[] SignatureData, short SigOffset)
+    {
+        eccSig.init(idKeypair.getPrivate(), Signature.MODE_SIGN);
+        // Sign the secret hash, and copy the signature into the response buffer
+     	return eccSig.sign(SigningData, (short)0, SigningDataLen, SignatureData, (short)SigOffset );	
+    }
+    
     /**
      * Check to see if the session has been properly set up.
      *
@@ -730,10 +781,16 @@ public class SecureChannel {
      */
     public void CardDecrypt(byte[] OutputData, short len) {
         //Copy out MAC from first 16 bytes
+    	if( Card2CardStatus != CARD_TO_CARD_PAIRED)
+    	{
+    		ISOException.throwIt( (short)0x6987);
+    		return;
+    	}
         Util.arrayCopyNonAtomic(OutputData, (short) 0, CardAESCMAC, (short) 0, SC_BLOCK_SIZE);
         if (!VerifyCardAESCMAC(OutputData, SC_BLOCK_SIZE, (short) (len - (SC_BLOCK_SIZE)), CardAESCMAC)) {
             reset();
             ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+            return;
         }
 
         // //Probably cycle like this
@@ -753,7 +810,12 @@ public class SecureChannel {
      * @return encrypted data length
      */
     public short CardEncrypt(byte[] OutputData, short len) {
-        crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
+    	if( Card2CardStatus != CARD_TO_CARD_PAIRED)
+    	{
+    		ISOException.throwIt( (short)0x6987);
+    		return( 0 );
+    	}
+         crypto.aesCbcIso9797m2.init(CardscEncKey, Cipher.MODE_ENCRYPT, CardAESIV, (short) 0, SC_BLOCK_SIZE);
         len = crypto.aesCbcIso9797m2.doFinal(OutputData, (short) 0, len, OutputData, (short) 0);
 
         //Use the CardAESIV so it will cycle to the next MAC
@@ -910,7 +972,17 @@ public class SecureChannel {
         if (scCounter < SC_COUNTER_MAX) {
             scCounter++;
         } else {
-            scKeypair.genKeyPair();
+            if( SECURE_CHANNEL_DEBUG == true)
+            {
+                ECPrivateKey idPrivateKey = (ECPrivateKey) scKeypair.getPrivate();
+                idPrivateKey.setS(DebugMasterPrivateKey, (short) 0, (short) 32);
+                byte[] PublicKeystr = new byte[70];
+                short PublicKeyLength = localsecp256k1.derivePublicKey(idPrivateKey, PublicKeystr, (short) 0);
+                ECPublicKey PublicKey = (ECPublicKey) scKeypair.getPublic();
+                PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+            }
+            else
+            	scKeypair.genKeyPair();
             scCounter = 0;
         }
     }

@@ -1,0 +1,16 @@
+/mode trace=on
+/send 00A4040008A00000082000030100
+
+/set-var i 0
+while ()
+/send 80990000
+/send 8041C800
+
+/set-var i $(/expr ${i} + 1)
+/echo ${i}
+
+if ${last.response.status}  == 9000
+break
+end
+/send 80990000
+end
