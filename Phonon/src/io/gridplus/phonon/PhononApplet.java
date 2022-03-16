@@ -23,7 +23,7 @@ import javacard.security.KeyPair;
 
 public class PhononApplet extends Applet {    //implements ExtendedLength {
     public static final short PHONON_KEY_LENGTH = 256;
-    public static final short MAX_NUMBER_PHONONS = 128;
+    public static final short MAX_NUMBER_PHONONS = 256;
     public static final short MAX_EXTENDED_SCHEMA_BUFFER = 100;
     // runtime configs
     static final short APPLICATION_VERSION = (short) 0x0003;
