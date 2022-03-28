@@ -1940,6 +1940,12 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             pin.update(apduBuffer, ISO7816.OFFSET_CDATA, PIN_LENGTH);
 
             JCSystem.commitTransaction();
+            //Checks the pin ands sets it to validated
+            pin.resetAndUnblock();
+            if (!pin.check(apduBuffer, ISO7816.OFFSET_CDATA, PIN_LENGTH)) {
+                ISOException.throwIt((short) ((short) 0x63c0 | (short) pin.getTriesRemaining()));
+            }
+            
             secp256k1.setCurveParameters((ECKey) PhononKey.getPrivate());
             secp256k1.setCurveParameters((ECKey) PhononKey.getPublic());
         } else {

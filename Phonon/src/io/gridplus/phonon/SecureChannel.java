@@ -22,7 +22,7 @@ import javacardx.crypto.Cipher;
  */
 public class SecureChannel {
     public static final boolean SECURE_CHANNEL_DEBUG = false;
-    public static final boolean USE_CA_DEMO_KEY = false;
+    public static final boolean USE_CA_DEMO_KEY = true;
 
     public static final byte ID_CERTIFICATE_EMPTY = (byte) 0x00;
     public static final byte ID_CERTIFICATE_LOCKED = (byte) 0xFF;
