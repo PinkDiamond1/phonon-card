@@ -19,6 +19,9 @@ note: the javacard tools say it's a windows version. The build commands just use
 the gp.jar file can be downloaded from [here](https://javacard.pro/globalplatform/)
 
 ### Compiling the class files
+Make a place for the capfiles to go
+
+`mkdir -p ./outputs/classfiles`
 
 `$JAVA_8_ROOT/Contents/Home/bin/javac -O -g -classpath "${JAVACARD_TOOLS_ROOT}/lib/api_classic-3.0.4.jar" -target 1.6 -source 1.6 -d "./outputs/classfiles" ./Phonon/src/io/gridplus/phonon/*.java`
 
