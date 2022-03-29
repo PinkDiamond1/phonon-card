@@ -23,6 +23,8 @@ Make a place for the capfiles to go
 
 `mkdir -p ./outputs/classfiles`
 
+Generate the class files
+
 `$JAVA_8_ROOT/Contents/Home/bin/javac -O -g -classpath "${JAVACARD_TOOLS_ROOT}/lib/api_classic-3.0.4.jar" -target 1.6 -source 1.6 -d "./outputs/classfiles" ./Phonon/src/io/gridplus/phonon/*.java`
 
 ### Generating phonon.cap
