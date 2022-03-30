@@ -59,7 +59,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte INS_GET_FRIENDLY_NAME = (byte) 0x57;
     static final byte INS_GET_AVAILABLE_MEMORY = (byte) 0x99;
     static final byte PIN_LENGTH = 6;
-    static final byte PIN_MAX_RETRIES = 3;
+    static final byte PIN_MAX_RETRIES = 3;  	//change to 10
     static final byte PAIRING_MAX_CLIENT_COUNT = 1;
     static final byte UID_LENGTH = 16;
     static final short CHAIN_CODE_SIZE = 32;
@@ -834,6 +834,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         MiningRarity = (short)(apduBuffer[ISO7816.OFFSET_P1] & 0x00ff);
     	ECPublicKey pk = secureChannel.GetCardPublicKey();
     	pk.getW(ScratchBuffer, (short)0);
+    	
+    	// Hash Value is TransBuffer
+    	// Nonce is ScratchBuffer used to determine rarity
+    	
         crypto.sha512.update(ScratchBuffer, (short)1, (short)64);
        	crypto.random.generateData(TransBuffer, (short) 0, (short) 64);
        	crypto.sha512.update( TransBuffer, (short)0, (short)64);
@@ -912,29 +916,34 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         
         PhononArray[phononKeyPointer].KeyCurveType = KEY_CURVE_TYPE_NATIVE;
         PhononArray[phononKeyPointer].CurrencyType = KEY_CURRENCY_TYPE_NATIVE;
-        PhononArray[phononKeyPointer].PhononPublicKeyLen = 65;
+        PhononArray[phononKeyPointer].PhononPublicKeyLen = 64;
         PhononArray[phononKeyPointer].ValueExponent = 0;
         PhononArray[phononKeyPointer].ValueBase = (byte)(BitsRarity & 0x00ff);;
  
         if (UsingDeletedSpot == 0) {
             PhononArray[phononKeyPointer].sPhononPublicKey = new byte[PhononArray[phononKeyPointer].PhononPublicKeyLen];
         }
-        Util.arrayFillNonAtomic(PhononArray[phononKeyPointer].sPhononPublicKey, (short)0, (short)1, (byte)4);
-        Util.arrayCopyNonAtomic(ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPublicKey, (short) 1, (short)64);
 
-        PhononArray[phononKeyPointer].PhononPrivateKeyLen = (short)65;
+        // 64 bits of Hash ( ScratchBuffer ) is public key value
+        
+        Util.arrayCopyNonAtomic(ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0, (short)64);
+
+        PhononArray[phononKeyPointer].PhononPrivateKeyLen = (short)64;
         if (UsingDeletedSpot == 0) {
             PhononArray[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray[phononKeyPointer].PhononPrivateKeyLen];
         }
 
-        Util.arrayFillNonAtomic(PhononArray[phononKeyPointer].sPhononPrivateKey, (short)0, (short)1, (byte)4);
-        Util.arrayCopyNonAtomic(ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 1, (short)64);
-        //overwrite private key for security reasons
-        Util.arrayFillNonAtomic(ScratchBuffer, (short)0, PhononArray[phononKeyPointer].PhononPrivateKeyLen, (byte)0x00);
-        short SigLen = secureChannel.CardSignData(TransBuffer, (short)64,ScratchBuffer, (short) 2);
+        // 64 bits of Nonce ( TransBuffer ) is Public key value
+        
+        Util.arrayCopyNonAtomic(TransBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, (short)64);
+        
+        short SigLen = secureChannel.CardSignData(TransBuffer, (short)64,ScratchBuffer, (short) 0);
         
         PhononArray[phononKeyPointer].ExtendedSchema[0]= TLV_EXTENDED_NATIVE_SIGNATURE;
-        PhononArray[phononKeyPointer].ExtendedSchema[1] = (byte)(SigLen + 2);
+        
+        //allocate 2 extra bytes for the TL 
+        PhononArray[phononKeyPointer].ExtendedSchema[1] = (byte)(SigLen);
+        Util.arrayCopyNonAtomic(ScratchBuffer, (short)0, PhononArray[phononKeyPointer].ExtendedSchema, (short)2, SigLen);
         PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
 
         JCSystem.commitTransaction();
