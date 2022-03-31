@@ -761,7 +761,7 @@ public class SecureChannel {
 
         if (!verifyAESMAC(apduBuffer, apduLen)) {
             reset();
-            ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+            ISOException.throwIt((short)((short)ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED +(short)1));
         }
 
         crypto.aesCbcIso9797m2.init(scEncKey, Cipher.MODE_DECRYPT, secret, (short) 0, SC_BLOCK_SIZE);
