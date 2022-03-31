@@ -838,8 +838,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     	ECPublicKey pk = secureChannel.GetCardPublicKey();
     	pk.getW(ScratchBuffer, (short)0);
     	
-    	// Hash Value is TransBuffer
-    	// Nonce is ScratchBuffer used to determine rarity
+    	// Salt is TransBuffer
+    	// Hash Value is ScratchBuffer used to determine rarity
     	
         crypto.sha512.update(ScratchBuffer, (short)1, (short)64);
        	crypto.random.generateData(TransBuffer, (short) 0, (short) 64);
@@ -927,7 +927,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             PhononArray[phononKeyPointer].sPhononPublicKey = new byte[PhononArray[phononKeyPointer].PhononPublicKeyLen];
         }
 
-        // 64 bits of Hash ( ScratchBuffer ) is public key value
+        // 64 bytes of Hash ( ScratchBuffer ) is public key value
         
         Util.arrayCopyNonAtomic(ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0, (short)64);
 
@@ -936,17 +936,18 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             PhononArray[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray[phononKeyPointer].PhononPrivateKeyLen];
         }
 
-        // 64 bits of Nonce ( TransBuffer ) is Public key value
+        // 64 byte of Salt ( TransBuffer ) is private key value
         
         Util.arrayCopyNonAtomic(TransBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, (short)64);
         
-        short SigLen = secureChannel.CardSignData(TransBuffer, (short)64,ScratchBuffer, (short) 0);
+        short SigLen = secureChannel.CardSignData(ScratchBuffer, (short)64,TransBuffer, (short) 0);
+        
         
         PhononArray[phononKeyPointer].ExtendedSchema[0]= TLV_EXTENDED_NATIVE_SIGNATURE;
         
         //allocate 2 extra bytes for the TL 
         PhononArray[phononKeyPointer].ExtendedSchema[1] = (byte)(SigLen);
-        Util.arrayCopyNonAtomic(ScratchBuffer, (short)0, PhononArray[phononKeyPointer].ExtendedSchema, (short)2, SigLen);
+        Util.arrayCopyNonAtomic(TransBuffer, (short)0, PhononArray[phononKeyPointer].ExtendedSchema, (short)2, SigLen);
         PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
 
         JCSystem.commitTransaction();
@@ -1952,12 +1953,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             pin.update(apduBuffer, ISO7816.OFFSET_CDATA, PIN_LENGTH);
 
             JCSystem.commitTransaction();
-            //Checks the pin ands sets it to validated
-            pin.resetAndUnblock();
-            if (!pin.check(apduBuffer, ISO7816.OFFSET_CDATA, PIN_LENGTH)) {
-                ISOException.throwIt((short) ((short) 0x63c0 | (short) pin.getTriesRemaining()));
-            }
-            
             secp256k1.setCurveParameters((ECKey) PhononKey.getPrivate());
             secp256k1.setCurveParameters((ECKey) PhononKey.getPublic());
         } else {
