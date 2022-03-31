@@ -26,7 +26,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     public static final short MAX_NUMBER_PHONONS = 256;
     public static final short MAX_EXTENDED_SCHEMA_BUFFER = 100;
     // runtime configs
-    static final short APPLICATION_VERSION = (short) 0x0003;
+    static final short APPLICATION_VERSION = (short) 0x0004;
     // constants
     static final byte UNINITIALIZED_BYTE = (byte) 0xff;
     static final short UNINITIALIZED_SHORT = (short) 0xffff;
