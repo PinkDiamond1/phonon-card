@@ -59,7 +59,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final byte INS_GET_FRIENDLY_NAME = (byte) 0x57;
     static final byte INS_GET_AVAILABLE_MEMORY = (byte) 0x99;
     static final byte PIN_LENGTH = 6;
-    static final byte PIN_MAX_RETRIES = 3;  	//change to 10
+    static final byte PIN_MAX_RETRIES = 10;  	//change to 10
     static final byte PAIRING_MAX_CLIENT_COUNT = 1;
     static final byte UID_LENGTH = 16;
     static final short CHAIN_CODE_SIZE = 32;
@@ -108,7 +108,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     static final short KEY_CURRENCY_TYPE_BITCOIN = 0x0001;
     static final short KEY_CURRENCY_TYPE_ETHEREUM = 0x0002;
     static final short KEY_CURRENCY_TYPE_NATIVE = 0x0003;
-    static final short KEY_CURRENCY_TYPE_MAX = (short)0xffff;
+    static final short KEY_CURRENCY_TYPE_MAX = (short)0x7fff;
     static final byte  TLV_EXTENDED_NATIVE_SIGNATURE = (byte) 0x94;
     
    
@@ -727,11 +727,14 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         secp256k1.setCurveParameters((ECKey) PhononKey.getPublic());
 
         byte[] apduBuffer1 = apdu.getBuffer();
-        secureChannel.preprocessAPDU(apduBuffer1);
+        if( DEBUG_MODE == false)
+        {
+        	secureChannel.preprocessAPDU(apduBuffer1);
 
-        if (!pin.isValidated()) {
-            secureChannel.respond(apdu, (short) 0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
-            return;
+        	if (!pin.isValidated()) {
+        		secureChannel.respond(apdu, (short) 0, ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+        		return;
+        	}
         }
 
 
@@ -965,7 +968,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         off += PhononArray[phononKeyPointer].PhononPublicKeyLen;
         ScratchBuffer[1] = (byte) (off - 1);
 
-        secureChannel.respond(apdu, ScratchBuffer, (short) 66, ISO7816.SW_NO_ERROR);
+        secureChannel.respond(apdu, ScratchBuffer, (short) off, ISO7816.SW_NO_ERROR);
     	return;
     }
 
