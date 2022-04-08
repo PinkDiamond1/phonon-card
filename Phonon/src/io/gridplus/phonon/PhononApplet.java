@@ -1322,6 +1322,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         short CurrencyType = (short) 0xffff;
         byte ValueBase = (byte) 0xff;
         byte ValueExponent = (byte) 0xff;
+        boolean ValueBaseSet = false;
+        boolean ValueExponentSet = false;
 
         for (short index = 0; index < TableCount; index++) {
             Phonon.LoadTagFromTable(IncomingData, index);
@@ -1349,11 +1351,13 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
                 case TLV_SET_PHONON_VALUE: {
                     ValueBase = (Phonon.GetData())[0];
+                    ValueBaseSet = true;
                     break;
                 }
 
                 case TLV_VALUE_EXPONENT: {
                     ValueExponent = (Phonon.GetData())[0];
+                    ValueExponentSet = true;
                     break;
                 }
 
@@ -1398,8 +1402,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         if (SchemaVersion == UNINITIALIZED_BYTE ||
                 CurrencyType > KEY_CURRENCY_TYPE_MAX ||
                 ExtendedSchemaVersion == UNINITIALIZED_SHORT ||
-                ValueBase == UNINITIALIZED_BYTE ||
-                ValueExponent == UNINITIALIZED_SHORT) {
+                ValueBaseSet == false ||
+                ValueExponentSet == false) {
             secureChannel.respond(apdu, (short) 0, ISO7816.SW_DATA_INVALID);
             return;
         }
