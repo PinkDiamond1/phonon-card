@@ -142,7 +142,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     private short SendPhononListCount;
     private short SendPhononListLastSent;
     private boolean DebugKeySet;
-    private short friendlyNameLen;
+    private short friendlyNameLen=0;
     private short MiningRarity;
 
     public PhononApplet() {
@@ -165,6 +165,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         PhononListLastSent = 0;
         SendPhononListCount = 0;
         SendPhononListLastSent = 0;
+        friendlyNameLen = 0;
         secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_NOT_INITIALIZED;
 
 
@@ -179,7 +180,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         
         globalBertlv = new Bertlv();
 
-        friendlyName = new byte[255];
+        friendlyName = new byte[40];
        	AvailableMemory = JCSystem.makeTransientShortArray((short) 6, JCSystem.MEMORY_TYPE_TRANSIENT_DESELECT);
     }
 
@@ -2064,14 +2065,20 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
      * @param apdu the JCRE-owned APDU object.
      */
     private void ChangeFriendlyName(APDU apdu) {
-        byte[] apduBuffer = apdu.getBuffer();
+        byte[] apduBuffer = apdu.getBuffer();     
         secureChannel.preprocessAPDU(apduBuffer);
-        
+       if( (apduBuffer[ISO7816.OFFSET_LC] & 0xff) > 32 )
+        {
+        	secureChannel.respond(apdu, (short)0, (short)ISO7816.SW_WRONG_LENGTH);
+        	return;
+        }
+         
         if (!pin.isValidated()) {
-            ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+        	secureChannel.respond(apdu, (short)0, (short)ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+        	return;
         }
         friendlyNameLen = apduBuffer[ISO7816.OFFSET_LC];
-        Util.arrayCopy(apduBuffer, ISO7816.OFFSET_CDATA, friendlyName, (short) 0, apduBuffer[ISO7816.OFFSET_LC]);
+        Util.arrayCopy(apduBuffer, ISO7816.OFFSET_CDATA, friendlyName, (short) 0, friendlyNameLen);
         secureChannel.respond(apdu, (short) 0, ISO7816.SW_NO_ERROR);
     }
 
@@ -2083,7 +2090,18 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
      */
     private void GetFriendlyName(APDU apdu) {
         byte[] apduBuffer = apdu.getBuffer();
-        Util.arrayCopyNonAtomic(friendlyName, (short) 0, apduBuffer, ISO7816.OFFSET_CDATA, friendlyNameLen);
-        apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, friendlyNameLen);
+        if(secureChannel.isOpen())
+        	secureChannel.preprocessAPDU(apduBuffer);
+        if (friendlyNameLen == 0 ){
+        		ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+        	return;
+        }
+        if( secureChannel.isOpen()){
+        	secureChannel.respond( apdu, friendlyName, friendlyNameLen, ISO7816.SW_NO_ERROR);
+        }
+        else {
+            Util.arrayCopyNonAtomic(friendlyName, (short) 0, apduBuffer, (short)0, friendlyNameLen);
+        	apdu.setOutgoingAndSend((short)0, friendlyNameLen);
+        }
     }
 }
