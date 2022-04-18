@@ -1,0 +1,56 @@
+Select
+	retrun with set pin
+	return without set pin
+
+Identify
+	challenge salt too long
+	no challenge salt
+	challenge salt too short
+
+LoadCert
+	invalid cert
+	no cert
+	long cert
+	cert already loaded
+init
+	pin too short
+	pin too long
+	pin include dumb ass characters
+pair
+	step one twice
+	step two without step one
+	step one after successful steps 1 and 2
+	step two after successful steps 1 and 2
+open_channel
+
+mutual_auth
+
+verify_pin
+
+list_phonons
+
+get_phonon_pub_key
+
+create_phonon
+
+set_descriptor
+
+destroy_phonons
+
+set_receive_list
+
+REceive_phonons
+
+Transaction_ack
+
+Init_card_pairing
+
+Card_pair
+
+Card_pair2
+
+Finalize_card_pairing
+
+generate_invoice
+
+receive_invoice

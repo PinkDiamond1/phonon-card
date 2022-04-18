@@ -59,13 +59,13 @@ public class SecureChannel {
     private final AESKey CardscMacKey;
     private final byte[] SenderSalt;
     private final SECP256k1 localsecp256k1;
-    
+
     public static final byte CARD_TO_CARD_NOT_INITIALIZED = 0x00;
     public static final byte CARD_TO_CARD_INIT_CARD_PAIR = 0x01;
     public static final byte CARD_TO_CARD_PAIR_1 = 0x02;
     public static final byte CARD_TO_CARD_PAIR_2 = 0x03;
     public static final byte CARD_TO_CARD_PAIRED = 0x04;
-    
+
     public byte Card2CardStatus;
 
     /*
@@ -144,7 +144,7 @@ public class SecureChannel {
         scKeypair = new KeyPair(KeyPair.ALG_EC_FP, SC_KEY_LENGTH);
         secp256k1.setCurveParameters((ECKey) scKeypair.getPrivate());
         secp256k1.setCurveParameters((ECKey) scKeypair.getPublic());
-        
+
      	scKeypair.genKeyPair();
         if( SECURE_CHANNEL_DEBUG == true)
         {
@@ -268,7 +268,7 @@ public class SecureChannel {
         	Util.arrayFillNonAtomic(apduBuffer, (short)0, (short) (SC_SECRET_LENGTH + SC_BLOCK_SIZE), (byte)0x08);
         else
         	crypto.random.generateData(apduBuffer, (short) 0, (short) (SC_SECRET_LENGTH + SC_BLOCK_SIZE));
-        
+
         crypto.sha512.update(secret, (short) 0, len);
         crypto.sha512.update(pairingKeys, pairingKeyOff, SC_SECRET_LENGTH);
         crypto.sha512.doFinal(apduBuffer, (short) 0, SC_SECRET_LENGTH, secret, (short) 0);
@@ -407,7 +407,7 @@ public class SecureChannel {
         // Send the response
         apdu.setOutgoingAndSend(responseStart, (short) (off - responseStart));
     }
-    
+
     public ECPublicKey GetCardPublicKey()
     {
     	return (ECPublicKey)idKeypair.getPublic();
@@ -620,9 +620,9 @@ public class SecureChannel {
     {
         eccSig.init(idKeypair.getPrivate(), Signature.MODE_SIGN);
         // Sign the secret hash, and copy the signature into the response buffer
-     	return eccSig.sign(SigningData, (short)0, SigningDataLen, SignatureData, (short)SigOffset );	
+     	return eccSig.sign(SigningData, (short)0, SigningDataLen, SignatureData, (short)SigOffset );
     }
-    
+
     /**
      * Check to see if the session has been properly set up.
      *
