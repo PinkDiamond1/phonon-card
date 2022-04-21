@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/GridPlus/phonon-client/card"
 	"github.com/GridPlus/phonon-client/cert"
 	"github.com/GridPlus/phonon-client/model"
 	"github.com/GridPlus/phonon-client/orchestrator"
@@ -258,6 +259,9 @@ func TestCreatePhonon(t *testing.T) {
 }
 
 func TestCreateAsManyPhononsAsPossible(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping TestCreateAsManyPhononsAsPossible in short mode")
+	}
 	cs := unlockHappy()
 	var createdIndices []uint16
 	for i := 0; i < maxPhononStorageAmount; i++ {
@@ -271,7 +275,7 @@ func TestCreateAsManyPhononsAsPossible(t *testing.T) {
 		createdIndices = append(createdIndices, keyIndex)
 	}
 	// list phonons doesn't work. likely runs out of memory determining which phonons to return
-	list, err := cs.ListPhonons(model.Unspecified, 0, 0)
+	list, err := cs.ListPhonons(model.Unspecified, 0, 0, false)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -371,7 +375,7 @@ func TestSetDescriptor(t *testing.T) {
 				},
 				CurrencyType: model.Bitcoin,
 			},
-			expectedErr: errors.New("phonon index invalid"),
+			expectedErr: card.ErrInvalidPhononIndex,
 		},
 		// out of bounds Key index
 		{
@@ -383,7 +387,7 @@ func TestSetDescriptor(t *testing.T) {
 				},
 				CurrencyType: model.Bitcoin,
 			},
-			expectedErr: errors.New("phonon index invalid"),
+			expectedErr: card.ErrInvalidPhononIndex,
 		},
 		// max denomination
 		{
@@ -491,7 +495,7 @@ func TestDestroyPhonon(t *testing.T) {
 	}
 	_, err = cs.DestroyPhonon(69)
 	fmt.Println(err.Error())
-	if err == nil || err.Error() != "Phonon index invalid" {
+	if err == nil || err != card.ErrInvalidPhononIndex {
 		if err != nil {
 			t.Error("did not receive proper error on delete phonon where phonon is out of range")
 			t.FailNow()
@@ -502,7 +506,7 @@ func TestDestroyPhonon(t *testing.T) {
 
 	}
 	_, err = cs.DestroyPhonon(maxPhononStorageAmount + 5)
-	if err == nil || err.Error() != "Phonon index invalid" {
+	if err == nil || err != card.ErrInvalidPhononIndex {
 		if err != nil {
 			t.Error("did not receive proper error on delete phonon where phonon is out of range: ", err.Error())
 			t.FailNow()
@@ -579,14 +583,16 @@ func TestCardPairEz(t *testing.T) {
 func TestCardPairReal(t *testing.T) {
 	cs := setPinHappy()
 	term := orchestrator.NewPhononTerminal()
-	card, err := orchestrator.NewSession(cs)
+	c, err := orchestrator.NewSession(cs)
 	if err != nil {
 		t.Error("Unable to generate sesison from command set: " + err.Error())
 		t.FailNow()
-
 	}
-	// todo: test attempting to pair without pin verification
-	card.VerifyPIN("111111")
+	term.AddSession(c)
+	err = c.VerifyPIN("111111")
+	if err != nil {
+		t.Fatal("unable to verify pin on real card: ", err)
+	}
 	mockid, err := term.GenerateMock()
 	if err != nil {
 		t.Error(err.Error())
@@ -594,32 +600,42 @@ func TestCardPairReal(t *testing.T) {
 
 	}
 	mock := term.SessionFromID(mockid)
-	mock.VerifyPIN("111111")
+	err = mock.VerifyPIN("111111")
+	if err != nil {
+		t.Fatal("error verifying pin on mock: ", err)
+	}
 	err = mock.ConnectToLocalProvider()
 	if err != nil {
 		t.Error("Unable to connect mock to local provider: " + err.Error())
 		t.FailNow()
 
 	}
-	err = card.ConnectToLocalProvider()
+	err = c.ConnectToLocalProvider()
 	if err != nil {
 		t.Error("Unable to connect card to local provider: " + err.Error())
 		t.FailNow()
 
 	}
-	err = mock.ConnectToCounterparty(card.GetName())
+	cardName := c.GetName()
+	t.Log("card name found is: ", cardName)
+	err = mock.ConnectToCounterparty(c.GetName())
 	if err != nil {
 		t.Error("Unable to pair with local mock: " + err.Error())
 		t.FailNow()
-
 	}
+	err = c.ConnectToCounterparty(mockid)
+	if err != nil{
+		t.Error("Unable to pair with local mock: " + err.Error())
+		t.FailNow()
+	}
+	//////////////
 	//send to prove paring
-	index, _, err := card.CreatePhonon()
+	index, _, err := c.CreatePhonon()
 	if err != nil {
 		t.Error("Unable to create phonon to prove pairing worked: " + err.Error())
 		t.FailNow()
 	}
-	err = card.SetDescriptor(&model.Phonon{
+	err = c.SetDescriptor(&model.Phonon{
 		KeyIndex: index,
 		Denomination: model.Denomination{
 			Base:     1,
@@ -631,12 +647,12 @@ func TestCardPairReal(t *testing.T) {
 		t.Error("Unable to set descriptor on test phonon for sending: " + err.Error())
 		t.FailNow()
 	}
-	err = card.SendPhonons([]uint16{index})
+	err = c.SendPhonons([]uint16{index})
 	if err != nil {
 		t.Error("Unable to send phonons to prove pairing: " + err.Error())
 		t.FailNow()
 	}
-	err = card.ConnectToCounterparty(mockid)
+	err = c.ConnectToCounterparty(mockid)
 	if err != nil {
 		t.Error("Unable to pair with local mock: " + err.Error())
 		t.FailNow()
@@ -650,23 +666,24 @@ func TestCardPairReal(t *testing.T) {
 		t.FailNow()
 	}
 	mock2 := term.SessionFromID(mock2id)
-	err = mock.ConnectToLocalProvider()
+	mock2.VerifyPIN("111111")
+	err = mock2.ConnectToLocalProvider()
 	if err != nil {
 		t.Error("Unable to connect mock to local provider: " + err.Error())
 		t.FailNow()
 	}
-	err = mock2.ConnectToCounterparty(card.GetName())
+	err = mock2.ConnectToCounterparty(c.GetName())
 	if err != nil {
 		t.Error("Unable to pair with second local mock: " + err.Error())
 		t.FailNow()
 	}
 	//send to prove paring
-	index, _, err = card.CreatePhonon()
+	index, _, err = c.CreatePhonon()
 	if err != nil {
 		t.Error("Unable to create phonon to prove pairing worked: " + err.Error())
 		t.FailNow()
 	}
-	err = card.SetDescriptor(&model.Phonon{
+	err = c.SetDescriptor(&model.Phonon{
 		KeyIndex: index,
 		Denomination: model.Denomination{
 			Base:     1,
@@ -678,7 +695,7 @@ func TestCardPairReal(t *testing.T) {
 		t.Error("Unable to set descriptor on test phonon for sending: " + err.Error())
 		t.FailNow()
 	}
-	err = card.SendPhonons([]uint16{index})
+	err = c.SendPhonons([]uint16{index})
 	if err != nil {
 		t.Error("Unable to send phonons to prove pairing: " + err.Error())
 		t.FailNow()

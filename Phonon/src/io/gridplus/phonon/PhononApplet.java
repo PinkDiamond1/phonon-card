@@ -1325,6 +1325,9 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         byte ValueExponent = (byte) 0xff;
         boolean ValueBaseSet = false;
         boolean ValueExponentSet = false;
+	    boolean ValueSchemaSet = false;
+	    boolean ValueExtendedSchemaSet = false;
+	    boolean ValueCurrencySet = false;
 
         for (short index = 0; index < TableCount; index++) {
             Phonon.LoadTagFromTable(IncomingData, index);
@@ -1335,18 +1338,20 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                 }
 
                 case TLV_SCHEMA_VERSION: {
-
                     SchemaVersion = (Phonon.GetData())[0];
+		            ValueSchemaSet = true;
                     break;
                 }
 
                 case TLV_EXTENDED_SCHEMA_VERSION: {
                     ExtendedSchemaVersion = (Phonon.GetData())[0];
+		            ValueExtendedSchemaSet = true;
                     break;
                 }
 
                 case TLV_SET_PHONON_CURRENCY: {
                     CurrencyType = Util.getShort(Phonon.GetData(), (short) 0);
+		            ValueCurrencySet = true;
                     break;
                 }
 
@@ -1400,14 +1405,10 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         }
 
-        if (SchemaVersion == UNINITIALIZED_BYTE ||
-                CurrencyType > KEY_CURRENCY_TYPE_MAX ||
-                ExtendedSchemaVersion == UNINITIALIZED_SHORT ||
-                ValueBaseSet == false ||
-                ValueExponentSet == false) {
-            secureChannel.respond(apdu, (short) 0, ISO7816.SW_DATA_INVALID);
-            return;
-        }
+	if (!ValueBaseSet || !ValueExponentSet || !ValueSchemaSet || !ValueExtendedSchemaSet || !ValueCurrencySet){
+		secureChannel.respond(apdu, (short) 0, ISO7816.SW_DATA_INVALID);
+		return;
+	}
 
         JCSystem.beginTransaction();
 
