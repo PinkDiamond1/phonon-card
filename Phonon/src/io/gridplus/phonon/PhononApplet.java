@@ -22,7 +22,7 @@ import javacard.security.KeyPair;
  */
 
 public class PhononApplet extends Applet {    //implements ExtendedLength {
-    public static final short PHONON_KEY_LENGTH = 256;
+   public static final short PHONON_KEY_LENGTH = 256;
     public static final short MAX_NUMBER_PHONONS = 256;
     public static final short MAX_EXTENDED_SCHEMA_BUFFER = 100;
     // runtime configs
@@ -842,9 +842,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
     	// Salt is TransBuffer
     	// Hash Value is ScratchBuffer used to determine rarity
 
-        crypto.sha512.update(ScratchBuffer, (short)1, (short)64);
-       	crypto.random.generateData(TransBuffer, (short) 0, (short) 64);
-       	crypto.sha512.update( TransBuffer, (short)0, (short)64);
+       	crypto.random.generateData(TransBuffer, (short) 0, (short) 32);
+       	crypto.sha512.update( TransBuffer, (short)0, (short)32);
         crypto.sha512.doFinal(ScratchBuffer, (short) 0, (short)64, ScratchBuffer, (short) 0);
         short BytesRarity = (short)(MiningRarity/8);
         short BitsRarity = (short)(MiningRarity - (short)(BytesRarity*8));
@@ -903,7 +902,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         JCSystem.beginTransaction();
 
-
         short phononKeyPointer = phononKeyIndex;
         byte UsingDeletedSpot = 0;
 
@@ -925,24 +923,22 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         PhononArray[phononKeyPointer].ValueBase = (byte)(BitsRarity & 0x00ff);;
 
         if (UsingDeletedSpot == 0) {
-            PhononArray[phononKeyPointer].sPhononPublicKey = new byte[PhononArray[phononKeyPointer].PhononPublicKeyLen];
+            PhononArray[phononKeyPointer].sPhononPublicKey = new byte[65];
         }
-
         // 64 bytes of Hash ( ScratchBuffer ) is public key value
 
         Util.arrayCopyNonAtomic(ScratchBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0, (short)64);
 
-        PhononArray[phononKeyPointer].PhononPrivateKeyLen = (short)64;
+        PhononArray[phononKeyPointer].PhononPrivateKeyLen = (short)32;
         if (UsingDeletedSpot == 0) {
             PhononArray[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray[phononKeyPointer].PhononPrivateKeyLen];
         }
 
         // 64 byte of Salt ( TransBuffer ) is private key value
 
-        Util.arrayCopyNonAtomic(TransBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, (short)64);
-
+        Util.arrayCopyNonAtomic(TransBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, (short)32);
+        
         short SigLen = secureChannel.CardSignData(ScratchBuffer, (short)64,TransBuffer, (short) 0);
-
 
         PhononArray[phononKeyPointer].ExtendedSchema[0]= TLV_EXTENDED_NATIVE_SIGNATURE;
 
@@ -950,7 +946,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         PhononArray[phononKeyPointer].ExtendedSchema[1] = (byte)(SigLen);
         Util.arrayCopyNonAtomic(TransBuffer, (short)0, PhononArray[phononKeyPointer].ExtendedSchema, (short)2, SigLen);
         PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
-
+        
         JCSystem.commitTransaction();
 
         short off = 0;
@@ -2070,7 +2066,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         secureChannel.preprocessAPDU(apduBuffer);
        if( (apduBuffer[ISO7816.OFFSET_LC] & 0xff) > 32 )
         {
-        	secureChannel.respond(apdu, (short)0, (short)ISO7816.SW_WRONG_LENGTH);
+        	secureChannel.respond(apdu, (short)0, (short)(ISO7816.SW_WRONG_LENGTH + apduBuffer[ISO7816.OFFSET_LC] & 0xff));
         	return;
         }
 
@@ -2078,9 +2074,9 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         	secureChannel.respond(apdu, (short)0, (short)ISO7816.SW_CONDITIONS_NOT_SATISFIED);
         	return;
         }
-        friendlyNameLen = apduBuffer[ISO7816.OFFSET_LC];
+        friendlyNameLen = (short)(apduBuffer[ISO7816.OFFSET_LC]& 0xff);
         Util.arrayCopy(apduBuffer, ISO7816.OFFSET_CDATA, friendlyName, (short) 0, friendlyNameLen);
-        secureChannel.respond(apdu, (short) 0, ISO7816.SW_NO_ERROR);
+       secureChannel.respond(apdu, (short) 0, (short)(ISO7816.SW_NO_ERROR));
     }
 
 
@@ -2093,9 +2089,9 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         byte[] apduBuffer = apdu.getBuffer();
         if(secureChannel.isOpen())
         	secureChannel.preprocessAPDU(apduBuffer);
-        if (friendlyNameLen == 0 ){
-        		ISOException.throwIt(ISO7816.SW_DATA_INVALID);
-        	return;
+        if (friendlyNameLen < 1 ){
+        	ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+            return;
         }
         if( secureChannel.isOpen()){
         	secureChannel.respond( apdu, friendlyName, friendlyNameLen, ISO7816.SW_NO_ERROR);
