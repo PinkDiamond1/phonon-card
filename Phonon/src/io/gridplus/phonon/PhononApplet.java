@@ -836,15 +836,13 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             return;
         }
         MiningRarity = (short)(apduBuffer[ISO7816.OFFSET_P1] & 0x00ff);
-    	ECPublicKey pk = secureChannel.GetCardPublicKey();
-    	pk.getW(ScratchBuffer, (short)0);
+    	//ECPublicKey pk = secureChannel.GetCardPublicKey();
+    	//pk.getW(ScratchBuffer, (short)0);
 
     	// Salt is TransBuffer
     	// Hash Value is ScratchBuffer used to determine rarity
-
        	crypto.random.generateData(TransBuffer, (short) 0, (short) 32);
-       	crypto.sha512.update( TransBuffer, (short)0, (short)32);
-        crypto.sha512.doFinal(ScratchBuffer, (short) 0, (short)64, ScratchBuffer, (short) 0);
+       	crypto.sha512.doFinal( TransBuffer, (short)0, (short)32, ScratchBuffer, (short) 0);
         short BytesRarity = (short)(MiningRarity/8);
         short BitsRarity = (short)(MiningRarity - (short)(BytesRarity*8));
         short i;
@@ -934,17 +932,16 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             PhononArray[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray[phononKeyPointer].PhononPrivateKeyLen];
         }
 
-        // 64 byte of Salt ( TransBuffer ) is private key value
+        // 32 byte of Salt ( TransBuffer ) is private key value
 
         Util.arrayCopyNonAtomic(TransBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, (short)32);
-        
         short SigLen = secureChannel.CardSignData(ScratchBuffer, (short)64,TransBuffer, (short) 0);
 
         PhononArray[phononKeyPointer].ExtendedSchema[0]= TLV_EXTENDED_NATIVE_SIGNATURE;
-
         //allocate 2 extra bytes for the TL
         PhononArray[phononKeyPointer].ExtendedSchema[1] = (byte)(SigLen);
         Util.arrayCopyNonAtomic(TransBuffer, (short)0, PhononArray[phononKeyPointer].ExtendedSchema, (short)2, SigLen);
+	PhononArray[phononKeyPointer].ExtendedSchemaLength = (short)(SigLen + 2);
         PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
         
         JCSystem.commitTransaction();
@@ -1169,27 +1166,37 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
                 phononKeyPointer = DeletedPhononList[DeletedPhononIndex];
                 UsingDeletedSpot = 1;
             }
-            ECPrivateKey PrivateKey = (ECPrivateKey) PhononKey.getPrivate();
-            PhononArray[phononKeyPointer].PhononPrivateKeyLen = TempPrivateKeyLen;
+	    if (KeyCurveType == KEY_CURVE_TYPE_SECP256K1){
+		ECPrivateKey PrivateKey = (ECPrivateKey) PhononKey.getPrivate();
+            	PhononArray[phononKeyPointer].PhononPrivateKeyLen = TempPrivateKeyLen;
 
-            if (UsingDeletedSpot == 0) {
-                PhononArray[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray[phononKeyPointer].PhononPrivateKeyLen];
-            }
+            	if (UsingDeletedSpot == 0) {
+               		PhononArray[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray[phononKeyPointer].PhononPrivateKeyLen];
+            	}
+            	Util.arrayCopyNonAtomic(TempPrivateKey, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, TempPrivateKeyLen);
+            	PrivateKey.setS(PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
+            	byte[] PublicKeystr = TempPrivateKey;
 
-            Util.arrayCopyNonAtomic(TempPrivateKey, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, TempPrivateKeyLen);
-            PrivateKey.setS(PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
-            byte[] PublicKeystr = TempPrivateKey;
+            	short PublicKeyLength = secp256k1.derivePublicKey(PrivateKey, PublicKeystr, (short) 0);
+            	ECPublicKey PublicKey = (ECPublicKey) PhononKey.getPublic();
+            	PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
 
-            short PublicKeyLength = secp256k1.derivePublicKey(PrivateKey, PublicKeystr, (short) 0);
-            ECPublicKey PublicKey = (ECPublicKey) PhononKey.getPublic();
-            PublicKey.setW(PublicKeystr, (short) 0, PublicKeyLength);
+            	PhononArray[phononKeyPointer].PhononPublicKeyLen = PublicKeyLength;
 
-            PhononArray[phononKeyPointer].PhononPublicKeyLen = PublicKeyLength;
+            	if (UsingDeletedSpot == 0) {
+                	PhononArray[phononKeyPointer].sPhononPublicKey = new byte[PhononArray[phononKeyPointer].PhononPublicKeyLen];
+            	}
+            	Util.arrayCopyNonAtomic(PublicKeystr, (short) 0, PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0, PhononArray[phononKeyPointer].PhononPublicKeyLen);
+	    } else if (KeyCurveType == KEY_CURVE_TYPE_NATIVE){
+		PhononArray[phononKeyPointer].PhononPrivateKeyLen = TempPrivateKeyLen;
+		PhononArray[phononKeyPointer].sPhononPrivateKey = new byte[PhononArray[phononKeyPointer].PhononPrivateKeyLen];
+		Util.arrayCopyNonAtomic(TempPrivateKey, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, PhononArray[phononKeyPointer].PhononPrivateKeyLen);
 
-            if (UsingDeletedSpot == 0) {
-                PhononArray[phononKeyPointer].sPhononPublicKey = new byte[PhononArray[phononKeyPointer].PhononPublicKeyLen];
-            }
-            Util.arrayCopyNonAtomic(PublicKeystr, (short) 0, PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0, PhononArray[phononKeyPointer].PhononPublicKeyLen);
+		PhononArray[phononKeyPointer].PhononPublicKeyLen = (short) 64;
+		PhononArray[phononKeyPointer].sPhononPublicKey = new byte[PhononArray[phononKeyPointer].PhononPublicKeyLen];
+		crypto.sha512.reset();
+		crypto.sha512.doFinal(TempPrivateKey, (short) 0, TempPrivateKeyLen, PhononArray[phononKeyPointer].sPhononPublicKey, (short) 0);
+	    }
 
             PhononArray[phononKeyPointer].CurrencyType = CurrencyType;
             PhononArray[phononKeyPointer].KeyCurveType = KeyCurveType;
@@ -1207,7 +1214,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             Offset += PhononLength;
         }
     }
-
     /**
      * Destroy a phonon to export its private key.
      *
@@ -1812,7 +1818,6 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             PhononDescriptorOffset = (short) (PhononCollectionOffset + 1);
             PhononCollectionOffset += 2;
 
-
             Bertlv berPhonon = globalBertlv;
             berPhonon.BuildTLVStructure(TLV_PRIV_KEY, PhononArray[i].PhononPrivateKeyLen, PhononArray[i].sPhononPrivateKey, PhononCollection, PhononCollectionOffset);
             PhononCollectionOffset += 2 + PhononArray[i].PhononPrivateKeyLen;
@@ -1835,7 +1840,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
             }
 
             PhononDescriptorLength = (short) (PhononCollectionOffset - PhononDescriptorLength);
-            PhononCollection[PhononDescriptorOffset] = (byte) PhononDescriptorLength;
+            PhononCollection[PhononDescriptorOffset] = (byte) (PhononDescriptorLength -2);
 
             PhononArray[i].Status = PHONON_STATUS_DELETED;
             PhononArray[i].CurrencyType = 0;

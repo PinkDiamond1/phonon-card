@@ -408,7 +408,7 @@ func TestSetDescriptor(t *testing.T) {
 					Exponent: 1,
 				},
 				CurrencyType: model.Bitcoin,
-				ExtendedTLV:  []tlv.TLV{regulartlv},
+				ExtendedTLV:  tlv.TLVList{regulartlv},
 			},
 			expectedErr: nil,
 		},
@@ -624,7 +624,8 @@ func TestCardPairReal(t *testing.T) {
 		t.FailNow()
 	}
 	err = c.ConnectToCounterparty(mockid)
-	if err != nil{
+	if err != nil {
+
 		t.Error("Unable to pair with local mock: " + err.Error())
 		t.FailNow()
 	}
