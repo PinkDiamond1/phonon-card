@@ -1,6 +1,7 @@
 package cardtests
 
 import (
+	"crypto/ecdsa"
 	"errors"
 	"fmt"
 	"testing"
@@ -625,7 +626,6 @@ func TestCardPairReal(t *testing.T) {
 	}
 	err = c.ConnectToCounterparty(mockid)
 	if err != nil {
-
 		t.Error("Unable to pair with local mock: " + err.Error())
 		t.FailNow()
 	}
@@ -1163,6 +1163,36 @@ func TestMinePhonon(t *testing.T) {
 		t.Error("Unable to mine native phonon: " + err.Error())
 		t.FailNow()
 	}
+
+	//TODO: Validate mined phonon
+
+	//List all since filtering is as of yet unimplemented
+	phonon, err := cardSess.ListPhonons(model.Unspecified, 0, 0)
+	if err != nil {
+		t.Fatal("unable to list mined phonon. err: ", err)
+	}
+	var minedPhonon *model.Phonon
+	for _, p := range phonon {
+		if p.KeyIndex == index {
+			minedPhonon = p
+		}
+	}
+	minedPhonon.PubKey, err = cardSess.GetPhononPubKey(index, model.NativeCurve)
+	if err != nil {
+		t.Fatal("unable to fetch pubKey for mined phonon. err: ", err)
+	}
+	t.Logf("fetched phonon metadata: %+v\n", minedPhonon)
+
+	//Check all fields of mined phonon conform to spec
+	cardIDKey, _, err := cardSess.IdentifyCard(util.RandomKey(32))
+	if err != nil {
+		t.Fatal("unable to fetch card pubKey with IdentifyCard. err: ", err)
+	}
+
+	t.Log("validating native phonon on real miner card")
+	validateNativePhonon(t, minedPhonon, cardIDKey)
+
+	//Test sending native phonon to counterparty
 	err = cardSess.ConnectToLocalProvider()
 	if err != nil {
 		t.Error("Unable to connect card to local remote provider: " + err.Error())
@@ -1183,5 +1213,79 @@ func TestMinePhonon(t *testing.T) {
 	if err != nil {
 		t.Error("unable to send native phonon to mock receiver: " + err.Error())
 		t.FailNow()
+	}
+
+	//List native phonon details in mock
+	phonons, err := mock.ListPhonons(model.Unspecified, 0, 0)
+	if err != nil {
+		t.Fatal("error listing mock's phonons. err: ", err)
+	}
+	mockNatPhonon := phonons[0]
+
+	mockNatPhonon.PubKey, err = mock.GetPhononPubKey(mockNatPhonon.KeyIndex, model.NativeCurve)
+	if err != nil {
+		t.Fatal("error getting mock's phonon pubKey. err: ", err)
+	}
+
+	mockIdentityPubKey, _, err := mock.IdentifyCard(util.RandomKey(32))
+	if err != nil {
+		t.Fatal("error fetching mock's identity pubKey. err: ", err)
+	}
+	t.Log("validating nativePhonon after send to mock")
+	validateNativePhonon(t, mockNatPhonon, mockIdentityPubKey)
+
+	//TODO: Mine a phonon on the mock and validate it
+
+	//TODO: Send that phonon back to the real card
+
+	//TODO: Validate that the real card can list all the mined phonon metadata
+
+	//TODO: To the extent possible, see if pubkeys are being correctly derived on each side.
+
+}
+
+func validateNativePhonon(t *testing.T, minedPhonon *model.Phonon, cardIDKey *ecdsa.PublicKey) {
+	if minedPhonon.CurrencyType != model.Native {
+		t.Fatal("mined phonon currencyType not set to model.Native")
+	}
+	if minedPhonon.CurveType != model.NativeCurve {
+		t.Fatal("mined phonon curveType not set to model.NativeCurve")
+	}
+	pubKeyLength := len(minedPhonon.PubKey.Bytes())
+	if pubKeyLength != 64 {
+		t.Fatalf("mined phonon pubKey should be 64 byte hash, but was %v bytes\n", pubKeyLength)
+	}
+	var nativePhononSig *util.ECDSASignature
+	var err error
+	for _, field := range minedPhonon.ExtendedTLV {
+		TagNativeSignature := 0x94
+		if field.Tag == byte(TagNativeSignature) {
+			t.Logf("field.Value: % X", field.Value)
+			nativePhononSig, err = util.ParseECDSASignature(field.Value)
+			if err != nil {
+				t.Error("unable to parse nativePhononSig from extended TLV field")
+				t.Fatal("attempted to parse bytes: % X", field.Value)
+			}
+		}
+	}
+	if nativePhononSig == nil {
+		t.Fatal("did not find native phonon signature in extended TLV")
+	}
+
+	//SigToPub has a weird 32 byte message requirement so excepting this for now
+	// //Check that card ID key can be derived from native phonon signature
+	// derivedMinerPubKey, err := ethcrypto.SigToPub(minedPhonon.PubKey.Bytes(), append(nativePhononSig.R.Bytes(), nativePhononSig.S.Bytes()...))
+	// if err != nil {
+	// 	t.Fatal("unable to derive card pubkey from native phonon signature. err: ", err)
+	// }
+	// if !cardIDKey.Equal(derivedMinerPubKey) {
+	// 	t.Fatal("card identity key received from IDENTIFY_CARD does not match identity key derived from mined native phonon signature")
+	// }
+	//Check that mined phonon signature is valid for this card
+	if !ecdsa.Verify(cardIDKey, minedPhonon.PubKey.Bytes(), nativePhononSig.R, nativePhononSig.S) {
+		t.Error("cardIDKKey was: ", util.ECCPubKeyToHexString(cardIDKey))
+		t.Errorf("minedPhonon PubKey was: % X", minedPhonon.PubKey.Bytes())
+		t.Errorf("minedPhonon sig was: % X", append(nativePhononSig.R.Bytes(), nativePhononSig.S.Bytes()...))
+		t.Fatal("unable to verify miner signature over mined phonon hash")
 	}
 }

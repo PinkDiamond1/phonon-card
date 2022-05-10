@@ -11,7 +11,6 @@ public class Bertlv {
     //byte [] NextTagData;
     short[] TagTable;
     short TagTableCount = 0;
-    short BuildLength = 0;
 //	BerTag bertag = JCSystem.makeTransientObjectArray(BerTag, JCSystem.CLEAR_ON_RESET);
 
     public Bertlv() {
@@ -23,7 +22,6 @@ public class Bertlv {
 
     public void Clean() {
         Util.arrayFillNonAtomic(bertag.data, (short) 0, (short) 250, (byte) 0x00);
-        BuildLength = 0;
         TagTableCount = 0;
 
     }
@@ -104,41 +102,41 @@ public class Bertlv {
     }
 
 
-    public void BuildTLVStructure(byte tag, short length, byte[] InData, byte[] OutData) {
+    public short BuildTLVStructure(byte tag, short length, byte[] InData, byte[] OutData) {
         short Offset = 0;
         OutData[Offset++] = tag;
         OutData[Offset++] = (byte) length;
         Util.arrayCopyNonAtomic(InData, (short) 0, OutData, Offset, length);
-        BuildLength = (short) (Offset + length);
+        return (short) (Offset + length);
     }
 
 
-    public void BuildTLVStructure(byte tag, short length, byte[] InData, byte[] OutputData, short OutOffset) {
+    public short BuildTLVStructure(byte tag, short length, byte[] InData, byte[] OutputData, short OutOffset) {
         short Offset = OutOffset;
         OutputData[Offset++] = tag;
         OutputData[Offset++] = (byte) length;
         Util.arrayCopyNonAtomic(InData, (short) 0, OutputData, Offset, length);
-        BuildLength = (short) (Offset + length - OutOffset);
+        return(short) (Offset + length - OutOffset);
     }
 
 
-    public void BuildTLVStructure(byte tag, short length, short InData, byte[] OutData, short OutOffset) {
+    public short BuildTLVStructure(byte tag, short length, short InData, byte[] OutData, short OutOffset) {
         short Offset = OutOffset;
         OutData[Offset++] = tag;
         OutData[Offset++] = (byte) length;
 
         Util.setShort(OutData, Offset, InData);
 
-        BuildLength = (short) (Offset + 2 - OutOffset);
+        return (short) (Offset + 2 - OutOffset);
     }
 
-    public void BuildTLVStructure(byte tag, short length, byte InData, byte[] OutData, short OutOffset) {
+    public short BuildTLVStructure(byte tag, short length, byte InData, byte[] OutData, short OutOffset) {
         short Offset = OutOffset;
         OutData[Offset++] = tag;
         OutData[Offset++] = (byte) length;
         OutData[Offset++] = InData;
 
-        BuildLength = (short) (Offset - OutOffset);
+	return (short) (Offset - OutOffset);
     }
 
 }

@@ -480,9 +480,8 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         short CardCertLen = secureChannel.GetCardCertificate(ScratchBuffer);
         Bertlv berCert = globalBertlv;
-        berCert.BuildTLVStructure(TLV_CARD_CERTIFICATE, CardCertLen, ScratchBuffer, apduBuffer, Offset);
-        Offset += berCert.BuildLength;
-
+        Offset += berCert.BuildTLVStructure(TLV_CARD_CERTIFICATE, CardCertLen, ScratchBuffer, apduBuffer, Offset);
+        
         byte[] salt = new byte[32];
 
         if (SecureChannel.SECURE_CHANNEL_DEBUG) {
@@ -494,8 +493,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         secureChannel.SetSenderSalt(salt);
 
         Bertlv berCardSalt = globalBertlv;
-        berCardSalt.BuildTLVStructure(TLV_SALT, (short) 32, salt, apduBuffer, Offset);
-        Offset += berCardSalt.BuildLength;
+        Offset += berCardSalt.BuildTLVStructure(TLV_SALT, (short) 32, salt, apduBuffer, Offset);
         secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_INIT_CARD_PAIR;
 
         if (DEBUG_MODE) {
@@ -573,18 +571,15 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
 
         apduBuffer = apdu.getBuffer();
         Bertlv berCardSalt = globalBertlv;
-        berCardSalt.BuildTLVStructure(TLV_SALT, (short) 32, ReceiverSalt, apduBuffer, (short) 0);
-        Offset += berCardSalt.BuildLength;
+        Offset += berCardSalt.BuildTLVStructure(TLV_SALT, (short) 32, ReceiverSalt, apduBuffer, (short) 0);
 
         Bertlv berCardAES = globalBertlv;
-        berCardAES.BuildTLVStructure(TLV_AESIV, (short) 16, secureChannel.CardGetAESIV(), apduBuffer, Offset);
-        Offset += berCardAES.BuildLength;
+        Offset += berCardAES.BuildTLVStructure(TLV_AESIV, (short) 16, secureChannel.CardGetAESIV(), apduBuffer, Offset);
 
         Util.arrayFillNonAtomic(ScratchBuffer, (short) 0, (short) ScratchBuffer.length, (byte) 0x00);
         short sigLen = secureChannel.CardSignSession(ScratchBuffer);
         Bertlv berCardSig = globalBertlv;
-        berCardSig.BuildTLVStructure(TLV_RECEIVER_SIG, sigLen, ScratchBuffer, apduBuffer, Offset);
-        Offset += berCardSig.BuildLength;
+        Offset += berCardSig.BuildTLVStructure(TLV_RECEIVER_SIG, sigLen, ScratchBuffer, apduBuffer, Offset);
         secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_PAIR_1;
 
         if (DEBUG_MODE) {
@@ -667,8 +662,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         short sigLen = secureChannel.CardSignSession(ScratchBuffer);
 
         Bertlv berCardSig = globalBertlv;
-        berCardSig.BuildTLVStructure(TLV_RECEIVER_SIG, sigLen, ScratchBuffer, apduBuffer);
-        Offset += berCardSig.BuildLength;
+        Offset += berCardSig.BuildTLVStructure(TLV_RECEIVER_SIG, sigLen, ScratchBuffer, apduBuffer);
         secureChannel.Card2CardStatus = secureChannel.CARD_TO_CARD_PAIRED;
 
 
@@ -937,11 +931,12 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         Util.arrayCopyNonAtomic(TransBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, (short)32);
         short SigLen = secureChannel.CardSignData(ScratchBuffer, (short)64,TransBuffer, (short) 0);
 
-        PhononArray[phononKeyPointer].ExtendedSchema[0]= TLV_EXTENDED_NATIVE_SIGNATURE;
-        //allocate 2 extra bytes for the TL
-        PhononArray[phononKeyPointer].ExtendedSchema[1] = (byte)(SigLen);
-        Util.arrayCopyNonAtomic(TransBuffer, (short)0, PhononArray[phononKeyPointer].ExtendedSchema, (short)2, SigLen);
-	PhononArray[phononKeyPointer].ExtendedSchemaLength = (short)(SigLen + 2);
+	short extendedSchemaPointer = (short) 0;
+
+	Bertlv berNativeSig = globalBertlv;
+	short tlvLen = berNativeSig.BuildTLVStructure(TLV_EXTENDED_NATIVE_SIGNATURE, SigLen, ScratchBuffer, PhononArray[phononKeyPointer].ExtendedSchema);
+
+	PhononArray[phononKeyPointer].ExtendedSchemaLength = (short)(tlvLen);
         PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
         
         JCSystem.commitTransaction();
@@ -1276,7 +1271,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         byte[] OutgoingData = ScratchBuffer;
 
         berPhononKey.BuildTLVStructure(TLV_KEY_CURVE_TYPE, (short) 1, PhononArray[PhononIndex].KeyCurveType, OutgoingData, (short) 0);
-        berPhononKey.BuildTLVStructure(TLV_PRIV_KEY, PhononArray[PhononIndex].PhononPrivateKeyLen, PhononArray[PhononIndex].sPhononPrivateKey, OutgoingData, (short) 3);
+        short buildLen = berPhononKey.BuildTLVStructure(TLV_PRIV_KEY, PhononArray[PhononIndex].PhononPrivateKeyLen, PhononArray[PhononIndex].sPhononPrivateKey, OutgoingData, (short) 3);
 
         PhononArray[PhononIndex].Status = PHONON_STATUS_DELETED;
         PhononArray[PhononIndex].CurrencyType = 0;
@@ -1289,7 +1284,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         JCSystem.commitTransaction();
 
         if (!DEBUG_MODE) {
-            secureChannel.respond(apdu, OutgoingData, (short) (berPhononKey.BuildLength + 3), ISO7816.SW_NO_ERROR);
+            secureChannel.respond(apdu, OutgoingData, (short) (buildLen + 3), ISO7816.SW_NO_ERROR);
         }
     }
 
