@@ -481,7 +481,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         short CardCertLen = secureChannel.GetCardCertificate(ScratchBuffer);
         Bertlv berCert = globalBertlv;
         Offset += berCert.BuildTLVStructure(TLV_CARD_CERTIFICATE, CardCertLen, ScratchBuffer, apduBuffer, Offset);
-        
+
         byte[] salt = new byte[32];
 
         if (SecureChannel.SECURE_CHANNEL_DEBUG) {
@@ -929,16 +929,17 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         // 32 byte of Salt ( TransBuffer ) is private key value
 
         Util.arrayCopyNonAtomic(TransBuffer, (short) 0, PhononArray[phononKeyPointer].sPhononPrivateKey, (short) 0, (short)32);
-        short SigLen = secureChannel.CardSignData(ScratchBuffer, (short)64,TransBuffer, (short) 0);
+
+        short SigLen = secureChannel.CardSignPrecomputed512(ScratchBuffer, (short)64,TransBuffer, (short) 0);
 
 	short extendedSchemaPointer = (short) 0;
 
 	Bertlv berNativeSig = globalBertlv;
-	short tlvLen = berNativeSig.BuildTLVStructure(TLV_EXTENDED_NATIVE_SIGNATURE, SigLen, ScratchBuffer, PhononArray[phononKeyPointer].ExtendedSchema);
+	short tlvLen = berNativeSig.BuildTLVStructure(TLV_EXTENDED_NATIVE_SIGNATURE, SigLen, TransBuffer, PhononArray[phononKeyPointer].ExtendedSchema);
 
 	PhononArray[phononKeyPointer].ExtendedSchemaLength = (short)(tlvLen);
         PhononArray[phononKeyPointer].Status = PHONON_STATUS_INITIALIZED;
-        
+
         JCSystem.commitTransaction();
 
         short off = 0;

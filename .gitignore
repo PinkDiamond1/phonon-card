@@ -5,3 +5,6 @@ Phonon/\.idea
 Phonon/.jcop
 Phonon/.project
 apdu.log
+.vscode/
+card-tests/.vscode/
+Phonon/pkg/

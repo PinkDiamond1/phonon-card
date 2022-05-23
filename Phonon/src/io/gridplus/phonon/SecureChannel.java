@@ -54,6 +54,7 @@ public class SecureChannel {
     private final Signature scMac;
     private final KeyPair scKeypair;
     private final Signature eccSig;
+    private final Signature eccSig512;
     private final byte[] secret;
     private final AESKey CardscEncKey;
     private final AESKey CardscMacKey;
@@ -135,6 +136,7 @@ public class SecureChannel {
         CardidCertStatus = ID_CERTIFICATE_EMPTY;
         scMac = Signature.getInstance(Signature.ALG_AES_MAC_128_NOPAD, false);
         eccSig = Signature.getInstance(Signature.ALG_ECDSA_SHA_256, false);
+	eccSig512 = Signature.getInstance(Signature.ALG_ECDSA_SHA_512, false);
 
         scEncKey = (AESKey) KeyBuilder.buildKey(KeyBuilder.TYPE_AES_TRANSIENT_DESELECT, KeyBuilder.LENGTH_AES_256, false);
         scMacKey = (AESKey) KeyBuilder.buildKey(KeyBuilder.TYPE_AES_TRANSIENT_DESELECT, KeyBuilder.LENGTH_AES_256, false);
@@ -622,6 +624,18 @@ public class SecureChannel {
         // Sign the secret hash, and copy the signature into the response buffer
      	return eccSig.sign(SigningData, (short)0, SigningDataLen, SignatureData, (short)SigOffset );
     }
+
+    public short CardSign512( byte[] SigningData, short SigningDataLen, byte[] SignatureData, short SigOffset)
+    {
+	eccSig512.init(idKeypair.getPrivate(), Signature.MODE_SIGN);
+     	return eccSig512.sign(SigningData, (short)0, SigningDataLen, SignatureData, (short)SigOffset );
+    }
+    public short CardSignPrecomputed512( byte[] SigningData, short SigningDataLen, byte[] SignatureData, short SigOffset)
+    {
+	eccSig512.init(idKeypair.getPrivate(), Signature.MODE_SIGN);
+     	return eccSig512.signPreComputedHash(SigningData, (short)0, SigningDataLen, SignatureData, (short)SigOffset );
+    }
+
 
     /**
      * Check to see if the session has been properly set up.

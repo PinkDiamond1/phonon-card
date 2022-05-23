@@ -1164,8 +1164,6 @@ func TestMinePhonon(t *testing.T) {
 		t.FailNow()
 	}
 
-	//TODO: Validate mined phonon
-
 	//List all since filtering is as of yet unimplemented
 	phonon, err := cardSess.ListPhonons(model.Unspecified, 0, 0)
 	if err != nil {
@@ -1191,6 +1189,7 @@ func TestMinePhonon(t *testing.T) {
 
 	t.Log("validating native phonon on real miner card")
 	validateNativePhonon(t, minedPhonon, cardIDKey)
+	t.Log("signature validation passed on real miner card")
 
 	//Test sending native phonon to counterparty
 	err = cardSess.ConnectToLocalProvider()
@@ -1227,24 +1226,39 @@ func TestMinePhonon(t *testing.T) {
 		t.Fatal("error getting mock's phonon pubKey. err: ", err)
 	}
 
-	mockIdentityPubKey, _, err := mock.IdentifyCard(util.RandomKey(32))
-	if err != nil {
-		t.Fatal("error fetching mock's identity pubKey. err: ", err)
-	}
 	t.Log("validating nativePhonon after send to mock")
-	validateNativePhonon(t, mockNatPhonon, mockIdentityPubKey)
+	validateNativePhonon(t, mockNatPhonon, cardIDKey)
+	t.Log("signature validation passed on mock recipient.")
 
-	//TODO: Mine a phonon on the mock and validate it
+	//TODO: having issues connecting mock back to original card to send phonons
+	// err = mock.ConnectToCounterparty(cardSess.GetName())
+	// if err != nil {
+	// 	t.Fatal("mock unable to connect to counterparty. err: ", err)
+	// }
+	// err = mock.SendPhonons([]uint16{mockNatPhonon.KeyIndex})
+	// if err != nil {
+	// 	t.Fatal("error sending native phonon from mock back to original card. err: ", err)
+	// }
+	// phonons, err = cardSess.ListPhonons(model.Unspecified, 0, 0)
+	// if err != nil {
+	// 	t.Fatal("unable to list mined phonon. err: ", err)
+	// }
+	// var returnedPhonon *model.Phonon
+	// for _, p := range phonons {
+	// 	p.PubKey, err = cardSess.GetPhononPubKey(p.KeyIndex, p.CurveType)
+	// 	if err != nil {
+	// 		t.Fatal("error getting pubKey. err: ", err)
+	// 	}
+	// 	if p.PubKey == mockNatPhonon.PubKey {
+	// 		returnedPhonon = p
+	// 		break
+	// 	}
+	// }
 
-	//TODO: Send that phonon back to the real card
-
-	//TODO: Validate that the real card can list all the mined phonon metadata
-
-	//TODO: To the extent possible, see if pubkeys are being correctly derived on each side.
-
+	// validateNativePhonon(t, returnedPhonon, cardIDKey)
 }
 
-func validateNativePhonon(t *testing.T, minedPhonon *model.Phonon, cardIDKey *ecdsa.PublicKey) {
+func validateNativePhonon(t *testing.T, minedPhonon *model.Phonon, minerPubKey *ecdsa.PublicKey) {
 	if minedPhonon.CurrencyType != model.Native {
 		t.Fatal("mined phonon currencyType not set to model.Native")
 	}
@@ -1257,10 +1271,12 @@ func validateNativePhonon(t *testing.T, minedPhonon *model.Phonon, cardIDKey *ec
 	}
 	var nativePhononSig *util.ECDSASignature
 	var err error
+	var rawSig []byte
 	for _, field := range minedPhonon.ExtendedTLV {
 		TagNativeSignature := 0x94
 		if field.Tag == byte(TagNativeSignature) {
 			t.Logf("field.Value: % X", field.Value)
+			rawSig = field.Value
 			nativePhononSig, err = util.ParseECDSASignature(field.Value)
 			if err != nil {
 				t.Error("unable to parse nativePhononSig from extended TLV field")
@@ -1282,10 +1298,16 @@ func validateNativePhonon(t *testing.T, minedPhonon *model.Phonon, cardIDKey *ec
 	// 	t.Fatal("card identity key received from IDENTIFY_CARD does not match identity key derived from mined native phonon signature")
 	// }
 	//Check that mined phonon signature is valid for this card
-	if !ecdsa.Verify(cardIDKey, minedPhonon.PubKey.Bytes(), nativePhononSig.R, nativePhononSig.S) {
-		t.Error("cardIDKKey was: ", util.ECCPubKeyToHexString(cardIDKey))
-		t.Errorf("minedPhonon PubKey was: % X", minedPhonon.PubKey.Bytes())
+	if !ecdsa.VerifyASN1(minerPubKey, minedPhonon.PubKey.Bytes(), rawSig) {
+		t.Fatal("verifyASN1 failed")
+	}
+	t.Log("validated native phonon sig with ASN1")
+
+	if !ecdsa.Verify(minerPubKey, minedPhonon.PubKey.Bytes(), nativePhononSig.R, nativePhononSig.S) {
+		t.Error("cardIDKKey was: ", util.ECCPubKeyToHexString(minerPubKey))
+		t.Errorf("minedPhonon PubKey was len %v: % X", len(minedPhonon.PubKey.Bytes()), minedPhonon.PubKey.Bytes())
 		t.Errorf("minedPhonon sig was: % X", append(nativePhononSig.R.Bytes(), nativePhononSig.S.Bytes()...))
 		t.Fatal("unable to verify miner signature over mined phonon hash")
 	}
+	t.Log("validated native phonon sig with plain verify")
 }
