@@ -99,6 +99,7 @@ public class SecureChannel {
         0x7c, (byte) 0x91, 0x1c, 0x3f, (byte) 0x9d, 0x75, (byte) 0xa5, (byte) 0xf1,
         (byte) 0xa9, 0x24, (byte) 0xb6, 0x27, (byte) 0xf1, 0x5d, (byte) 0xec, 0x51,
     };
+
     public byte[] SenderidCertificate;
     public byte[] CardAESIV;
     public byte[] CardHash;
@@ -323,14 +324,23 @@ public class SecureChannel {
             // Card cert may only be set once and never overwritten
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
-
-        // Save the certificate
-        if (apduBuffer[ISO7816.OFFSET_LC] <= (byte) CERTIFICATE_MAX_LEN) {
-            Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, idCertificate, (short) 0, (short) (apduBuffer[ISO7816.OFFSET_LC] & 0xff));
-            certEmpty = false;
-        } else {
+        if (apduBuffer[ISO7816.OFFSET_LC] > (byte) CERTIFICATE_MAX_LEN) {
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         }
+
+        //Load the cert where it can be validated
+        SetCardidCertStatus((byte) 0x00);
+        SenderloadCert(apduBuffer, ISO7816.OFFSET_CDATA, (short) (apduBuffer[ISO7816.OFFSET_LC] & 0xff));
+        //Validate the cert
+        boolean verifyStatus = CardVerifyCertificate();
+
+        if (!verifyStatus) {
+            ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+        }
+
+        // Save the certificate
+        Util.arrayCopyNonAtomic(apduBuffer, ISO7816.OFFSET_CDATA, idCertificate, (short) 0, (short) (apduBuffer[ISO7816.OFFSET_LC] & 0xff));
+        certEmpty = false;
     }
 
     /**
@@ -339,7 +349,7 @@ public class SecureChannel {
      * @param IncomingCert
      * @param IncomingCertLen
      */
-    public void SenderloadCert(byte[] IncomingCert, short IncomingCertLen) {
+    public void SenderloadCert(byte[] IncomingCert, short offset, short IncomingCertLen) {
         if (CardidCertStatus != ID_CERTIFICATE_EMPTY) {
             // Card cert may only be set once and never overwritten
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
@@ -353,7 +363,7 @@ public class SecureChannel {
         if (IncomingCertLen > CERTIFICATE_MAX_LEN) {
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         } else {
-            Util.arrayCopyNonAtomic(IncomingCert, (short) 0, SenderidCertificate, (short) 0, IncomingCertLen);
+            Util.arrayCopyNonAtomic(IncomingCert, offset, SenderidCertificate, (short) 0, IncomingCertLen);
             CardidCertStatus = ID_CERTIFICATE_LOCKED;
             CardidCertLen = IncomingCertLen;
         }
@@ -690,6 +700,7 @@ public class SecureChannel {
         ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
         localsecp256k1.setCurveParameters(pub);
         pub.setW(SenderidCertificate, (short) (6 + permLen), pubKeyLen);
+        // localsecp256k1.setCurveParameters(pub);
 
         eccSig.init(pub, Signature.MODE_VERIFY);
         return eccSig.verify(temphash, (short) 0, (short) ((SC_SECRET_LENGTH * 2) + (short) 16), RecieverSig, (short) 0, RecieverSigLen);
@@ -714,9 +725,11 @@ public class SecureChannel {
 
         KeyPair verifyidKeypair = new KeyPair(KeyPair.ALG_EC_FP, SC_KEY_LENGTH);
         localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPrivate());
+        //TODO: remove unnecessary line below
         localsecp256k1.setCurveParameters((ECKey) verifyidKeypair.getPublic());
         verifyidKeypair.genKeyPair();
         ECPublicKey pub = (ECPublicKey) verifyidKeypair.getPublic();
+        //TODO: remove unnecessary line below
         localsecp256k1.setCurveParameters(pub);
         pub.setW(CAPublicKey, (short) 0, (short) CAPublicKey.length);
 

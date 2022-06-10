@@ -462,7 +462,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         Util.arrayCopyNonAtomic(IncomingData, ptr, ScratchBuffer, (short) 0, CertLen);
 
         secureChannel.SetCardidCertStatus((byte) 0x00);
-        secureChannel.SenderloadCert(ScratchBuffer, CertLen);
+        secureChannel.SenderloadCert(ScratchBuffer, (short) 0, CertLen);
         boolean verifyStatus = secureChannel.CardVerifyCertificate();
 
         if (!verifyStatus) {
@@ -531,7 +531,7 @@ public class PhononApplet extends Applet {    //implements ExtendedLength {
         Util.arrayCopyNonAtomic(IncomingData, ptr, ScratchBuffer, (short) 0, CertLen);
 
         secureChannel.SetCardidCertStatus((byte) 0x00);
-        secureChannel.SenderloadCert(ScratchBuffer, CertLen);
+        secureChannel.SenderloadCert(ScratchBuffer, (short) 0, CertLen);
 
         boolean verifyStatus = secureChannel.CardVerifyCertificate();
 
